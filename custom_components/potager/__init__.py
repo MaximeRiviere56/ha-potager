@@ -129,7 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: PotagerEntry) -> bool:
 
 async def _async_options_modifiees(hass: HomeAssistant, entry: PotagerEntry) -> None:
     """Changer les dates de gelees ou les zones redessine tout le calendrier."""
-    await entry.runtime_data.async_request_refresh()
+    await entry.runtime_data.async_refresh()
 
 
 # --- Panneau ------------------------------------------------------------------
@@ -212,7 +212,7 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
         await coord.async_appliquer(lambda: coord.store.annuler(call.data["uid"]))
 
     async def rafraichir(_: ServiceCall) -> None:
-        await _coordinateur().async_request_refresh()
+        await _coordinateur().async_refresh()
 
     inscriptions = (
         (SERVICE_AJOUTER_PLANTE, ajouter, SCHEMA_AJOUTER),

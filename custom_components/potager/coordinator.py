@@ -145,7 +145,11 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         rafraichir, donc entites et panneau ne peuvent pas rester en retard.
         """
         resultat = mutation()
-        await self.async_request_refresh()
+        # `async_refresh` et non `async_request_refresh` : ce dernier est
+        # debounce, et le panneau qui rappelle `potager/jardin` juste apres
+        # recevrait l'etat d'avant la mutation. Le calcul etant pur et local,
+        # il n'y a rien a economiser en le differant.
+        await self.async_refresh()
         return resultat
 
 

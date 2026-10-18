@@ -55,12 +55,18 @@ class ActionsSensor(PotagerEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         return {
+            # `uid` et `etape` ne sont pas decoratifs : ils permettent a la
+            # carte Lovelace d'enregistrer « C'est fait » sans autre requete.
             "actions": [
                 {
+                    "uid": action["uid"],
                     "plante": action["nom"],
+                    "emoji": action["emoji"],
                     "action": action["etape"].libelle,
+                    "etape": action["etape"].type,
                     "zone": action["zone"],
                     "debut": action["etape"].debut.isoformat(),
+                    "fin": action["etape"].fin.isoformat(),
                     "jours_restants": action["jours_restants"],
                     "en_cours": action["en_cours"],
                 }

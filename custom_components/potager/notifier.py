@@ -114,7 +114,8 @@ class PotagerNotifier:
         if not cibles:
             return
 
-        await self.coordinator.async_request_refresh()
+        # Rafraichissement certain avant de decider des envois du jour.
+        await self.coordinator.async_refresh()
         aujourdhui = date.today().isoformat()
 
         for action in self.coordinator.data["actions"]:
