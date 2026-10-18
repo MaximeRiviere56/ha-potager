@@ -1,0 +1,120 @@
+ajouter_plante:
+  fields:
+    culture_id:
+      required: true
+      example: tomate
+      selector:
+        text:
+    zone:
+      example: serre
+      selector:
+        text:
+    surnom:
+      example: Cœur de bœuf
+      selector:
+        text:
+    notifs:
+      default: true
+      selector:
+        boolean:
+
+retirer_plante:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+
+marquer_seme:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    mode:
+      default: direct
+      selector:
+        select:
+          options:
+            - direct
+            - interieur
+    note:
+      selector:
+        text:
+
+marquer_repique:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    note:
+      selector:
+        text:
+
+marquer_recolte:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    quantite_g:
+      example: 850
+      selector:
+        number:
+          min: 0
+          max: 100000
+          step: 10
+          unit_of_measurement: g
+          mode: box
+    note:
+      selector:
+        text:
+
+marquer_perdu:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    cause:
+      example: limaces
+      selector:
+        text:
+    note:
+      selector:
+        text:
+
+marquer_termine:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+    date:
+      selector:
+        date:
+    note:
+      selector:
+        text:
+
+annuler_dernier_evenement:
+  fields:
+    uid:
+      required: true
+      selector:
+        text:
+
+rafraichir:

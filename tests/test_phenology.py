@@ -212,3 +212,45 @@ class TestProchaineEtape(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPlafondDeGel(unittest.TestCase):
+    """Une culture gélive ne se récolte pas après la première gelée."""
+
+    def test_la_recolte_d_une_gelive_s_arrete_au_gel(self):
+        # Plantée tard : + 75 j de cycle + 90 j de récolte irait jusqu'en février.
+        p = noter(plante(), lc.EVT_PLANTE, "2026-07-20")
+        etapes = ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 8, 1))
+        recolte = par_type(etapes)["recolte"]
+        self.assertEqual(recolte.debut, date(2026, 10, 3))  # 20 juil. + 75 j
+        self.assertEqual(recolte.fin, date(2026, 11, 15))  # et non le 1er janvier
+
+    def test_une_rustique_traverse_l_hiver(self):
+        """Le pommier ne craint pas le gel : sa fenêtre n'est pas touchée."""
+        p = noter(plante("pommier"), lc.EVT_PLANTE, "2025-12-01")
+        etapes = ph.prochaines_etapes(POMMIER, p, GELEES, 0, date(2026, 3, 1))
+        self.assertEqual(etapes[0].fin, date(2026, 10, 20))  # 10 sept. + 40 j
+
+    def test_une_recolte_precoce_n_est_pas_raccourcie(self):
+        """Récolte entièrement avant le gel : rien à plafonner."""
+        p = noter(plante(), lc.EVT_PLANTE, "2026-05-02")
+        recolte = par_type(ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 5, 3)))["recolte"]
+        self.assertEqual(recolte.debut, date(2026, 7, 16))
+        self.assertEqual(recolte.fin, date(2026, 10, 14))  # + 90 j, avant le 15/11
+
+    def test_fenetre_entierement_apres_le_gel_laissee_intacte(self):
+        """Semis trop tardif : on ne fabrique pas une fenêtre vide, qui ferait
+        disparaître la culture de l'interface sans explication."""
+        p = noter(plante(), lc.EVT_PLANTE, "2026-10-01")
+        recolte = par_type(ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 10, 2)))["recolte"]
+        self.assertEqual(recolte.debut, date(2026, 12, 15))
+        self.assertGreater(recolte.fin, recolte.debut)
+
+    def test_le_plafond_s_applique_aussi_aux_fenetres_theoriques(self):
+        tardive = {
+            "rusticite": {"gel": False},
+            "fenetres": {"plantation": {"ancrage": "gelees_derniere", "offset_jours": 100, "duree_jours": 20}},
+            "cycle": {"jours_plantation_a_recolte": 60, "duree_recolte_jours": 120},
+        }
+        recolte = par_type(ph.fenetres_theoriques(tardive, GELEES, 0, 2026))["recolte"]
+        self.assertEqual(recolte.fin, date(2026, 11, 15))

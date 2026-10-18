@@ -65,6 +65,12 @@ def valider(cultures: list[dict]) -> list[str]:
         if not 1 <= c.get("difficulte", 0) <= 3:
             problemes.append(f"{cid} : difficulte hors de 1-3")
 
+        # `gel` commande le plafonnement de la recolte a la premiere gelee :
+        # une fiche qui l'omet serait traitee comme rustique en silence, et
+        # promettrait des courgettes en janvier.
+        if not isinstance((c.get("rusticite") or {}).get("gel"), bool):
+            problemes.append(f"{cid} : 'rusticite.gel' absent ou non booleen")
+
         for nom, ref in (("aime", "aime"), ("evite", "evite")):
             for autre in c.get("associations", {}).get(ref, []):
                 if autre not in connus:

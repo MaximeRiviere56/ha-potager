@@ -1,0 +1,207 @@
+{
+  "title": "My Vegetable Garden",
+  "config": {
+    "step": {
+      "user": {
+        "title": "My Vegetable Garden",
+        "description": "Two settings matter: your frost dates, which anchor the whole calendar, and who receives the reminders.",
+        "data": {
+          "preset_climat": "Climate",
+          "gelees_derniere": "Last spring frost",
+          "gelees_premiere": "First autumn frost",
+          "notify_targets": "Reminder recipients",
+          "notify_heure": "Reminder time",
+          "rappel_jours": "Days of advance notice"
+        },
+        "data_description": {
+          "preset_climat": "Preset that sets your frost dates. Pick \"Custom dates\" to enter your own.",
+          "gelees_derniere": "Format MM-DD. The anchor for sowing and planting out.",
+          "gelees_premiere": "Format MM-DD. The anchor for winter crops and tree planting.",
+          "notify_targets": "Mobile apps get a \"Done\" button that fills in your journal in one tap.",
+          "notify_heure": "Time of the daily check.",
+          "rappel_jours": "How long before a window opens. Adjustable per plant afterwards."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Already configured: everything else is managed from the sidebar panel."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Garden settings",
+        "description": "Changing the frost dates redraws the whole calendar.",
+        "data": {
+          "preset_climat": "Climate",
+          "gelees_derniere": "Last spring frost",
+          "gelees_premiere": "First autumn frost",
+          "notify_targets": "Reminder recipients",
+          "notify_heure": "Reminder time",
+          "rappel_jours": "Days of advance notice"
+        }
+      }
+    }
+  },
+  "selector": {
+    "preset_climat": {
+      "options": {
+        "oceanique": "Oceanic west",
+        "nord_est": "Continental north and east",
+        "midi": "Mediterranean south",
+        "montagne": "Mountain",
+        "personnalise": "Custom dates"
+      }
+    }
+  },
+  "services": {
+    "ajouter_plante": {
+      "name": "Add a plant",
+      "description": "Adds a catalogue crop to the garden.",
+      "fields": {
+        "culture_id": {
+          "name": "Crop",
+          "description": "Crop id in the catalogue."
+        },
+        "zone": {
+          "name": "Zone",
+          "description": "Garden zone; its offset shifts the whole calendar."
+        },
+        "surnom": {
+          "name": "Nickname",
+          "description": "To tell two plants of the same crop apart."
+        },
+        "notifs": {
+          "name": "Reminders",
+          "description": "Enable reminders for this plant."
+        }
+      }
+    },
+    "retirer_plante": {
+      "name": "Remove a plant",
+      "description": "Removes the plant and its journal.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id, shown on its panel card."
+        }
+      }
+    },
+    "marquer_seme": {
+      "name": "Log a sowing",
+      "description": "Records a sowing on its real date; the rest of the cycle is recomputed from it.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "mode": {
+          "name": "Sowing mode",
+          "description": "\"direct\" goes straight to harvest; \"interieur\" adds a transplanting step."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Free remark kept in the journal."
+        }
+      }
+    },
+    "marquer_repique": {
+      "name": "Log a transplant",
+      "description": "Records planting out; harvest is recomputed from this date.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Free remark."
+        }
+      }
+    },
+    "marquer_recolte": {
+      "name": "Log a harvest",
+      "description": "Records a harvest; repeatable, quantities add up over the season.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "quantite_g": {
+          "name": "Quantity",
+          "description": "Weight in grams; optional."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Free remark."
+        }
+      }
+    },
+    "marquer_perdu": {
+      "name": "Log a loss",
+      "description": "The plant is lost; the cause stays in the journal for next season.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "cause": {
+          "name": "Cause",
+          "description": "What killed it."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Free remark."
+        }
+      }
+    },
+    "marquer_termine": {
+      "name": "Close a crop",
+      "description": "The crop is done and asks for nothing more.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Free remark."
+        }
+      }
+    },
+    "annuler_dernier_evenement": {
+      "name": "Undo last journal entry",
+      "description": "Removes the last event and restores the previous phase.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id."
+        }
+      }
+    },
+    "rafraichir": {
+      "name": "Recompute",
+      "description": "Recomputes every step immediately."
+    }
+  }
+}

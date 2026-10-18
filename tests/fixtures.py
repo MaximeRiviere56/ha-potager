@@ -5,6 +5,7 @@ from __future__ import annotations
 TOMATE = {
     "id": "tomate",
     "nom": "Tomate",
+    "rusticite": {"gel": False, "temp_min_c": 5},
     "fenetres": {
         "semis_interieur": {
             "ancrage": "gelees_derniere",
@@ -28,6 +29,7 @@ TOMATE = {
 RADIS = {
     "id": "radis",
     "nom": "Radis",
+    "rusticite": {"gel": True, "temp_min_c": -4},
     "fenetres": {
         "semis_direct": {
             "ancrage": "gelees_derniere",
@@ -44,6 +46,7 @@ RADIS = {
 POMMIER = {
     "id": "pommier",
     "nom": "Pommier",
+    "rusticite": {"gel": True, "temp_min_c": -25},
     "perenne": True,
     "fenetres": {
         "plantation": {

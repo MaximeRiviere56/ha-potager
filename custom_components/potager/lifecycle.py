@@ -21,11 +21,11 @@ PHASE_TERMINE = "termine"
 PHASE_PERDU = "perdu"
 
 PHASES_LIBELLES = {
-    PHASE_PREVU: "Prevu",
-    PHASE_SEME: "Seme",
-    PHASE_PLANTE: "Plante",
-    PHASE_EN_RECOLTE: "En recolte",
-    PHASE_TERMINE: "Termine",
+    PHASE_PREVU: "Prévu",
+    PHASE_SEME: "Semé",
+    PHASE_PLANTE: "Planté",
+    PHASE_EN_RECOLTE: "En récolte",
+    PHASE_TERMINE: "Terminé",
     PHASE_PERDU: "Perdu",
 }
 
@@ -71,11 +71,11 @@ PHASE_APRES: dict[str, str] = {
 }
 
 LIBELLES_EVENEMENTS = {
-    EVT_SEME: "Seme",
-    EVT_REPIQUE: "Repique",
-    EVT_PLANTE: "Plante",
-    EVT_RECOLTE: "Recolte",
-    EVT_TERMINE: "Termine",
+    EVT_SEME: "Semé",
+    EVT_REPIQUE: "Repiqué",
+    EVT_PLANTE: "Planté",
+    EVT_RECOLTE: "Récolté",
+    EVT_TERMINE: "Terminé",
     EVT_PERDU: "Perdu",
 }
 
@@ -180,7 +180,7 @@ def total_recolte_g(evenements: Iterable[dict]) -> int:
 
 def valider_transition(phase: str, type_evt: str) -> None:
     if type_evt not in TYPES_EVENEMENTS:
-        raise ErreurJournal(f"Type d'evenement inconnu : {type_evt!r}")
+        raise ErreurJournal(f"Type d'événement inconnu : {type_evt!r}")
     autorisees = TRANSITIONS[type_evt]
     if phase not in autorisees:
         raise TransitionInvalide(
@@ -204,7 +204,7 @@ def construire_evenement(
     if quantite_g is not None:
         quantite = int(quantite_g)
         if quantite < 0:
-            raise ErreurJournal("Une quantite recoltee ne peut pas etre negative.")
+            raise ErreurJournal("Une quantité récoltée ne peut pas être négative.")
         evt["quantite_g"] = quantite
     if cause:
         evt["cause"] = cause

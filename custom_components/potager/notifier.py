@@ -1,0 +1,216 @@
+"""Rappels du potager : quoi semer, repiquer ou recolter, et quand.
+
+Deux partis pris.
+
+Le moteur vit dans l'integration, pas dans des automatisations YAML : il n'y a
+rien a cabler cote utilisateur, et la logique « ne pas reclamer un semis deja
+fait » reste au meme endroit que la phase qui la porte.
+
+Les rappels passent par les services `notify.mobile_app_*` et non par
+`notify.send_message`, parce que seuls les premiers transportent des boutons
+d'action. C'est ce bouton « C'est fait » qui remplit le journal ; sans lui, le
+suivi reel reposerait sur la bonne volonte de rouvrir l'application.
+"""
+
+from __future__ import annotations
+
+import logging
+from datetime import date, timedelta
+from typing import Any
+
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
+
+from .const import (
+    CONF_NOTIFY_HEURE,
+    CONF_NOTIFY_TARGETS,
+    DEFAUT_NOTIFY_HEURE,
+    DOMAIN,
+)
+from .coordinator import PotagerCoordinator
+from .lifecycle import (
+    EVT_PLANTE,
+    EVT_RECOLTE,
+    EVT_REPIQUE,
+    EVT_SEME,
+    MODE_SEMIS_DIRECT,
+    MODE_SEMIS_INTERIEUR,
+)
+from .phenology import (
+    ETAPE_PLANTATION,
+    ETAPE_RECOLTE,
+    ETAPE_REPIQUAGE,
+    ETAPE_SEMIS_DIRECT,
+    ETAPE_SEMIS_INTERIEUR,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+EVENT_ACTION_MOBILE = "mobile_app_notification_action"
+PREFIXE = "POTAGER"
+SEPARATEUR = "|"
+JOURS_REPORT = 3
+
+# Ce qu'il faut inscrire au journal quand l'utilisateur repond « C'est fait ».
+JOURNAL_POUR_ETAPE: dict[str, tuple[str, dict[str, Any]]] = {
+    ETAPE_SEMIS_INTERIEUR: (EVT_SEME, {"mode": MODE_SEMIS_INTERIEUR}),
+    ETAPE_SEMIS_DIRECT: (EVT_SEME, {"mode": MODE_SEMIS_DIRECT}),
+    ETAPE_REPIQUAGE: (EVT_REPIQUE, {}),
+    ETAPE_PLANTATION: (EVT_PLANTE, {}),
+    ETAPE_RECOLTE: (EVT_RECOLTE, {}),
+}
+
+VERBES = {
+    ETAPE_SEMIS_INTERIEUR: "Semer à l'abri",
+    ETAPE_SEMIS_DIRECT: "Semer en place",
+    ETAPE_REPIQUAGE: "Repiquer",
+    ETAPE_PLANTATION: "Planter",
+    ETAPE_RECOLTE: "Récolter",
+}
+
+
+class PotagerNotifier:
+    """Verifie une fois par jour ce qui merite un rappel."""
+
+    def __init__(self, hass: HomeAssistant, coordinator: PotagerCoordinator) -> None:
+        self.hass = hass
+        self.coordinator = coordinator
+
+    # --- Branchement ---------------------------------------------------------
+
+    @callback
+    def async_demarrer(self):
+        """Arme la verification quotidienne et l'ecoute des boutons.
+
+        Renvoie la fonction de desabonnement, a confier a `entry.async_on_unload`.
+        """
+        heure = dt_util.parse_time(
+            self.coordinator.entry.options.get(CONF_NOTIFY_HEURE, DEFAUT_NOTIFY_HEURE)
+        ) or dt_util.parse_time(DEFAUT_NOTIFY_HEURE)
+
+        annuler_horaire = async_track_time_change(
+            self.hass,
+            self._async_verifier,
+            hour=heure.hour,
+            minute=heure.minute,
+            second=0,
+        )
+        annuler_actions = self.hass.bus.async_listen(
+            EVENT_ACTION_MOBILE, self._async_action_recue
+        )
+
+        @callback
+        def _desabonner() -> None:
+            annuler_horaire()
+            annuler_actions()
+
+        return _desabonner
+
+    # --- Verification quotidienne -------------------------------------------
+
+    async def _async_verifier(self, _now=None) -> None:
+        cibles = self.coordinator.entry.options.get(CONF_NOTIFY_TARGETS) or []
+        if not cibles:
+            return
+
+        await self.coordinator.async_request_refresh()
+        aujourdhui = date.today().isoformat()
+
+        for action in self.coordinator.data["actions"]:
+            entree = self.coordinator.data["plantes"].get(action["uid"])
+            if entree is None or not entree["plante"].get("notifs", True):
+                continue
+
+            etape = action["etape"]
+            cle_occurrence = f"{action['uid']}:{etape.type}:{etape.debut.isoformat()}"
+            cle_report = f"{action['uid']}:{etape.type}"
+
+            if self.coordinator.store.notif_deja_envoyee(cle_occurrence):
+                continue
+            if self.coordinator.store.report_en_cours(cle_report, aujourdhui):
+                continue
+
+            await self._async_envoyer(cibles, action)
+            self.coordinator.store.marquer_notif_envoyee(cle_occurrence, aujourdhui)
+
+    async def _async_envoyer(self, cibles: list[str], action: dict) -> None:
+        etape = action["etape"]
+        verbe = VERBES.get(etape.type, etape.libelle)
+        titre = f"{action['emoji']} {verbe} : {action['nom']}"
+
+        if action["en_cours"]:
+            quand = "C'est le moment"
+        elif action["jours_restants"] == 1:
+            quand = "Demain"
+        else:
+            quand = f"Dans {action['jours_restants']} jours"
+        message = f"{quand} — {action['zone']}. Fenêtre jusqu'au {etape.fin:%d/%m}."
+
+        actions_notif = [
+            {
+                "action": _encoder("fait", action["uid"], etape.type),
+                "title": "C'est fait",
+            },
+            {
+                "action": _encoder("report", action["uid"], etape.type),
+                "title": f"Rappeler dans {JOURS_REPORT} j",
+            },
+        ]
+
+        for cible in cibles:
+            service = cible.split(".", 1)[-1]
+            charge: dict[str, Any] = {"title": titre, "message": message}
+            if service != "persistent_notification":
+                charge["data"] = {
+                    "actions": actions_notif,
+                    "tag": f"{DOMAIN}_{action['uid']}_{etape.type}",
+                    "group": DOMAIN,
+                }
+            try:
+                await self.hass.services.async_call(
+                    "notify", service, charge, blocking=False
+                )
+            except Exception:  # noqa: BLE001 - un destinataire absent ne doit
+                # pas empecher les autres de recevoir leur rappel.
+                _LOGGER.exception("Echec de l'envoi du rappel vers notify.%s", service)
+
+    # --- Reponses aux boutons ------------------------------------------------
+
+    async def _async_action_recue(self, event: Event) -> None:
+        decode = _decoder(event.data.get("action", ""))
+        if decode is None:
+            return
+        quoi, uid, type_etape = decode
+
+        if quoi == "report":
+            jusqu_au = (date.today() + timedelta(days=JOURS_REPORT)).isoformat()
+            self.coordinator.store.reporter(f"{uid}:{type_etape}", jusqu_au)
+            return
+
+        inscription = JOURNAL_POUR_ETAPE.get(type_etape)
+        if inscription is None:
+            return
+        type_evt, details = inscription
+
+        store = self.coordinator.store
+        try:
+            await self.coordinator.async_appliquer(
+                lambda: store.noter(uid, type_evt, date.today(), **details)
+            )
+        except Exception:  # noqa: BLE001 - journal deja avance, ou plante retiree
+            # entre l'envoi du rappel et la reponse : sans interet a remonter.
+            _LOGGER.debug(
+                "Action '%s' ignoree pour %s : transition impossible", type_evt, uid
+            )
+
+
+def _encoder(quoi: str, uid: str, type_etape: str) -> str:
+    return SEPARATEUR.join((PREFIXE, quoi, uid, type_etape))
+
+
+def _decoder(action: str) -> tuple[str, str, str] | None:
+    morceaux = action.split(SEPARATEUR)
+    if len(morceaux) != 4 or morceaux[0] != PREFIXE:
+        return None
+    return morceaux[1], morceaux[2], morceaux[3]

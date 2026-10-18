@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 .DS_Store
 .venv/
+
+# Genere par tools/banc_fixture.py
+tools/fixture.js

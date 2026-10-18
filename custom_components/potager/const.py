@@ -18,13 +18,14 @@ CONF_GELEES_DERNIERE = "gelees_derniere"
 CONF_GELEES_PREMIERE = "gelees_premiere"
 CONF_ZONES = "zones"
 CONF_NOTIFY_TARGETS = "notify_targets"
-CONF_NOTIFY_HOUR = "notify_hour"
+CONF_NOTIFY_HEURE = "notify_heure"
+CONF_PRESET_CLIMAT = "preset_climat"
 CONF_RAPPEL_JOURS = "rappel_jours"
 
 # Bouguenais (44), zone USDA 9a, climat oceanique.
 DEFAUT_GELEES_DERNIERE = "04-15"
 DEFAUT_GELEES_PREMIERE = "11-15"
-DEFAUT_NOTIFY_HOUR = 8
+DEFAUT_NOTIFY_HEURE = "08:00:00"
 DEFAUT_RAPPEL_JOURS = 3
 
 ZONE_PLEINE_TERRE = "pleine-terre"
@@ -51,3 +52,12 @@ SERVICE_RAFRAICHIR = "rafraichir"
 # --- Evenements du bus -------------------------------------------------------
 
 EVENT_JARDIN_MAJ = f"{DOMAIN}_jardin_maj"
+
+# Preselections climatiques : eviter de demander a froid une date de gelee.
+PRESETS_CLIMAT: dict[str, dict[str, str]] = {
+    "oceanique": {"derniere": "04-15", "premiere": "11-15"},
+    "nord_est": {"derniere": "05-05", "premiere": "10-20"},
+    "midi": {"derniere": "03-20", "premiere": "12-05"},
+    "montagne": {"derniere": "05-25", "premiere": "10-01"},
+}
+PRESET_PERSONNALISE = "personnalise"

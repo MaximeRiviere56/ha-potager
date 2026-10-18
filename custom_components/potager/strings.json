@@ -1,0 +1,219 @@
+{
+  "title": "Mon Potager",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mon Potager",
+        "description": "Deux réglages suffisent : vos dates de gelées, qui calent tout le calendrier, et qui doit recevoir les rappels.",
+        "data": {
+          "preset_climat": "Climat",
+          "gelees_derniere": "Dernière gelée de printemps",
+          "gelees_premiere": "Première gelée d'automne",
+          "notify_targets": "Destinataires des rappels",
+          "notify_heure": "Heure des rappels",
+          "rappel_jours": "Prévenir combien de jours à l'avance"
+        },
+        "data_description": {
+          "preset_climat": "Préselection qui cale les gelées. Choisissez « Dates personnalisées » pour saisir les vôtres.",
+          "gelees_derniere": "Format MM-JJ. C'est le repère qui cale les semis et les plantations.",
+          "gelees_premiere": "Format MM-JJ. Repère des cultures d'hiver et des plantations d'arbres.",
+          "notify_targets": "Les applications mobiles reçoivent des boutons « C'est fait » qui remplissent votre journal d'un geste.",
+          "notify_heure": "Heure de la vérification quotidienne.",
+          "rappel_jours": "Délai avant l'ouverture d'une fenêtre. Réglable ensuite plante par plante."
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Mon Potager est déjà configuré : tout se gère ensuite depuis le panneau latéral."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Réglages du potager",
+        "description": "Modifier les gelées redessine tout le calendrier, y compris les étapes déjà calculées.",
+        "data": {
+          "preset_climat": "Climat",
+          "gelees_derniere": "Dernière gelée de printemps",
+          "gelees_premiere": "Première gelée d'automne",
+          "notify_targets": "Destinataires des rappels",
+          "notify_heure": "Heure des rappels",
+          "rappel_jours": "Prévenir combien de jours à l'avance"
+        },
+        "data_description": {
+          "preset_climat": "Préselection qui cale les gelées. Choisissez « Dates personnalisées » pour saisir les vôtres.",
+          "gelees_derniere": "Format MM-JJ. C'est le repère qui cale les semis et les plantations.",
+          "gelees_premiere": "Format MM-JJ. Repère des cultures d'hiver et des plantations d'arbres.",
+          "notify_targets": "Les applications mobiles reçoivent des boutons « C'est fait » qui remplissent votre journal d'un geste.",
+          "notify_heure": "Heure de la vérification quotidienne.",
+          "rappel_jours": "Délai avant l'ouverture d'une fenêtre. Réglable ensuite plante par plante."
+        }
+      }
+    }
+  },
+  "selector": {
+    "preset_climat": {
+      "options": {
+        "oceanique": "Ouest océanique (Bretagne, Loire)",
+        "nord_est": "Nord et Est continental",
+        "midi": "Midi méditerranéen",
+        "montagne": "Montagne",
+        "personnalise": "Dates personnalisées"
+      }
+    }
+  },
+  "services": {
+    "ajouter_plante": {
+      "name": "Ajouter une plante",
+      "description": "Ajoute une culture du catalogue au jardin. La même culture peut être ajoutée plusieurs fois : deux semis échelonnés, ou le même légume en serre et en pleine terre.",
+      "fields": {
+        "culture_id": {
+          "name": "Culture",
+          "description": "Identifiant de la culture dans le catalogue, par exemple « tomate »."
+        },
+        "zone": {
+          "name": "Zone",
+          "description": "Zone du jardin. Son décalage avance ou retarde tout le calendrier de la plante."
+        },
+        "surnom": {
+          "name": "Surnom",
+          "description": "Pour distinguer deux plants de la même culture, par exemple la variété."
+        },
+        "notifs": {
+          "name": "Rappels",
+          "description": "Activer les rappels pour cette plante."
+        }
+      }
+    },
+    "retirer_plante": {
+      "name": "Retirer une plante",
+      "description": "Retire la plante du jardin, avec son journal.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        }
+      }
+    },
+    "marquer_seme": {
+      "name": "Noter un semis",
+      "description": "Enregistre un semis à sa date réelle. Toute la suite du cycle est recalculée depuis cette date : semer en retard décale la récolte d'autant.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle de l'événement. Par défaut : aujourd'hui."
+        },
+        "mode": {
+          "name": "Mode de semis",
+          "description": "« en place » va directement du semis à la récolte ; « à l'abri » ajoute une étape de repiquage."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Remarque libre, conservée au journal."
+        }
+      }
+    },
+    "marquer_repique": {
+      "name": "Noter un repiquage",
+      "description": "Enregistre la mise en place du plant. La récolte est recalculée depuis cette date.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle de l'événement. Par défaut : aujourd'hui."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Remarque libre, conservée au journal."
+        }
+      }
+    },
+    "marquer_recolte": {
+      "name": "Noter une récolte",
+      "description": "Enregistre une récolte. Répétable autant de fois que nécessaire : les quantités se cumulent sur la saison.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle de l'événement. Par défaut : aujourd'hui."
+        },
+        "quantite_g": {
+          "name": "Quantité",
+          "description": "Poids récolté en grammes. Facultatif : une récolte non pesée reste au journal."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Remarque libre, conservée au journal."
+        }
+      }
+    },
+    "marquer_perdu": {
+      "name": "Noter une perte",
+      "description": "La plante est perdue : gel, maladie, limaces. Elle ne réclame plus rien, et la cause reste au journal pour la saison prochaine.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle de l'événement. Par défaut : aujourd'hui."
+        },
+        "cause": {
+          "name": "Cause",
+          "description": "Ce qui a eu raison de la plante."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Remarque libre, conservée au journal."
+        }
+      }
+    },
+    "marquer_termine": {
+      "name": "Clore une culture",
+      "description": "La culture est terminée et ne réclame plus rien.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle de l'événement. Par défaut : aujourd'hui."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Remarque libre, conservée au journal."
+        }
+      }
+    },
+    "annuler_dernier_evenement": {
+      "name": "Annuler le dernier événement",
+      "description": "Retire le dernier événement du journal et ramène la plante à sa phase précédente.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        }
+      }
+    },
+    "rafraichir": {
+      "name": "Recalculer",
+      "description": "Recalcule immédiatement toutes les étapes du potager."
+    }
+  },
+  "entity": {
+    "sensor": {},
+    "switch": {}
+  }
+}
