@@ -1,0 +1,366 @@
+"""Calcul des etapes culturales : fenetres theoriques et dates recalculees.
+
+Module volontairement pur : aucun import Home Assistant.
+
+Deux regles gouvernent tout ce fichier.
+
+1. Un fait gagne toujours sur une moyenne. Des qu'une date reelle est au
+   journal, les etapes suivantes s'enchainent depuis elle, en jours, et la
+   fenetre saisonniere theorique est ignoree. Semer trois semaines en retard
+   decale la recolte d'autant.
+2. Une date reelle ne subit jamais le decalage de zone. Le decalage de zone
+   (une serre prend trois semaines d'avance) est une prevision ; il n'a aucun
+   sens applique a ce qui s'est deja produit.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date, timedelta
+
+from .lifecycle import (
+    EVT_SEME,
+    MODE_SEMIS_INTERIEUR,
+    PHASE_EN_RECOLTE,
+    PHASE_PLANTE,
+    PHASE_PREVU,
+    PHASE_SEME,
+    PHASES_FINALES,
+    date_evenement,
+    date_mise_en_place,
+    mode_semis,
+    parse_date,
+    phase_depuis_evenements,
+    recoltes,
+)
+
+# --- Types d'etapes -----------------------------------------------------------
+
+ETAPE_SEMIS_INTERIEUR = "semis_interieur"
+ETAPE_SEMIS_DIRECT = "semis_direct"
+ETAPE_REPIQUAGE = "repiquage"
+ETAPE_PLANTATION = "plantation"
+ETAPE_RECOLTE = "recolte"
+
+LIBELLES_ETAPES = {
+    ETAPE_SEMIS_INTERIEUR: "Semer a l'abri",
+    ETAPE_SEMIS_DIRECT: "Semer en place",
+    ETAPE_REPIQUAGE: "Repiquer",
+    ETAPE_PLANTATION: "Planter",
+    ETAPE_RECOLTE: "Recolter",
+}
+
+# Ordre canonique d'affichage quand deux etapes tombent le meme jour.
+ORDRE_ETAPES = [
+    ETAPE_SEMIS_INTERIEUR,
+    ETAPE_SEMIS_DIRECT,
+    ETAPE_REPIQUAGE,
+    ETAPE_PLANTATION,
+    ETAPE_RECOLTE,
+]
+
+SOURCE_REELLE = "reel"
+SOURCE_PREVUE = "prevu"
+
+ANCRAGE_GELEES_DERNIERE = "gelees_derniere"
+ANCRAGE_GELEES_PREMIERE = "gelees_premiere"
+ANCRAGE_DATE_FIXE = "date_fixe"
+
+# Largeur par defaut d'une fenetre deduite d'un enchainement en jours.
+DUREE_FENETRE_DEFAUT = 14
+
+
+@dataclass(frozen=True)
+class Gelees:
+    """Reperes climatiques locaux, au format 'MM-JJ'."""
+
+    derniere: str = "04-15"
+    premiere: str = "11-15"
+
+
+@dataclass(frozen=True)
+class Etape:
+    """Une action a mener, sur une fenetre de temps."""
+
+    type: str
+    debut: date
+    fin: date
+    source: str = SOURCE_PREVUE
+
+    @property
+    def libelle(self) -> str:
+        return LIBELLES_ETAPES.get(self.type, self.type)
+
+    @property
+    def reelle(self) -> bool:
+        return self.source == SOURCE_REELLE
+
+    def contient(self, jour: date) -> bool:
+        return self.debut <= jour <= self.fin
+
+    def jours_restants(self, jour: date) -> int:
+        """Negatif si la fenetre est deja ouverte, 0 le jour d'ouverture."""
+        return (self.debut - jour).days
+
+
+class CatalogueInvalide(ValueError):
+    """La fiche de culture ne permet pas de calculer ses etapes."""
+
+
+# --- Resolution des fenetres theoriques ---------------------------------------
+
+
+def _jour_mois(repere: str, annee: int) -> date:
+    """'MM-JJ' + annee -> date, en tolerant le 29 fevrier des annees communes."""
+    try:
+        mois, jour = (int(part) for part in repere.split("-", 1))
+    except (ValueError, AttributeError) as err:
+        raise CatalogueInvalide(f"Repere de date invalide : {repere!r}") from err
+    while jour > 1:
+        try:
+            return date(annee, mois, jour)
+        except ValueError:
+            jour -= 1
+    return date(annee, mois, 1)
+
+
+def resoudre_fenetre(
+    fenetre: dict,
+    gelees: Gelees,
+    annee: int,
+    decalage_zone: int = 0,
+) -> tuple[date, date]:
+    """Transforme une fenetre du catalogue en dates concretes."""
+    ancrage = fenetre.get("ancrage", ANCRAGE_DATE_FIXE)
+    if ancrage == ANCRAGE_GELEES_DERNIERE:
+        pivot = _jour_mois(gelees.derniere, annee)
+    elif ancrage == ANCRAGE_GELEES_PREMIERE:
+        pivot = _jour_mois(gelees.premiere, annee)
+    elif ancrage == ANCRAGE_DATE_FIXE:
+        repere = fenetre.get("date")
+        if not repere:
+            raise CatalogueInvalide("Une fenetre 'date_fixe' doit porter une 'date'.")
+        pivot = _jour_mois(repere, annee)
+    else:
+        raise CatalogueInvalide(f"Ancrage inconnu : {ancrage!r}")
+
+    debut = pivot + timedelta(days=int(fenetre.get("offset_jours", 0)) + decalage_zone)
+    duree = int(fenetre.get("duree_jours", DUREE_FENETRE_DEFAUT))
+    return debut, debut + timedelta(days=max(duree, 0))
+
+
+def _cycle(culture: dict) -> dict:
+    return culture.get("cycle") or {}
+
+
+def fenetres_theoriques(
+    culture: dict,
+    gelees: Gelees,
+    decalage_zone: int = 0,
+    annee: int | None = None,
+) -> list[Etape]:
+    """Fenetres saisonnieres d'une culture pour une annee donnee.
+
+    La fenetre de recolte est deduite de la plantation quand le catalogue ne la
+    declare pas explicitement. Les perennes (arbres, petits fruits) la declarent
+    toujours : chez elles la recolte revient chaque annee sans nouveau semis.
+    """
+    annee = annee or date.today().year
+    fenetres = culture.get("fenetres") or {}
+    cycle = _cycle(culture)
+    etapes: list[Etape] = []
+
+    for type_etape in (
+        ETAPE_SEMIS_INTERIEUR,
+        ETAPE_SEMIS_DIRECT,
+        ETAPE_PLANTATION,
+    ):
+        brute = fenetres.get(type_etape)
+        if brute:
+            debut, fin = resoudre_fenetre(brute, gelees, annee, decalage_zone)
+            etapes.append(Etape(type_etape, debut, fin, SOURCE_PREVUE))
+
+    recolte_brute = fenetres.get(ETAPE_RECOLTE)
+    if recolte_brute:
+        debut, fin = resoudre_fenetre(recolte_brute, gelees, annee, decalage_zone)
+        etapes.append(Etape(ETAPE_RECOLTE, debut, fin, SOURCE_PREVUE))
+    else:
+        deduite = _recolte_deduite(etapes, cycle)
+        if deduite is not None:
+            etapes.append(deduite)
+
+    return trier(etapes)
+
+
+def _recolte_deduite(etapes: list[Etape], cycle: dict) -> Etape | None:
+    """Recolte calculee depuis la plantation, a defaut depuis le semis direct."""
+    duree = int(cycle.get("duree_recolte_jours", DUREE_FENETRE_DEFAUT))
+    par_type = {etape.type: etape for etape in etapes}
+
+    plantation = par_type.get(ETAPE_PLANTATION)
+    jours_plantation = cycle.get("jours_plantation_a_recolte")
+    if plantation is not None and jours_plantation:
+        debut = plantation.debut + timedelta(days=int(jours_plantation))
+        return Etape(ETAPE_RECOLTE, debut, debut + timedelta(days=duree), SOURCE_PREVUE)
+
+    semis = par_type.get(ETAPE_SEMIS_DIRECT) or par_type.get(ETAPE_SEMIS_INTERIEUR)
+    jours_semis = cycle.get("jours_semis_a_recolte")
+    if semis is not None and jours_semis:
+        debut = semis.debut + timedelta(days=int(jours_semis))
+        return Etape(ETAPE_RECOLTE, debut, debut + timedelta(days=duree), SOURCE_PREVUE)
+
+    return None
+
+
+# --- Etapes recalculees depuis le journal -------------------------------------
+
+
+def _chaine_depuis_semis(culture: dict, jour_semis: date, direct: bool) -> list[Etape]:
+    cycle = _cycle(culture)
+    duree_recolte = int(cycle.get("duree_recolte_jours", DUREE_FENETRE_DEFAUT))
+    etapes: list[Etape] = []
+
+    jours_repiquage = cycle.get("jours_semis_a_repiquage")
+    if not direct and jours_repiquage:
+        debut_repiquage = jour_semis + timedelta(days=int(jours_repiquage))
+        etapes.append(
+            Etape(
+                ETAPE_REPIQUAGE,
+                debut_repiquage,
+                debut_repiquage + timedelta(days=DUREE_FENETRE_DEFAUT),
+                SOURCE_REELLE,
+            )
+        )
+        jours_recolte = cycle.get("jours_plantation_a_recolte")
+        if jours_recolte:
+            debut_recolte = debut_repiquage + timedelta(days=int(jours_recolte))
+            etapes.append(
+                Etape(
+                    ETAPE_RECOLTE,
+                    debut_recolte,
+                    debut_recolte + timedelta(days=duree_recolte),
+                    SOURCE_REELLE,
+                )
+            )
+        return etapes
+
+    # Semis en place : on va du semis a la recolte sans repiquage.
+    jours_recolte = cycle.get("jours_semis_a_recolte") or cycle.get(
+        "jours_plantation_a_recolte"
+    )
+    if jours_recolte:
+        debut_recolte = jour_semis + timedelta(days=int(jours_recolte))
+        etapes.append(
+            Etape(
+                ETAPE_RECOLTE,
+                debut_recolte,
+                debut_recolte + timedelta(days=duree_recolte),
+                SOURCE_REELLE,
+            )
+        )
+    return etapes
+
+
+def _chaine_depuis_mise_en_place(culture: dict, jour: date) -> list[Etape]:
+    cycle = _cycle(culture)
+    jours_recolte = cycle.get("jours_plantation_a_recolte")
+    if not jours_recolte:
+        return []
+    duree = int(cycle.get("duree_recolte_jours", DUREE_FENETRE_DEFAUT))
+    debut = jour + timedelta(days=int(jours_recolte))
+    return [Etape(ETAPE_RECOLTE, debut, debut + timedelta(days=duree), SOURCE_REELLE)]
+
+
+def prochaines_etapes(
+    culture: dict,
+    plante: dict,
+    gelees: Gelees,
+    decalage_zone: int = 0,
+    aujourdhui: date | None = None,
+) -> list[Etape]:
+    """Etapes a venir ou en cours, triees, la plus urgente d'abord.
+
+    Les fenetres deja fermees sont ecartees. Pour une plante encore au stade
+    'prevu' on produit l'annee en cours et la suivante : sans cela un potager
+    consulte en decembre n'afficherait plus rien.
+    """
+    aujourdhui = aujourdhui or date.today()
+    evenements = plante.get("evenements") or []
+    phase = phase_depuis_evenements(evenements)
+
+    if phase in PHASES_FINALES:
+        return []
+
+    perenne = bool(culture.get("perenne"))
+
+    if phase == PHASE_PREVU:
+        etapes = fenetres_theoriques(
+            culture, gelees, decalage_zone, aujourdhui.year
+        ) + fenetres_theoriques(culture, gelees, decalage_zone, aujourdhui.year + 1)
+        return _a_venir(etapes, aujourdhui)
+
+    if perenne:
+        # Un pommier plante ne se resseme pas : sa recolte revient chaque annee
+        # sur sa fenetre saisonniere, et seule la recolte nous interesse encore.
+        etapes = [
+            etape
+            for annee in (aujourdhui.year, aujourdhui.year + 1)
+            for etape in fenetres_theoriques(culture, gelees, decalage_zone, annee)
+            if etape.type == ETAPE_RECOLTE
+        ]
+        return _a_venir(etapes, aujourdhui)
+
+    if phase == PHASE_SEME:
+        jour_semis = date_evenement(evenements, EVT_SEME)
+        direct = mode_semis(evenements) != MODE_SEMIS_INTERIEUR
+        etapes = _chaine_depuis_semis(culture, jour_semis, direct)
+        return _a_venir(etapes, aujourdhui)
+
+    if phase == PHASE_PLANTE:
+        jour = date_mise_en_place(evenements)
+        return _a_venir(_chaine_depuis_mise_en_place(culture, jour), aujourdhui)
+
+    if phase == PHASE_EN_RECOLTE:
+        # La recolte a commence : la fenetre court depuis la premiere recolte
+        # reelle, et c'est elle qu'on continue d'afficher.
+        premiere = parse_date(recoltes(evenements)[0]["date"])
+        duree = int(_cycle(culture).get("duree_recolte_jours", DUREE_FENETRE_DEFAUT))
+        fin = premiere + timedelta(days=duree)
+        if fin < aujourdhui:
+            return []
+        return [Etape(ETAPE_RECOLTE, premiere, fin, SOURCE_REELLE)]
+
+    return []
+
+
+def prochaine_etape(
+    culture: dict,
+    plante: dict,
+    gelees: Gelees,
+    decalage_zone: int = 0,
+    aujourdhui: date | None = None,
+) -> Etape | None:
+    etapes = prochaines_etapes(culture, plante, gelees, decalage_zone, aujourdhui)
+    return etapes[0] if etapes else None
+
+
+def etapes_reelles(plante: dict) -> list[tuple[str, date]]:
+    """Les faits du journal, pour l'historique du calendrier."""
+    faits: list[tuple[str, date]] = []
+    for evt in plante.get("evenements") or []:
+        type_evt = evt.get("type")
+        if type_evt:
+            faits.append((type_evt, parse_date(evt["date"])))
+    return faits
+
+
+# --- Tri et filtrage ----------------------------------------------------------
+
+
+def trier(etapes: list[Etape]) -> list[Etape]:
+    ordre = {type_etape: rang for rang, type_etape in enumerate(ORDRE_ETAPES)}
+    return sorted(etapes, key=lambda e: (e.debut, ordre.get(e.type, 99)))
+
+
+def _a_venir(etapes: list[Etape], aujourdhui: date) -> list[Etape]:
+    return trier([etape for etape in etapes if etape.fin >= aujourdhui])
