@@ -7,7 +7,7 @@ from pathlib import Path
 
 import voluptuous as vol
 
-from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components import panel_custom
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

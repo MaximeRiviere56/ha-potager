@@ -11,8 +11,7 @@ from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import PotagerCoordinator, etape_en_dict, libelle_phase
+from .coordinator import PotagerCoordinator, libelle_phase
 from .entity import PotagerEntity, PotagerPlanteEntity, suivre_les_plantes
 from .lifecycle import PHASES_LIBELLES
 
