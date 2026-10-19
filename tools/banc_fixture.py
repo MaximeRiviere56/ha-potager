@@ -180,6 +180,78 @@ def main() -> None:
         "categories": cat.categories(),
         "total": len(cat.toutes()),
     }
+    reglages = {
+        "options": {
+            "preset_climat": "oceanique",
+            "gelees_derniere": GELEES.derniere,
+            "gelees_premiere": GELEES.premiere,
+            "notify_targets": ["notify.mobile_app_fairphone_6"],
+            "notify_heure": "08:00:00",
+            "rappel_jours": 3,
+            "notify_etapes": [
+                "semis_interieur", "semis_direct", "repiquage", "plantation", "recolte",
+            ],
+            "notify_resume": False,
+            "notify_recolte_recurrence": 2,
+            "masquer_terminees": False,
+        },
+        "cibles_possibles": [
+            {"value": "notify.mobile_app_fairphone_6", "label": "Fairphone 6", "mobile": True},
+            {"value": "notify.mobile_app_maxime", "label": "Maxime", "mobile": True},
+            {"value": "persistent_notification",
+             "label": "Notification dans Home Assistant", "mobile": False},
+        ],
+        "presets": {},
+        "etapes_notifiables": [
+            "semis_interieur", "semis_direct", "repiquage", "plantation", "recolte",
+        ],
+    }
+
+    cultures_perso = {
+        "cultures": [
+            {
+                "id": "perso-chou-rave", "nom": "Chou-rave", "emoji": "🥬",
+                "categorie": "legume-feuille", "famille": "Brassicacées",
+                "difficulte": 1, "exposition": "plein-soleil",
+                "arrosage": {"besoin": "moyen", "frequence_jours": 3, "notes": ""},
+                "sol": "ordinaire", "espacement_cm": 25,
+                "rusticite": {"gel": True, "temp_min_c": None}, "perso": True,
+                "fenetres": {
+                    "semis_direct": {"ancrage": "date_fixe", "date": "03-01",
+                                     "duree_jours": 120}
+                },
+                "cycle": {"jours_semis_a_recolte": 70, "duree_recolte_jours": 30},
+                "associations": {"aime": [], "evite": []}, "conseils": [],
+            }
+        ]
+    }
+
+    # Le calendrier : fenetres theoriques de l'annee, et etapes reelles.
+    lignes = []
+    for plante in plantes:
+        zone = next(z for z in ZONES if z["id"] == plante["zone"]["id"])
+        fiche_culture = cat.culture(plante["culture_id"])
+        lignes.append(
+            {
+                "uid": plante["uid"],
+                "nom": plante["nom"],
+                "emoji": plante["emoji"],
+                "zone": plante["zone"]["nom"],
+                "prevues": [
+                    etape_dict(e)
+                    for e in ph.fenetres_theoriques(
+                        fiche_culture, GELEES, zone["decalage_jours"], AUJ.year
+                    )
+                ],
+                "reelles": [e for e in plante["etapes"] if e["reelle"]],
+                "evenements": [
+                    evt for evt in plante["evenements"]
+                    if evt["date"][:4] == str(AUJ.year)
+                ],
+            }
+        )
+    calendrier = {"annee": AUJ.year, "lignes": lignes}
+
     tomate = cat.culture("tomate")
     fiche = {
         "culture": tomate,
@@ -198,6 +270,9 @@ def main() -> None:
         f'      "potager/jardin": {json.dumps(jardin, ensure_ascii=False)},\n'
         f'      "potager/catalogue": {json.dumps(catalogue, ensure_ascii=False)},\n'
         f'      "potager/culture": {json.dumps(fiche, ensure_ascii=False)},\n'
+        f'      "potager/reglages": {json.dumps(reglages, ensure_ascii=False)},\n'
+        f'      "potager/cultures_perso": {json.dumps(cultures_perso, ensure_ascii=False)},\n'
+        f'      "potager/calendrier": {json.dumps(calendrier, ensure_ascii=False)},\n'
         "    };\n"
         '    if (!(msg.type in reponses)) throw new Error("commande non simulee : " + msg.type);\n'
         "    return reponses[msg.type];\n  },\n};\n",

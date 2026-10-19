@@ -160,7 +160,15 @@ class PotagerOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         if user_input is not None:
-            return self.async_create_entry(data=_appliquer_preset(dict(user_input)))
+            # Fusion, et non remplacement : ce formulaire ne connait que les
+            # reglages d'origine. Le panneau en gere d'autres (granularite des
+            # rappels, affichage), qu'un passage par « Configurer » effacerait
+            # s'il ecrivait seulement ses propres champs.
+            fusion = {
+                **self.config_entry.options,
+                **_appliquer_preset(dict(user_input)),
+            }
+            return self.async_create_entry(data=fusion)
 
         return self.async_show_form(
             step_id="init",

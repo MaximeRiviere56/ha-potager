@@ -17,15 +17,23 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import catalog
+from .catalog import Catalogue
 from .const import (
     CONF_GELEES_DERNIERE,
     CONF_GELEES_PREMIERE,
+    CONF_MASQUER_TERMINEES,
+    CONF_NOTIFY_ETAPES,
+    CONF_NOTIFY_RECOLTE_RECURRENCE,
+    CONF_NOTIFY_RESUME,
     CONF_RAPPEL_JOURS,
     DEFAUT_GELEES_DERNIERE,
     DEFAUT_GELEES_PREMIERE,
+    DEFAUT_MASQUER_TERMINEES,
+    DEFAUT_NOTIFY_RECOLTE_RECURRENCE,
+    DEFAUT_NOTIFY_RESUME,
     DEFAUT_RAPPEL_JOURS,
     DOMAIN,
+    ETAPES_NOTIFIABLES,
 )
 from .lifecycle import PHASES_LIBELLES, resume as resume_journal
 from .phenology import Gelees, prochaines_etapes
@@ -51,6 +59,16 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.entry = entry
         self.store = store
+        self._catalogue = Catalogue(store.cultures_perso)
+
+    @property
+    def catalogue(self) -> Catalogue:
+        """Fiches livrees et fiches personnelles, vues comme un seul catalogue."""
+        return self._catalogue
+
+    def recharger_catalogue(self) -> None:
+        """A appeler apres toute modification des fiches personnelles."""
+        self._catalogue = Catalogue(self.store.cultures_perso)
 
     # --- Options -------------------------------------------------------------
 
@@ -65,6 +83,33 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @property
     def rappel_jours(self) -> int:
         return int(self.entry.options.get(CONF_RAPPEL_JOURS, DEFAUT_RAPPEL_JOURS))
+
+    @property
+    def etapes_notifiables(self) -> list[str]:
+        """Types d'etapes pour lesquels un rappel part. Tout, par defaut :
+        mieux vaut desactiver ce qui derange que decouvrir en juillet qu'un
+        rappel n'est jamais parti."""
+        choix = self.entry.options.get(CONF_NOTIFY_ETAPES)
+        return list(choix) if choix is not None else list(ETAPES_NOTIFIABLES)
+
+    @property
+    def notify_resume(self) -> bool:
+        return bool(self.entry.options.get(CONF_NOTIFY_RESUME, DEFAUT_NOTIFY_RESUME))
+
+    @property
+    def recolte_recurrence(self) -> int:
+        """Relance pendant la fenetre de recolte, en jours. 0 = une seule fois."""
+        return int(
+            self.entry.options.get(
+                CONF_NOTIFY_RECOLTE_RECURRENCE, DEFAUT_NOTIFY_RECOLTE_RECURRENCE
+            )
+        )
+
+    @property
+    def masquer_terminees(self) -> bool:
+        return bool(
+            self.entry.options.get(CONF_MASQUER_TERMINEES, DEFAUT_MASQUER_TERMINEES)
+        )
 
     def rappel_pour(self, plante: dict) -> int:
         """Le reglage de la plante prime sur le reglage global."""
@@ -85,7 +130,7 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         for brute in self.store.plantes:
             uid = brute["uid"]
-            fiche = catalog.culture(brute["culture_id"])
+            fiche = self._catalogue.culture(brute["culture_id"])
             if fiche is None:
                 _LOGGER.warning(
                     "Culture absente du catalogue, plante ignoree : %s",

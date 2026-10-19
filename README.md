@@ -1,5 +1,7 @@
 # Mon Potager
 
+[![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-potager&category=integration)
+
 Une intégration Home Assistant pour gérer un potager : choisir ses légumes dans
 un catalogue de 108 cultures, les suivre dans un jardin virtuel, et recevoir au
 bon moment un rappel pour semer, repiquer ou récolter.
@@ -11,8 +13,8 @@ bon moment un rappel pour semer, repiquer ou récolter.
 
 ## Ce que ça donne
 
-**Un panneau « Mon Potager » dans la barre latérale**, avec cinq vues :
-Aujourd'hui, Mon potager, Catalogue, Calendrier, Journal.
+**Un panneau « Mon Potager » dans la barre latérale**, avec six vues :
+Aujourd'hui, Mon potager, Catalogue, Calendrier, Journal et Réglages.
 
 **Des entités** pour vos tableaux de bord et vos automatisations :
 
@@ -52,14 +54,25 @@ défait la dernière entrée — on se trompe toujours une fois.
 
 ## Installation
 
-### Par HACS (recommandé)
+### En un clic
+
+[![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-potager&category=integration)
+
+Ce bouton ouvre HACS sur votre propre instance avec le dépôt déjà renseigné :
+il ne reste qu'à télécharger, redémarrer, puis ajouter l'intégration.
+
+> Il s'appuie sur [My Home Assistant](https://my.home-assistant.io/). Au premier
+> usage, votre navigateur vous demandera l'adresse de votre instance ; elle
+> reste stockée dans ce navigateur et n'est transmise à personne.
+
+### À la main, dans HACS
 
 1. HACS → menu ⋮ → **Dépôts personnalisés**
 2. URL `https://github.com/MaximeRiviere56/ha-potager`, catégorie **Integration**
 3. Installer **Mon Potager**, puis redémarrer Home Assistant
 4. **Paramètres → Appareils et services → Ajouter une intégration → Mon Potager**
 
-### À la main
+### Sans HACS
 
 Copier `custom_components/potager/` dans le dossier `config/` de Home
 Assistant, redémarrer, puis ajouter l'intégration.
@@ -78,7 +91,68 @@ titre: Au potager
 max: 5
 ```
 
-## Configuration
+## Réglages
+
+Tout se règle depuis l'onglet **Réglages** du panneau, sans passer par les
+pages de configuration de Home Assistant.
+
+### Saison et gelées
+
+Les deux dates qui calent **tout** le calendrier. Un préréglage climatique
+(Ouest océanique, Nord et Est, Midi, Montagne) les remplit, ou vous saisissez
+les vôtres. Les modifier redessine immédiatement les 108 fiches.
+
+### Rappels
+
+Quatre niveaux de granularité, du plus large au plus fin :
+
+| Niveau | Réglage |
+|---|---|
+| **À qui** | les applications mobiles qui reçoivent les rappels, et/ou une notification interne à Home Assistant |
+| **Quoi** | quelles étapes méritent un rappel — semis à l'abri, semis en place, repiquage, plantation, récolte |
+| **Quand** | l'heure de la vérification, le délai d'anticipation, et la relance pendant la récolte |
+| **Comment** | un message par plante, ou un seul message groupé |
+
+Deux réglages méritent un mot.
+
+**La relance de récolte.** Une courgette se cueille tous les deux jours :
+prévenir une seule fois ne sert à rien. Mettez 2 et le rappel revient tant que
+la fenêtre est ouverte. À 0, un unique rappel par récolte.
+
+**Le message groupé.** Au printemps, cinq rappels le même matin sont cinq
+rappels qu'on balaie sans lire. Le revers : un message groupé ne peut pas
+porter de bouton « C'est fait », puisqu'il faudrait deviner de quelle plante
+il s'agit.
+
+Au-dessous, chaque plante garde son propre interrupteur de rappels et peut
+avoir son propre délai, dans sa fiche.
+
+### Zones
+
+Pleine terre, serre, châssis, balcon — ajoutez, renommez, supprimez. Chacune
+porte un décalage en jours qui avance ou retarde tout le calendrier de ses
+plantes. Il ne s'applique **jamais** à une date de votre journal : un fait
+n'est pas une prévision.
+
+### Mes fiches
+
+Le catalogue livré ne contiendra jamais votre variété locale. Ajoutez-la :
+nom, catégorie, exposition, eau, périodes **en mois** (comme sur un sachet de
+graines) et durées du cycle. Ce sont ces durées qui permettent ensuite de
+recalculer la récolte depuis votre date réelle de semis.
+
+Vos fiches sont conservées dans le stockage de votre jardin, pas dans le
+fichier livré : **une mise à jour de l'intégration ne les efface pas.** Elles
+apparaissent dans le catalogue au milieu des autres, et une fiche utilisée par
+une plante du jardin ne peut pas être supprimée par mégarde.
+
+### Affichage
+
+Masquer ou non les plantes terminées et perdues dans « Mon potager ». Elles
+restent dans le journal et le calendrier : c'est l'historique du potager, il
+ne s'efface pas.
+
+## Configuration initiale
 
 Deux réglages comptent vraiment.
 
@@ -93,14 +167,7 @@ le calendrier juste chez vous, et pas seulement en moyenne nationale.
 les services `notify.mobile_app_*` transportent des boutons d'action, et c'est
 le bouton « C'est fait » qui remplit votre journal sans effort.
 
-### Les zones
-
-Pleine terre, serre, châssis, balcon — chacune porte un décalage en jours
-(la serre prend trois semaines d'avance par défaut) qui avance ou retarde tout
-le calendrier des plantes qui s'y trouvent.
-
-Le décalage ne s'applique **jamais** à une date du journal : une date réelle est
-un fait, pas une prévision.
+Tout cela se modifie ensuite depuis l'onglet **Réglages** du panneau.
 
 ## Le catalogue
 
@@ -110,7 +177,8 @@ l'exposition, les besoins en eau, le sol, l'espacement, la rusticité, les bons
 et mauvais voisins, des conseils, et ses fenêtres culturales.
 
 Le catalogue est **embarqué** : aucune API, aucun compte, aucun service externe
-susceptible de disparaître. Les API publiques du domaine ont d'ailleurs mal
+susceptible de disparaître. Il est extensible depuis le panneau (voir
+[Mes fiches](#mes-fiches)). Les API publiques du domaine ont d'ailleurs mal
 vieilli — OpenFarm est mort, Growstuff n'a jamais eu d'API officielle, et
 Permapeople ne fournit pas de calendrier de semis.
 
@@ -146,7 +214,7 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 ## Développement
 
 ```bash
-python3 -m unittest discover -s tests -p 'test_*.py'   # 52 tests, sans dépendance
+python3 -m unittest discover -s tests -p 'test_*.py'   # 62 tests, sans dépendance
 ```
 
 `lifecycle.py` (le journal) et `phenology.py` (le calcul des étapes) n'importent

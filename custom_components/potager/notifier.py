@@ -39,7 +39,7 @@ from .lifecycle import (
 )
 from .phenology import (
     ETAPE_PLANTATION,
-    ETAPE_RECOLTE,
+        ETAPE_RECOLTE,
     ETAPE_REPIQUAGE,
     ETAPE_SEMIS_DIRECT,
     ETAPE_SEMIS_INTERIEUR,
@@ -116,7 +116,12 @@ class PotagerNotifier:
 
         # Rafraichissement certain avant de decider des envois du jour.
         await self.coordinator.async_refresh()
-        aujourdhui = date.today().isoformat()
+        aujourdhui = date.today()
+        aujourdhui_iso = aujourdhui.isoformat()
+        etapes_voulues = set(self.coordinator.etapes_notifiables)
+        recurrence = self.coordinator.recolte_recurrence
+
+        a_envoyer: list[dict] = []
 
         for action in self.coordinator.data["actions"]:
             entree = self.coordinator.data["plantes"].get(action["uid"])
@@ -124,16 +129,69 @@ class PotagerNotifier:
                 continue
 
             etape = action["etape"]
-            cle_occurrence = f"{action['uid']}:{etape.type}:{etape.debut.isoformat()}"
+            if etape.type not in etapes_voulues:
+                continue
+
             cle_report = f"{action['uid']}:{etape.type}"
-
-            if self.coordinator.store.notif_deja_envoyee(cle_occurrence):
-                continue
-            if self.coordinator.store.report_en_cours(cle_report, aujourdhui):
+            if self.coordinator.store.report_en_cours(cle_report, aujourdhui_iso):
                 continue
 
-            await self._async_envoyer(cibles, action)
-            self.coordinator.store.marquer_notif_envoyee(cle_occurrence, aujourdhui)
+            cle = f"{action['uid']}:{etape.type}:{etape.debut.isoformat()}"
+            dernier = self.coordinator.store.dernier_envoi(cle)
+
+            if dernier is not None:
+                # Une recolte se relance : une courgette se cueille tous les
+                # deux jours, prevenir une seule fois ne sert a rien. Les
+                # autres etapes ne se repetent pas.
+                if not (
+                    recurrence
+                    and etape.type == ETAPE_RECOLTE
+                    and action["en_cours"]
+                    and (aujourdhui - date.fromisoformat(dernier)).days >= recurrence
+                ):
+                    continue
+
+            a_envoyer.append(action)
+            self.coordinator.store.marquer_notif_envoyee(cle, aujourdhui_iso)
+
+        if not a_envoyer:
+            return
+
+        if self.coordinator.notify_resume and len(a_envoyer) > 1:
+            await self._async_envoyer_resume(cibles, a_envoyer)
+        else:
+            for action in a_envoyer:
+                await self._async_envoyer(cibles, action)
+
+    async def _async_envoyer_resume(
+        self, cibles: list[str], actions: list[dict]
+    ) -> None:
+        """Un seul message pour toute la journee.
+
+        Au printemps, cinq rappels le meme matin sont cinq rappels qu'on
+        balaie sans lire. Le resume n'a pas de bouton d'action : il y a
+        plusieurs plantes, et deviner laquelle serait pire que rien.
+        """
+        lignes = [
+            f"{a['emoji']} {VERBES.get(a['etape'].type, a['etape'].libelle)} : "
+            f"{a['nom']} ({a['zone']})"
+            for a in actions
+        ]
+        charge: dict[str, Any] = {
+            "title": f"🌱 {len(actions)} choses à faire au potager",
+            "message": "\n".join(lignes),
+        }
+        for cible in cibles:
+            service = cible.split(".", 1)[-1]
+            donnees = dict(charge)
+            if service != "persistent_notification":
+                donnees["data"] = {"tag": f"{DOMAIN}_resume", "group": DOMAIN}
+            try:
+                await self.hass.services.async_call(
+                    "notify", service, donnees, blocking=False
+                )
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Echec du résumé vers notify.%s", service)
 
     async def _async_envoyer(self, cibles: list[str], action: dict) -> None:
         etape = action["etape"]

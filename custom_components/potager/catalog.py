@@ -105,3 +105,153 @@ def info_minimale(fiche: dict) -> dict[str, Any]:
         "perenne": bool(fiche.get("perenne")),
         "arrosage": fiche["arrosage"],
     }
+
+
+# --- Catalogue personnel ------------------------------------------------------
+#
+# Les fiches ajoutees par l'utilisateur vivent dans le stockage du jardin, pas
+# dans le fichier livre : une mise a jour de l'integration ne doit jamais les
+# effacer. Elles sont fusionnees au chargement, et leur id porte un prefixe
+# pour qu'elles ne puissent pas masquer une fiche d'origine.
+
+CATEGORIES_VALIDES = {
+    "legume-fruit", "legume-racine", "legume-gousse", "legume-bulbe",
+    "legume-feuille", "aromatique", "petit-fruit", "fruitier", "fleur-compagne",
+}
+EXPOSITIONS_VALIDES = {"plein-soleil", "mi-ombre", "ombre"}
+BESOINS_EAU_VALIDES = {"faible", "moyen", "eleve"}
+
+MOIS_NOMS = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+]
+
+
+def slug(texte: str) -> str:
+    """Identifiant stable derive du nom, sans accent ni espace."""
+    base = _sans_accents(texte).strip().lower()
+    garde = [c if c.isalnum() else "-" for c in base]
+    morceaux = "".join(garde).split("-")
+    return "-".join(m for m in morceaux if m) or "culture"
+
+
+def fenetre_par_mois(mois_debut: int, mois_fin: int) -> dict:
+    """Transforme « de mars à juillet » en fenetre exploitable par le moteur.
+
+    Les fiches livrees sont ancrees aux gelees locales, ce qui les rend justes
+    partout. Demander cela a quelqu'un qui saisit une fiche a la main serait
+    absurde : on prend des mois, donc un ancrage a date fixe. C'est moins
+    savant, mais c'est ce que les sachets de graines indiquent.
+    """
+    mois_debut = max(1, min(12, int(mois_debut)))
+    mois_fin = max(1, min(12, int(mois_fin)))
+    duree = (mois_fin - mois_debut) % 12
+    # Un mois unique couvre tout de meme le mois entier.
+    jours = (duree + 1) * 30 if duree or mois_debut == mois_fin else 30
+    return {
+        "ancrage": "date_fixe",
+        "date": f"{mois_debut:02d}-01",
+        "duree_jours": jours,
+    }
+
+
+def valider_fiche(fiche: dict) -> list[str]:
+    """Problemes empechant une fiche personnelle de fonctionner.
+
+    Volontairement plus souple que la validation du catalogue livre : on
+    verifie ce sans quoi le moteur ne saurait rien calculer, pas la qualite
+    agronomique de la saisie.
+    """
+    soucis: list[str] = []
+
+    if not (fiche.get("nom") or "").strip():
+        soucis.append("Le nom est obligatoire.")
+    if fiche.get("categorie") not in CATEGORIES_VALIDES:
+        soucis.append("Catégorie inconnue.")
+    if fiche.get("exposition") not in EXPOSITIONS_VALIDES:
+        soucis.append("Exposition inconnue.")
+    if (fiche.get("arrosage") or {}).get("besoin") not in BESOINS_EAU_VALIDES:
+        soucis.append("Besoin en eau inconnu.")
+    if not isinstance((fiche.get("rusticite") or {}).get("gel"), bool):
+        soucis.append("Indiquez si la culture craint le gel.")
+
+    fenetres = fiche.get("fenetres") or {}
+    if not fenetres:
+        soucis.append("Indiquez au moins une période de semis ou de plantation.")
+
+    cycle = fiche.get("cycle") or {}
+    recolte_calculable = (
+        "recolte" in fenetres
+        or ("plantation" in fenetres and cycle.get("jours_plantation_a_recolte"))
+        or (
+            ("semis_direct" in fenetres or "semis_interieur" in fenetres)
+            and cycle.get("jours_semis_a_recolte")
+        )
+    )
+    if not recolte_calculable:
+        soucis.append(
+            "Impossible de calculer une récolte : indiquez une période de "
+            "récolte, ou le nombre de jours entre la mise en terre et la récolte."
+        )
+
+    return soucis
+
+
+class Catalogue:
+    """Vue fusionnee des fiches livrees et des fiches personnelles."""
+
+    def __init__(self, perso: list[dict] | None = None) -> None:
+        self._index = dict(charger())
+        for fiche in perso or []:
+            self._index[fiche["id"]] = fiche
+
+    def culture(self, culture_id: str) -> dict | None:
+        return self._index.get(culture_id)
+
+    def toutes(self) -> list[dict]:
+        return sorted(self._index.values(), key=lambda c: c["nom"])
+
+    def categories(self) -> list[str]:
+        return sorted({c["categorie"] for c in self._index.values()})
+
+    def perso(self) -> list[dict]:
+        return sorted(
+            (c for c in self._index.values() if c.get("perso")),
+            key=lambda c: c["nom"],
+        )
+
+    def rechercher(self, requete: str = "", **filtres) -> list[dict]:
+        resultats = self.toutes()
+        if requete:
+            terme = _sans_accents(requete.strip())
+            resultats = [
+                c
+                for c in resultats
+                if terme in _sans_accents(c["nom"])
+                or terme in _sans_accents(c.get("nom_scientifique") or "")
+                or terme in _sans_accents(c.get("famille") or "")
+            ]
+        if filtres.get("categorie"):
+            resultats = [c for c in resultats if c["categorie"] == filtres["categorie"]]
+        if filtres.get("exposition"):
+            resultats = [
+                c for c in resultats if c["exposition"] == filtres["exposition"]
+            ]
+        if filtres.get("difficulte_max") is not None:
+            resultats = [
+                c for c in resultats if c["difficulte"] <= filtres["difficulte_max"]
+            ]
+        return resultats
+
+    def compagnes(self, culture_id: str) -> dict[str, list[dict]]:
+        fiche = self.culture(culture_id)
+        if not fiche:
+            return {"aime": [], "evite": []}
+        return {
+            cle: [
+                self._index[autre]
+                for autre in (fiche.get("associations") or {}).get(cle, [])
+                if autre in self._index
+            ]
+            for cle in ("aime", "evite")
+        }

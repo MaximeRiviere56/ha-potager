@@ -15,6 +15,7 @@ const VUES = [
   { id: "catalogue", nom: "Catalogue", icone: "mdi:book-open-variant" },
   { id: "calendrier", nom: "Calendrier", icone: "mdi:calendar-month" },
   { id: "journal", nom: "Journal", icone: "mdi:notebook-outline" },
+  { id: "reglages", nom: "Réglages", icone: "mdi:cog-outline" },
 ];
 
 const CATEGORIES = {
@@ -77,6 +78,51 @@ const fmtLong = (iso) =>
   jour(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const kg = (grammes) =>
   grammes >= 1000 ? `${(grammes / 1000).toFixed(grammes % 1000 ? 2 : 0)} kg` : `${grammes} g`;
+
+/** Identifiant stable derive d'un nom saisi, pour les zones. */
+function slugifier(texte) {
+  return (
+    texte
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "zone"
+  );
+}
+
+/** Refait le chemin inverse du serveur : une fiche stockee redevient les
+ *  champs du formulaire, pour pouvoir la modifier. */
+function _versFormulaire(fiche) {
+  const periodes = {};
+  for (const [cle, f] of Object.entries(fiche.fenetres || {})) {
+    if (!f.date) continue;
+    const debut = Number(f.date.slice(0, 2));
+    const mois = Math.max(1, Math.round((f.duree_jours || 30) / 30));
+    periodes[cle] = { debut, fin: ((debut - 1 + mois - 1) % 12) + 1 };
+  }
+  const cycle = fiche.cycle || {};
+  return {
+    id: fiche.id,
+    nom: fiche.nom,
+    emoji: fiche.emoji,
+    categorie: fiche.categorie,
+    famille: fiche.famille,
+    exposition: fiche.exposition,
+    arrosage: fiche.arrosage,
+    sol: fiche.sol,
+    espacement_cm: fiche.espacement_cm,
+    difficulte: fiche.difficulte,
+    gel: (fiche.rusticite || {}).gel !== false,
+    perenne: !!fiche.perenne,
+    periodes,
+    jours_semis_a_recolte: cycle.jours_semis_a_recolte,
+    jours_semis_a_repiquage: cycle.jours_semis_a_repiquage,
+    jours_plantation_a_recolte: cycle.jours_plantation_a_recolte,
+    duree_recolte_jours: cycle.duree_recolte_jours,
+    conseils: fiche.conseils || [],
+  };
+}
 
 function echappe(texte) {
   const div = document.createElement("div");
@@ -302,6 +348,30 @@ const STYLES = `
   }
   .actions-fiche { display: flex; flex-wrap: wrap; gap: 8px; }
 
+  .aide {
+    font-size: 13px; line-height: 1.5; color: var(--secondary-text-color);
+    margin: 10px 0 0;
+  }
+  .bloc > .aide:first-child { margin-top: 0; margin-bottom: 12px; }
+  label.case {
+    display: flex; align-items: flex-start; gap: 10px; padding: 7px 0;
+    font-size: 14px; cursor: pointer;
+  }
+  label.case input { width: 18px; height: 18px; flex: 0 0 auto; margin-top: 1px; }
+  .ligne-zone {
+    display: flex; align-items: center; gap: 8px; padding: 6px 0;
+    border-bottom: 1px solid var(--divider-color);
+  }
+  .ligne-zone:last-child { border-bottom: 0; }
+  .ligne-zone .zone-nom { flex: 1; min-width: 0; }
+  .ligne-zone input, .ligne-zone select, .reglage textarea {
+    border: 1px solid var(--divider-color); border-radius: 8px; padding: 7px 10px;
+    background: var(--card-background-color); color: var(--primary-text-color);
+    font-family: inherit; font-size: 14px;
+  }
+  .reglage > span { display: flex; align-items: center; gap: 6px; font-size: 14px;
+                    color: var(--secondary-text-color); }
+
   .erreur {
     background: color-mix(in srgb, var(--error-color) 15%, transparent);
     color: var(--error-color); padding: 12px 14px; border-radius: var(--potager-rayon);
@@ -334,6 +404,9 @@ class PotagerPanel extends HTMLElement {
     this._anneeCal = new Date().getFullYear();
     this._signature = null;
     this._rendu = false;
+    this._reglages = null;
+    this._cataloguePerso = null;
+    this._calendrier = null;
   }
 
   /** Home Assistant pousse un nouvel objet `hass` a chaque changement d'etat.
@@ -374,12 +447,18 @@ class PotagerPanel extends HTMLElement {
   async _charger({ discret = false } = {}) {
     if (!discret) this._chargement = true;
     try {
-      const [jardin, catalogue] = await Promise.all([
+      const [jardin, catalogue, reglages, perso, calendrier] = await Promise.all([
         this._hass.callWS({ type: "potager/jardin" }),
         this._hass.callWS({ type: "potager/catalogue" }),
+        this._hass.callWS({ type: "potager/reglages" }),
+        this._hass.callWS({ type: "potager/cultures_perso" }),
+        this._hass.callWS({ type: "potager/calendrier", annee: this._anneeCal }),
       ]);
       this._jardin = jardin;
       this._catalogue = catalogue;
+      this._reglages = reglages;
+      this._cataloguePerso = perso.cultures;
+      this._calendrier = calendrier;
       this._erreur = null;
       this._signature = this._signatureEtat();
     } catch (err) {
@@ -472,6 +551,7 @@ class PotagerPanel extends HTMLElement {
       catalogue: () => this._vueCatalogue(),
       calendrier: () => this._vueCalendrier(),
       journal: () => this._vueJournal(),
+      reglages: () => this._vueReglages(),
     };
     hote.innerHTML = banniere + (vues[this._vue] || vues.aujourdhui)();
     this._brancherVue(hote);
@@ -612,7 +692,10 @@ class PotagerPanel extends HTMLElement {
   // --- Vue : Mon potager ---------------------------------------------------
 
   _vuePotager() {
-    const plantes = this._jardin?.plantes || [];
+    const toutes = this._jardin?.plantes || [];
+    const plantes = this._reglages?.options?.masquer_terminees
+      ? toutes.filter((p) => !["termine", "perdu"].includes(p.phase))
+      : toutes;
     if (!plantes.length) {
       return `<div class="vide">
           <div class="gros">🪴</div>
@@ -796,13 +879,13 @@ class PotagerPanel extends HTMLElement {
   // --- Vue : Calendrier ----------------------------------------------------
 
   _vueCalendrier() {
-    const plantes = this._jardin?.plantes || [];
-    if (!plantes.length) {
+    const lignes = this._calendrier?.lignes || [];
+    if (!lignes.length) {
       return `<div class="vide"><div class="gros">📅</div>
         <p>Le calendrier se remplira dès que vous aurez ajouté des cultures.</p></div>`;
     }
 
-    const annee = this._anneeCal;
+    const annee = this._calendrier.annee;
     const debutAnnee = new Date(annee, 0, 1).getTime();
     const finAnnee = new Date(annee + 1, 0, 1).getTime();
     const duree = finAnnee - debutAnnee;
@@ -817,35 +900,49 @@ class PotagerPanel extends HTMLElement {
           }%"></div>`
         : "";
 
-    const lignes = plantes
-      .map((plante) => {
-        const bandes = (plante.etapes || [])
-          .filter((e) => jour(e.fin).getTime() >= debutAnnee && jour(e.debut).getTime() < finAnnee)
-          .map((e) => {
-            const gauche = position(e.debut);
-            const largeur = Math.max(1.2, position(e.fin) - gauche);
-            return `<div class="cal-bande ${e.reelle ? "" : "prevue"}"
-              style="left:${gauche}%;width:${largeur}%;background:${
-              COULEURS_ETAPE[e.type] || "var(--primary-color)"
-            }"
-              title="${echappe(e.libelle)} : ${fmtCourt(e.debut)} → ${fmtCourt(e.fin)}"></div>`;
-          })
-          .join("");
+    const bande = (e, reelle) => {
+      const gauche = position(e.debut);
+      const largeur = Math.max(1.2, position(e.fin) - gauche);
+      return `<div class="cal-bande ${reelle ? "" : "prevue"}"
+        style="left:${gauche}%;width:${largeur}%;background:${
+        COULEURS_ETAPE[e.type] || "var(--primary-color)"
+      }"
+        title="${echappe(e.libelle)} : ${fmtCourt(e.debut)} → ${fmtCourt(e.fin)}${
+        reelle ? " (d'après votre journal)" : " (prévu)"
+      }"></div>`;
+    };
 
-        const faits = (plante.evenements || [])
-          .filter((evt) => evt.date.startsWith(String(annee)))
+    const corps = lignes
+      .map((ligne) => {
+        // Le réel recouvre le prévu : une étape notée au journal remplace la
+        // moyenne saisonnière, elle ne s'y ajoute pas.
+        const typesReels = new Set((ligne.reelles || []).map((e) => e.type));
+        const prevues = (ligne.prevues || [])
+          .filter((e) => !typesReels.has(e.type))
+          .map((e) => bande(e, false))
+          .join("");
+        const reelles = (ligne.reelles || [])
+          .filter(
+            (e) =>
+              jour(e.fin).getTime() >= debutAnnee &&
+              jour(e.debut).getTime() < finAnnee
+          )
+          .map((e) => bande(e, true))
+          .join("");
+        const faits = (ligne.evenements || [])
           .map(
             (evt) => `<div class="cal-bande"
-              style="left:${position(evt.date)}%;width:1.2%;background:var(--primary-text-color)"
-              title="${echappe(evt.libelle)} le ${fmtCourt(evt.date)}"></div>`
+              style="left:${position(evt.date)}%;width:1.2%;
+                     background:var(--primary-text-color)"
+              title="${echappe(evt.type)} le ${fmtCourt(evt.date)}"></div>`
           )
           .join("");
 
         return `<div class="cal-ligne">
-            <div class="cal-nom" title="${echappe(plante.nom)}">${plante.emoji} ${echappe(
-          plante.nom
+            <div class="cal-nom" title="${echappe(ligne.nom)}">${ligne.emoji} ${echappe(
+          ligne.nom
         )}</div>
-            <div class="cal-piste">${bandes}${faits}${repere}</div>
+            <div class="cal-piste">${prevues}${reelles}${faits}${repere}</div>
           </div>`;
       })
       .join("");
@@ -863,7 +960,7 @@ class PotagerPanel extends HTMLElement {
             <div></div>
             <div class="cal-mois">${MOIS.map((m) => `<span>${m}</span>`).join("")}</div>
           </div>
-          ${lignes}
+          ${corps}
         </div>
       </div>
 
@@ -1058,9 +1155,15 @@ class PotagerPanel extends HTMLElement {
         this._rendreVue();
       })
     );
+    if (this._vue === "reglages") this._brancherReglages(hote);
+
     hote.querySelectorAll("[data-annee]").forEach((el) =>
-      el.addEventListener("click", () => {
+      el.addEventListener("click", async () => {
         this._anneeCal = Number(el.dataset.annee);
+        this._calendrier = await this._hass.callWS({
+          type: "potager/calendrier",
+          annee: this._anneeCal,
+        });
         this._rendreVue();
       })
     );
@@ -1116,7 +1219,11 @@ class PotagerPanel extends HTMLElement {
     }
 
     const contenu =
-      this._fiche.type === "plante" ? this._fichePlante() : this._ficheCulture();
+      this._fiche.type === "plante"
+        ? this._fichePlante()
+        : this._fiche.type === "perso"
+        ? this._fichePerso()
+        : this._ficheCulture();
     if (contenu === null) {
       hote.innerHTML = "";
       this._fiche = null;
@@ -1562,6 +1669,26 @@ class PotagerPanel extends HTMLElement {
       })
     );
 
+    hote.querySelector("#pf-enregistrer")?.addEventListener("click", async (ev) => {
+      const zoneErreur = hote.querySelector("#pf-erreur");
+      zoneErreur.hidden = true;
+      ev.target.disabled = true;
+      try {
+        await this._hass.callWS({
+          type: "potager/culture_perso/definir",
+          fiche: this._lireFichePerso(),
+        });
+        await this._charger({ discret: true });
+        this._fermerFiche();
+      } catch (err) {
+        // L'erreur s'affiche dans le formulaire, à côté du champ fautif :
+        // la renvoyer en bandeau ferait perdre la saisie de vue.
+        zoneErreur.textContent = err?.message || "Fiche incomplète.";
+        zoneErreur.hidden = false;
+        ev.target.disabled = false;
+      }
+    });
+
     const modifier = (champs) =>
       this._appeler({ type: "potager/modifier", ...champs });
 
@@ -1589,6 +1716,668 @@ class PotagerPanel extends HTMLElement {
         modifier({ uid: rappel.dataset.uid, rappel_jours: Number(rappel.value) })
       );
     }
+  }
+
+  // --- Vue : Réglages ------------------------------------------------------
+
+  _vueReglages() {
+    if (!this._reglages) {
+      return `<div class="chargement">Chargement des réglages…</div>`;
+    }
+    const o = this._reglages.options;
+    return `
+      ${this._blocSaison(o)}
+      ${this._blocNotifs(o)}
+      ${this._blocZones()}
+      ${this._blocCataloguePerso()}
+      ${this._blocAffichage(o)}`;
+  }
+
+  _blocSaison(o) {
+    const presets = [
+      ["oceanique", "Ouest océanique (Bretagne, Loire)"],
+      ["nord_est", "Nord et Est continental"],
+      ["midi", "Midi méditerranéen"],
+      ["montagne", "Montagne"],
+      ["personnalise", "Dates personnalisées"],
+    ];
+    return `
+      <h2>Saison et gelées</h2>
+      <div class="carte bloc">
+        <p class="aide">
+          Ces deux dates calent <strong>tout</strong> le calendrier. Aucune date
+          du catalogue n'est écrite en dur&nbsp;: chaque période est un décalage
+          en jours par rapport à elles. Les modifier redessine immédiatement
+          les 108 fiches.
+        </p>
+        <div class="reglage">
+          <label for="preset">Climat</label>
+          <select id="preset">
+            ${presets
+              .map(
+                ([v, l]) =>
+                  `<option value="${v}" ${
+                    o.preset_climat === v ? "selected" : ""
+                  }>${l}</option>`
+              )
+              .join("")}
+          </select>
+        </div>
+        ${this._champDate("Dernière gelée de printemps", "gelee-der", o.gelees_derniere)}
+        ${this._champDate("Première gelée d'automne", "gelee-pre", o.gelees_premiere)}
+        <p class="aide">
+          Pour Bouguenais (zone 9a), le préréglage océanique donne le 15 avril
+          et le 15 novembre. Si vous tenez un relevé, vos propres dates valent
+          mieux que n'importe quelle moyenne.
+        </p>
+      </div>`;
+  }
+
+  _champDate(libelle, id, valeur) {
+    const [mois, jour] = (valeur || "01-01").split("-").map(Number);
+    return `
+      <div class="reglage">
+        <label>${libelle}</label>
+        <span style="display:flex;gap:6px">
+          <select id="${id}-mois">
+            ${MOIS_LONGS.map(
+              (m, i) =>
+                `<option value="${i + 1}" ${
+                  mois === i + 1 ? "selected" : ""
+                }>${m}</option>`
+            ).join("")}
+          </select>
+          <input id="${id}-jour" type="number" min="1" max="31" value="${jour}"
+                 style="width:64px">
+        </span>
+      </div>`;
+  }
+
+  _blocNotifs(o) {
+    const cibles = this._reglages.cibles_possibles || [];
+    const choisies = o.notify_targets || [];
+    const etapes = o.notify_etapes || [];
+    const libelles = {
+      semis_interieur: "Semer à l'abri",
+      semis_direct: "Semer en place",
+      repiquage: "Repiquer",
+      plantation: "Planter",
+      recolte: "Récolter",
+    };
+
+    return `
+      <h2>Rappels</h2>
+      <div class="carte bloc">
+        <h4>À qui</h4>
+        ${
+          cibles.length
+            ? cibles
+                .map(
+                  (c) => `
+            <label class="case">
+              <input type="checkbox" data-cible="${c.value}"
+                     ${choisies.includes(c.value) ? "checked" : ""}>
+              <span>${echappe(c.label)}${
+                    c.mobile ? "" : " — sans bouton d'action"
+                  }</span>
+            </label>`
+                )
+                .join("")
+            : `<p class="aide">Aucune application mobile connectée à Home Assistant.</p>`
+        }
+        <p class="aide">
+          Seules les applications mobiles portent les boutons «&nbsp;C'est
+          fait&nbsp;»&nbsp;; c'est par eux que votre journal se remplit sans
+          effort. Sans destinataire coché, aucun rappel ne part.
+        </p>
+      </div>
+
+      <div class="carte bloc">
+        <h4>Quoi</h4>
+        ${Object.entries(libelles)
+          .map(
+            ([cle, lib]) => `
+          <label class="case">
+            <input type="checkbox" data-etape-notif="${cle}"
+                   ${etapes.includes(cle) ? "checked" : ""}>
+            <span>${lib}</span>
+          </label>`
+          )
+          .join("")}
+        <p class="aide">
+          Tout est activé au départ&nbsp;: mieux vaut décocher ce qui dérange
+          que découvrir en juillet qu'un rappel n'est jamais parti.
+        </p>
+      </div>
+
+      <div class="carte bloc">
+        <h4>Quand</h4>
+        <div class="reglage">
+          <label for="heure">Heure de la vérification</label>
+          <input id="heure" type="time" value="${(o.notify_heure || "08:00:00").slice(0, 5)}">
+        </div>
+        <div class="reglage">
+          <label for="rappel">Prévenir à l'avance</label>
+          <span><input id="rappel" type="number" min="0" max="30"
+                       value="${o.rappel_jours}" style="width:72px"> jours</span>
+        </div>
+        <div class="reglage">
+          <label for="recurrence">Relancer pendant la récolte</label>
+          <span><input id="recurrence" type="number" min="0" max="30"
+                       value="${o.notify_recolte_recurrence}" style="width:72px"> jours</span>
+        </div>
+        <p class="aide">
+          Une courgette se cueille tous les deux jours&nbsp;: prévenir une
+          seule fois ne sert à rien. Mettez 0 pour un unique rappel par récolte.
+        </p>
+      </div>
+
+      <div class="carte bloc">
+        <h4>Comment</h4>
+        <label class="case">
+          <input type="checkbox" id="resume" ${o.notify_resume ? "checked" : ""}>
+          <span>Un seul message groupé quand plusieurs choses tombent le même jour</span>
+        </label>
+        <p class="aide">
+          Au printemps, cinq rappels le même matin sont cinq rappels qu'on
+          balaie sans lire. Le revers&nbsp;: un message groupé ne peut pas
+          porter de bouton «&nbsp;C'est fait&nbsp;», puisqu'il faudrait deviner
+          de quelle plante il s'agit.
+        </p>
+        <p class="aide">
+          Le réglage par plante reste prioritaire&nbsp;: chaque plante a son
+          interrupteur de rappels et peut avoir son propre délai, dans sa fiche.
+        </p>
+      </div>`;
+  }
+
+  _blocZones() {
+    const zones = this._jardin?.zones || [];
+    return `
+      <h2>Zones</h2>
+      <div class="carte bloc">
+        <p class="aide">
+          Le décalage avance ou retarde tout le calendrier des plantes de la
+          zone. Il ne s'applique <strong>jamais</strong> à une date de votre
+          journal&nbsp;: un fait n'est pas une prévision.
+        </p>
+        <div id="zones-liste">
+          ${zones
+            .map(
+              (z, i) => `
+            <div class="ligne-zone" data-zone-index="${i}">
+              <input class="zone-nom" type="text" value="${echappe(z.nom)}"
+                     placeholder="Nom de la zone">
+              <span style="display:flex;align-items:center;gap:6px">
+                <input class="zone-decalage" type="number" min="-120" max="120"
+                       value="${z.decalage_jours}" style="width:76px">
+                <span class="aide" style="margin:0">j</span>
+              </span>
+              <button class="icone" data-zone-suppr="${i}" title="Supprimer">
+                <ha-icon icon="mdi:close"></ha-icon>
+              </button>
+            </div>`
+            )
+            .join("")}
+        </div>
+        <div class="actions-fiche" style="margin-top:12px">
+          <button class="bouton discret" id="zone-ajouter">
+            <ha-icon icon="mdi:plus"></ha-icon> Ajouter une zone
+          </button>
+          <button class="bouton" id="zones-enregistrer">
+            <ha-icon icon="mdi:content-save"></ha-icon> Enregistrer les zones
+          </button>
+        </div>
+      </div>`;
+  }
+
+  _blocCataloguePerso() {
+    const perso = this._cataloguePerso || [];
+    return `
+      <h2>Mes fiches</h2>
+      <div class="carte bloc">
+        <p class="aide">
+          Ajoutez les légumes qui manquent au catalogue. Vos fiches sont
+          conservées dans votre jardin&nbsp;: une mise à jour de l'intégration
+          ne les efface pas.
+        </p>
+        ${
+          perso.length
+            ? perso
+                .map(
+                  (c) => `
+            <div class="ligne-zone">
+              <span style="flex:1">${c.emoji} ${echappe(c.nom)}
+                <span class="aide" style="margin:0">· ${
+                  CATEGORIES[c.categorie] || c.categorie
+                }</span>
+              </span>
+              <button class="icone" data-perso-editer="${c.id}" title="Modifier">
+                <ha-icon icon="mdi:pencil"></ha-icon>
+              </button>
+              <button class="icone" data-perso-suppr="${c.id}" title="Supprimer">
+                <ha-icon icon="mdi:delete-outline"></ha-icon>
+              </button>
+            </div>`
+                )
+                .join("")
+            : `<p class="aide">Aucune fiche personnelle pour l'instant.</p>`
+        }
+        <div class="actions-fiche" style="margin-top:12px">
+          <button class="bouton" id="perso-nouvelle">
+            <ha-icon icon="mdi:plus"></ha-icon> Ajouter une fiche
+          </button>
+        </div>
+      </div>`;
+  }
+
+  _blocAffichage(o) {
+    return `
+      <h2>Affichage</h2>
+      <div class="carte bloc">
+        <label class="case">
+          <input type="checkbox" id="masquer-terminees"
+                 ${o.masquer_terminees ? "checked" : ""}>
+          <span>Masquer les plantes terminées ou perdues dans «&nbsp;Mon potager&nbsp;»</span>
+        </label>
+        <p class="aide">
+          Elles restent dans le journal et dans le calendrier&nbsp;: c'est
+          l'historique de votre potager, il ne s'efface pas.
+        </p>
+      </div>`;
+  }
+
+  // --- Formulaire de fiche personnelle -------------------------------------
+
+  _fichePerso() {
+    const f = this._fiche.fiche || {};
+    const p = f.periodes || {};
+    const selMois = (id, valeur) =>
+      `<select id="${id}">
+         <option value="">—</option>
+         ${MOIS_LONGS.map(
+           (m, i) =>
+             `<option value="${i + 1}" ${
+               Number(valeur) === i + 1 ? "selected" : ""
+             }>${m}</option>`
+         ).join("")}
+       </select>`;
+
+    const periode = (cle, libelle) => `
+      <div class="reglage">
+        <label>${libelle}</label>
+        <span style="display:flex;gap:6px;align-items:center">
+          ${selMois(`per-${cle}-debut`, (p[cle] || {}).debut)}
+          <span class="aide" style="margin:0">à</span>
+          ${selMois(`per-${cle}-fin`, (p[cle] || {}).fin)}
+        </span>
+      </div>`;
+
+    const choix = (id, valeur, options) =>
+      `<select id="${id}">${options
+        .map(
+          ([v, l]) =>
+            `<option value="${v}" ${valeur === v ? "selected" : ""}>${l}</option>`
+        )
+        .join("")}</select>`;
+
+    return `
+      <div class="fiche-tete">
+        <div class="emoji">${f.emoji || "🌱"}</div>
+        <h3>${f.id ? "Modifier la fiche" : "Nouvelle fiche"}</h3>
+        <button class="icone" data-fermer="1"><ha-icon icon="mdi:close"></ha-icon></button>
+      </div>
+
+      <div class="fiche-corps">
+        <div class="carte bloc">
+          <h4>Identité</h4>
+          <div class="reglage">
+            <label for="pf-nom">Nom *</label>
+            <input id="pf-nom" type="text" value="${echappe(f.nom || "")}"
+                   placeholder="Chou-rave">
+          </div>
+          <div class="reglage">
+            <label for="pf-emoji">Emoji</label>
+            <input id="pf-emoji" type="text" value="${echappe(f.emoji || "")}"
+                   placeholder="🥬" style="width:80px">
+          </div>
+          <div class="reglage">
+            <label for="pf-categorie">Catégorie *</label>
+            ${choix("pf-categorie", f.categorie, Object.entries(CATEGORIES))}
+          </div>
+          <div class="reglage">
+            <label for="pf-famille">Famille</label>
+            <input id="pf-famille" type="text" value="${echappe(f.famille || "")}"
+                   placeholder="Brassicacées">
+          </div>
+        </div>
+
+        <div class="carte bloc">
+          <h4>Conditions</h4>
+          <div class="reglage">
+            <label for="pf-expo">Exposition *</label>
+            ${choix("pf-expo", f.exposition || "plein-soleil",
+              Object.entries(EXPOSITIONS).map(([v, o]) => [v, o.label]))}
+          </div>
+          <div class="reglage">
+            <label for="pf-eau">Besoin en eau *</label>
+            ${choix("pf-eau", (f.arrosage || {}).besoin || "moyen", Object.entries(EAU))}
+          </div>
+          <div class="reglage">
+            <label for="pf-freq">Arroser tous les</label>
+            <span><input id="pf-freq" type="number" min="1" max="30"
+                         value="${(f.arrosage || {}).frequence_jours || 4}"
+                         style="width:72px"> jours</span>
+          </div>
+          <div class="reglage">
+            <label for="pf-espacement">Espacement</label>
+            <span><input id="pf-espacement" type="number" min="1" max="1000"
+                         value="${f.espacement_cm || 30}" style="width:72px"> cm</span>
+          </div>
+          <div class="reglage">
+            <label for="pf-difficulte">Difficulté</label>
+            ${choix("pf-difficulte", String(f.difficulte || 1),
+              [["1", "★ Facile"], ["2", "★★ Moyenne"], ["3", "★★★ Exigeante"]])}
+          </div>
+          <label class="case">
+            <input type="checkbox" id="pf-gel" ${
+              f.gel === false ? "" : "checked"
+            }>
+            <span>Résiste au gel</span>
+          </label>
+          <p class="aide">
+            Décochez pour une culture gélive&nbsp;: sa récolte sera alors
+            automatiquement plafonnée à votre première gelée d'automne.
+          </p>
+          <label class="case">
+            <input type="checkbox" id="pf-perenne" ${f.perenne ? "checked" : ""}>
+            <span>Pérenne (se replante pas chaque année)</span>
+          </label>
+        </div>
+
+        <div class="carte bloc">
+          <h4>Périodes</h4>
+          <p class="aide">
+            En mois, comme sur un sachet de graines. Les fiches livrées sont
+            calées sur vos gelées&nbsp;; une fiche saisie à la main reste sur
+            le calendrier, ce qui est plus simple et suffit largement.
+          </p>
+          ${periode("semis_interieur", "Semer à l'abri")}
+          ${periode("semis_direct", "Semer en place")}
+          ${periode("plantation", "Planter")}
+          ${periode("recolte", "Récolter")}
+          <p class="aide">
+            Pour une pérenne, seule «&nbsp;Récolter&nbsp;» compte vraiment&nbsp;:
+            sa récolte revient chaque année.
+          </p>
+        </div>
+
+        <div class="carte bloc">
+          <h4>Durées du cycle</h4>
+          <div class="reglage">
+            <label for="pf-semis-recolte">Du semis à la récolte</label>
+            <span><input id="pf-semis-recolte" type="number" min="0" max="900"
+                         value="${f.jours_semis_a_recolte || ""}"
+                         style="width:84px"> jours</span>
+          </div>
+          <div class="reglage">
+            <label for="pf-semis-repiquage">Du semis au repiquage</label>
+            <span><input id="pf-semis-repiquage" type="number" min="0" max="365"
+                         value="${f.jours_semis_a_repiquage || ""}"
+                         style="width:84px"> jours</span>
+          </div>
+          <div class="reglage">
+            <label for="pf-plantation-recolte">De la plantation à la récolte</label>
+            <span><input id="pf-plantation-recolte" type="number" min="0" max="900"
+                         value="${f.jours_plantation_a_recolte || ""}"
+                         style="width:84px"> jours</span>
+          </div>
+          <div class="reglage">
+            <label for="pf-duree-recolte">La récolte dure</label>
+            <span><input id="pf-duree-recolte" type="number" min="1" max="365"
+                         value="${f.duree_recolte_jours || 30}"
+                         style="width:84px"> jours</span>
+          </div>
+          <p class="aide">
+            Ce sont ces durées qui permettent de recalculer votre récolte à
+            partir de la date où vous avez réellement semé. Laissez vide ce que
+            vous ne savez pas, mais il en faut au moins une.
+          </p>
+        </div>
+
+        <div class="carte bloc">
+          <h4>Notes</h4>
+          <div class="reglage">
+            <label for="pf-arrosage-notes">Conseil d'arrosage</label>
+            <input id="pf-arrosage-notes" type="text"
+                   value="${echappe((f.arrosage || {}).notes || "")}">
+          </div>
+          <div class="reglage">
+            <label for="pf-sol">Sol</label>
+            <input id="pf-sol" type="text" value="${echappe(f.sol || "")}"
+                   placeholder="riche et frais">
+          </div>
+          <div class="reglage">
+            <label for="pf-conseils">Conseils (un par ligne)</label>
+          </div>
+          <textarea id="pf-conseils" rows="3" style="width:100%;border:1px solid
+                    var(--divider-color);border-radius:8px;padding:8px;
+                    background:var(--card-background-color);
+                    color:var(--primary-text-color);font-family:inherit"
+          >${echappe((f.conseils || []).join("\n"))}</textarea>
+        </div>
+
+        <div class="carte bloc">
+          <div class="actions-fiche">
+            <button class="bouton" id="pf-enregistrer">
+              <ha-icon icon="mdi:content-save"></ha-icon> Enregistrer la fiche
+            </button>
+            <button class="bouton discret" data-fermer="1">Annuler</button>
+          </div>
+          <div id="pf-erreur" class="erreur" hidden style="margin-top:12px"></div>
+        </div>
+      </div>`;
+  }
+
+  _lireFichePerso() {
+    const sr = this.shadowRoot.getElementById("fiche");
+    const v = (id) => sr.querySelector(`#${id}`)?.value?.trim() || "";
+    const n = (id) => {
+      const brut = v(id);
+      return brut === "" ? null : Number(brut);
+    };
+    const periode = (cle) => {
+      const debut = n(`per-${cle}-debut`);
+      return debut ? { debut, fin: n(`per-${cle}-fin`) || debut } : null;
+    };
+
+    return {
+      id: this._fiche.fiche?.id || null,
+      nom: v("pf-nom"),
+      emoji: v("pf-emoji") || "🌱",
+      categorie: v("pf-categorie"),
+      famille: v("pf-famille"),
+      exposition: v("pf-expo"),
+      arrosage: {
+        besoin: v("pf-eau"),
+        frequence_jours: n("pf-freq") || 4,
+        notes: v("pf-arrosage-notes"),
+      },
+      sol: v("pf-sol"),
+      espacement_cm: n("pf-espacement") || 30,
+      difficulte: n("pf-difficulte") || 1,
+      gel: sr.querySelector("#pf-gel")?.checked ?? true,
+      perenne: sr.querySelector("#pf-perenne")?.checked || false,
+      periodes: {
+        semis_interieur: periode("semis_interieur"),
+        semis_direct: periode("semis_direct"),
+        plantation: periode("plantation"),
+        recolte: periode("recolte"),
+      },
+      jours_semis_a_recolte: n("pf-semis-recolte"),
+      jours_semis_a_repiquage: n("pf-semis-repiquage"),
+      jours_plantation_a_recolte: n("pf-plantation-recolte"),
+      duree_recolte_jours: n("pf-duree-recolte") || 30,
+      conseils: (sr.querySelector("#pf-conseils")?.value || "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean),
+    };
+  }
+
+  // --- Câblage des réglages ------------------------------------------------
+
+  async _enregistrerReglages(partiel) {
+    const reponse = await this._appeler({
+      type: "potager/reglages/definir",
+      options: partiel,
+    });
+    if (reponse?.options) {
+      this._reglages.options = reponse.options;
+    }
+    return reponse;
+  }
+
+  _brancherReglages(hote) {
+    const jourMois = (id) => {
+      const mois = Number(hote.querySelector(`#${id}-mois`)?.value || 1);
+      const jour = Number(hote.querySelector(`#${id}-jour`)?.value || 1);
+      return `${String(mois).padStart(2, "0")}-${String(jour).padStart(2, "0")}`;
+    };
+
+    const preset = hote.querySelector("#preset");
+    preset?.addEventListener("change", () =>
+      this._enregistrerReglages({ preset_climat: preset.value })
+    );
+
+    ["gelee-der", "gelee-pre"].forEach((id) =>
+      ["mois", "jour"].forEach((suffixe) =>
+        hote.querySelector(`#${id}-${suffixe}`)?.addEventListener("change", () =>
+          this._enregistrerReglages({
+            preset_climat: "personnalise",
+            gelees_derniere: jourMois("gelee-der"),
+            gelees_premiere: jourMois("gelee-pre"),
+          })
+        )
+      )
+    );
+
+    const cibles = () =>
+      [...hote.querySelectorAll("[data-cible]")]
+        .filter((c) => c.checked)
+        .map((c) => c.dataset.cible);
+    hote.querySelectorAll("[data-cible]").forEach((c) =>
+      c.addEventListener("change", () =>
+        this._enregistrerReglages({ notify_targets: cibles() })
+      )
+    );
+
+    const etapes = () =>
+      [...hote.querySelectorAll("[data-etape-notif]")]
+        .filter((c) => c.checked)
+        .map((c) => c.dataset.etapeNotif);
+    hote.querySelectorAll("[data-etape-notif]").forEach((c) =>
+      c.addEventListener("change", () =>
+        this._enregistrerReglages({ notify_etapes: etapes() })
+      )
+    );
+
+    const heure = hote.querySelector("#heure");
+    heure?.addEventListener("change", () =>
+      this._enregistrerReglages({ notify_heure: `${heure.value}:00` })
+    );
+    const rappel = hote.querySelector("#rappel");
+    rappel?.addEventListener("change", () =>
+      this._enregistrerReglages({ rappel_jours: Number(rappel.value) })
+    );
+    const recurrence = hote.querySelector("#recurrence");
+    recurrence?.addEventListener("change", () =>
+      this._enregistrerReglages({
+        notify_recolte_recurrence: Number(recurrence.value),
+      })
+    );
+    const resume = hote.querySelector("#resume");
+    resume?.addEventListener("change", () =>
+      this._enregistrerReglages({ notify_resume: resume.checked })
+    );
+    const masquer = hote.querySelector("#masquer-terminees");
+    masquer?.addEventListener("change", () =>
+      this._enregistrerReglages({ masquer_terminees: masquer.checked })
+    );
+
+    // --- Zones
+    hote.querySelector("#zone-ajouter")?.addEventListener("click", () => {
+      const liste = hote.querySelector("#zones-liste");
+      const index = liste.querySelectorAll(".ligne-zone").length;
+      const ligne = document.createElement("div");
+      ligne.className = "ligne-zone";
+      ligne.dataset.zoneIndex = String(index);
+      ligne.innerHTML = `
+        <input class="zone-nom" type="text" value="" placeholder="Nom de la zone">
+        <span style="display:flex;align-items:center;gap:6px">
+          <input class="zone-decalage" type="number" min="-120" max="120" value="0"
+                 style="width:76px">
+          <span class="aide" style="margin:0">j</span>
+        </span>
+        <button class="icone" data-zone-suppr="${index}">
+          <ha-icon icon="mdi:close"></ha-icon>
+        </button>`;
+      liste.appendChild(ligne);
+      ligne
+        .querySelector("[data-zone-suppr]")
+        .addEventListener("click", () => ligne.remove());
+      ligne.querySelector(".zone-nom").focus();
+    });
+
+    hote.querySelectorAll("[data-zone-suppr]").forEach((b) =>
+      b.addEventListener("click", () => b.closest(".ligne-zone")?.remove())
+    );
+
+    hote.querySelector("#zones-enregistrer")?.addEventListener("click", async (ev) => {
+      const zones = [...hote.querySelectorAll(".ligne-zone")]
+        .map((ligne) => {
+          const nom = ligne.querySelector(".zone-nom").value.trim();
+          if (!nom) return null;
+          return {
+            id: slugifier(nom),
+            nom,
+            decalage_jours: Number(ligne.querySelector(".zone-decalage").value || 0),
+          };
+        })
+        .filter(Boolean);
+      if (!zones.length) {
+        this._erreur = "Gardez au moins une zone.";
+        this._rendreVue();
+        return;
+      }
+      ev.target.disabled = true;
+      await this._appeler({ type: "potager/zones", zones });
+    });
+
+    // --- Catalogue personnel
+    hote.querySelector("#perso-nouvelle")?.addEventListener("click", () => {
+      this._fiche = { type: "perso", fiche: null };
+      this._rendreFiche();
+    });
+    hote.querySelectorAll("[data-perso-editer]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const fiche = (this._cataloguePerso || []).find(
+          (c) => c.id === b.dataset.persoEditer
+        );
+        this._fiche = { type: "perso", fiche: fiche ? _versFormulaire(fiche) : null };
+        this._rendreFiche();
+      })
+    );
+    hote.querySelectorAll("[data-perso-suppr]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        if (!confirm("Supprimer cette fiche ?")) return;
+        b.disabled = true;
+        await this._appeler({
+          type: "potager/culture_perso/supprimer",
+          culture_id: b.dataset.persoSuppr,
+        });
+      })
+    );
   }
 }
 

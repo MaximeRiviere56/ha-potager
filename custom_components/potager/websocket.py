@@ -7,6 +7,7 @@ a chaque client connecte. Le panneau interroge donc directement ces commandes.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -16,7 +17,24 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import catalog
-from .const import DOMAIN, ZONE_PLEINE_TERRE
+from .const import (
+    CONF_GELEES_DERNIERE,
+    CONF_GELEES_PREMIERE,
+    CONF_MASQUER_TERMINEES,
+    CONF_NOTIFY_ETAPES,
+    CONF_NOTIFY_HEURE,
+    CONF_NOTIFY_RECOLTE_RECURRENCE,
+    CONF_NOTIFY_RESUME,
+    CONF_NOTIFY_TARGETS,
+    CONF_PRESET_CLIMAT,
+    CONF_RAPPEL_JOURS,
+    DEFAUT_NOTIFY_HEURE,
+    DOMAIN,
+    ETAPES_NOTIFIABLES,
+    PREFIXE_PERSO,
+    PRESETS_CLIMAT,
+    ZONE_PLEINE_TERRE,
+)
 from .coordinator import PotagerCoordinator, etape_en_dict, libelle_phase
 from .lifecycle import ErreurJournal, LIBELLES_EVENEMENTS, TYPES_EVENEMENTS
 from .phenology import (
@@ -26,6 +44,9 @@ from .phenology import (
     Gelees,
     fenetres_theoriques,
 )
+
+
+_MOTIF_JOUR_MOIS = re.compile(r"^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$")
 
 
 def _coordinateur(hass: HomeAssistant) -> PotagerCoordinator | None:
@@ -72,6 +93,11 @@ def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, 
 @callback
 def async_enregistrer(hass: HomeAssistant) -> None:
     for commande in (
+        reglages,
+        definir_reglages,
+        definir_culture_perso,
+        supprimer_culture_perso,
+        cultures_perso,
         catalogue,
         fiche_culture,
         jardin,
@@ -100,28 +126,34 @@ def async_enregistrer(hass: HomeAssistant) -> None:
 )
 @callback
 def catalogue(hass, connection, msg) -> None:
-    resultats = catalog.rechercher(
+    coordinator = _coordinateur(hass)
+    if coordinator is None:
+        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        return
+
+    fiches = coordinator.catalogue
+    resultats = fiches.rechercher(
         msg.get("requete", ""),
         categorie=msg.get("categorie"),
         exposition=msg.get("exposition"),
         difficulte_max=msg.get("difficulte_max"),
     )
-
-    coordinator = _coordinateur(hass)
-    gelees = coordinator.gelees if coordinator else Gelees()
-    aujourdhui = (
-        coordinator.data["calcule_le"] if coordinator else dt_util.now().date()
-    )
+    gelees = coordinator.gelees
+    aujourdhui = coordinator.data["calcule_le"]
 
     connection.send_result(
         msg["id"],
         {
             "cultures": [
-                {**catalog.info_minimale(c), **_semis(c, gelees, aujourdhui)}
+                {
+                    **catalog.info_minimale(c),
+                    "perso": bool(c.get("perso")),
+                    **_semis(c, gelees, aujourdhui),
+                }
                 for c in resultats
             ],
-            "categories": catalog.categories(),
-            "total": len(catalog.toutes()),
+            "categories": fiches.categories(),
+            "total": len(fiches.toutes()),
         },
     )
 
@@ -159,23 +191,29 @@ def _semis(fiche: dict, gelees: Gelees, aujourdhui) -> dict[str, Any]:
 )
 @callback
 def fiche_culture(hass, connection, msg) -> None:
-    fiche = catalog.culture(msg["culture_id"])
+    coordinator = _coordinateur(hass)
+    if coordinator is None:
+        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        return
+
+    fiche = coordinator.catalogue.culture(msg["culture_id"])
     if fiche is None:
         connection.send_error(msg["id"], "introuvable", "Culture inconnue")
         return
 
-    coordinator = _coordinateur(hass)
-    gelees = coordinator.gelees if coordinator else Gelees()
     connection.send_result(
         msg["id"],
         {
             "culture": fiche,
             "compagnes": {
                 cle: [catalog.info_minimale(c) for c in fiches]
-                for cle, fiches in catalog.compagnes(msg["culture_id"]).items()
+                for cle, fiches in coordinator.catalogue.compagnes(
+                    msg["culture_id"]
+                ).items()
             },
             "fenetres": [
-                etape_en_dict(e) for e in fenetres_theoriques(fiche, gelees)
+                etape_en_dict(e)
+                for e in fenetres_theoriques(fiche, coordinator.gelees)
             ],
         },
     )
@@ -296,7 +334,7 @@ def _avec_coordinateur(fonction):
 @websocket_api.async_response
 @_avec_coordinateur
 async def ajouter(coordinator, msg) -> dict:
-    if catalog.culture(msg["culture_id"]) is None:
+    if coordinator.catalogue.culture(msg["culture_id"]) is None:
         raise ErreurJournal(f"Culture inconnue : {msg['culture_id']}")
     plante = await coordinator.async_appliquer(
         lambda: coordinator.store.ajouter_plante(
@@ -403,3 +441,222 @@ async def definir_zones(coordinator, msg) -> dict:
         lambda: coordinator.store.definir_zones(msg["zones"])
     )
     return {"ok": True}
+
+
+# --- Reglages -----------------------------------------------------------------
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/reglages"})
+@callback
+def reglages(hass, connection, msg) -> None:
+    """Reglages courants, et le choix de destinataires possibles.
+
+    La liste des services de notification est calculee ici plutot que devinee
+    cote panneau : elle change quand un telephone est ajoute ou retire.
+    """
+    coordinator = _coordinateur(hass)
+    if coordinator is None:
+        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        return
+
+    options = dict(coordinator.entry.options)
+    services = hass.services.async_services().get("notify", {})
+    cibles = [
+        {
+            "value": f"notify.{nom}",
+            "label": nom.removeprefix("mobile_app_").replace("_", " ").title(),
+            "mobile": True,
+        }
+        for nom in sorted(services)
+        if nom.startswith("mobile_app_")
+    ]
+    cibles.append(
+        {
+            "value": "persistent_notification",
+            "label": "Notification dans Home Assistant",
+            "mobile": False,
+        }
+    )
+
+    connection.send_result(
+        msg["id"],
+        {
+            "options": {
+                CONF_PRESET_CLIMAT: options.get(CONF_PRESET_CLIMAT, "oceanique"),
+                CONF_GELEES_DERNIERE: coordinator.gelees.derniere,
+                CONF_GELEES_PREMIERE: coordinator.gelees.premiere,
+                CONF_NOTIFY_TARGETS: options.get(CONF_NOTIFY_TARGETS, []),
+                CONF_NOTIFY_HEURE: options.get(
+                    CONF_NOTIFY_HEURE, DEFAUT_NOTIFY_HEURE
+                ),
+                CONF_RAPPEL_JOURS: coordinator.rappel_jours,
+                CONF_NOTIFY_ETAPES: coordinator.etapes_notifiables,
+                CONF_NOTIFY_RESUME: coordinator.notify_resume,
+                CONF_NOTIFY_RECOLTE_RECURRENCE: coordinator.recolte_recurrence,
+                CONF_MASQUER_TERMINEES: coordinator.masquer_terminees,
+            },
+            "cibles_possibles": cibles,
+            "presets": PRESETS_CLIMAT,
+            "etapes_notifiables": list(ETAPES_NOTIFIABLES),
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/reglages/definir",
+        vol.Required("options"): dict,
+    }
+)
+@websocket_api.async_response
+@_avec_coordinateur
+async def definir_reglages(coordinator, msg) -> dict:
+    """Ecrit les reglages dans l'entree de configuration.
+
+    Les reglages globaux restent dans `entry.options` et non dans le stockage
+    du jardin : ils restent ainsi modifiables depuis la page d'integration de
+    Home Assistant, et le panneau n'est qu'une facon plus agreable d'y acceder.
+    """
+    valides = {
+        CONF_PRESET_CLIMAT,
+        CONF_GELEES_DERNIERE,
+        CONF_GELEES_PREMIERE,
+        CONF_NOTIFY_TARGETS,
+        CONF_NOTIFY_HEURE,
+        CONF_RAPPEL_JOURS,
+        CONF_NOTIFY_ETAPES,
+        CONF_NOTIFY_RESUME,
+        CONF_NOTIFY_RECOLTE_RECURRENCE,
+        CONF_MASQUER_TERMINEES,
+    }
+    propose = {cle: val for cle, val in msg["options"].items() if cle in valides}
+
+    for cle in (CONF_GELEES_DERNIERE, CONF_GELEES_PREMIERE):
+        if cle in propose and not _MOTIF_JOUR_MOIS.match(str(propose[cle])):
+            raise ErreurJournal(
+                f"Date de gelée invalide : {propose[cle]!r}. Format attendu MM-JJ."
+            )
+
+    fusion = {**coordinator.entry.options, **propose}
+    coordinator.hass.config_entries.async_update_entry(
+        coordinator.entry, options=fusion
+    )
+    return {"options": fusion}
+
+
+# --- Catalogue personnel ------------------------------------------------------
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/culture_perso/definir",
+        vol.Required("fiche"): dict,
+    }
+)
+@websocket_api.async_response
+@_avec_coordinateur
+async def definir_culture_perso(coordinator, msg) -> dict:
+    fiche = _normaliser_fiche(msg["fiche"], coordinator)
+    soucis = catalog.valider_fiche(fiche)
+    if soucis:
+        raise ErreurJournal(" ".join(soucis))
+
+    def _ecrire() -> dict:
+        resultat = coordinator.store.enregistrer_culture(fiche)
+        coordinator.recharger_catalogue()
+        return resultat
+
+    await coordinator.async_appliquer(_ecrire)
+    return {"id": fiche["id"]}
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/culture_perso/supprimer",
+        vol.Required("culture_id"): str,
+    }
+)
+@websocket_api.async_response
+@_avec_coordinateur
+async def supprimer_culture_perso(coordinator, msg) -> dict:
+    def _effacer() -> None:
+        coordinator.store.supprimer_culture(msg["culture_id"])
+        coordinator.recharger_catalogue()
+
+    await coordinator.async_appliquer(_effacer)
+    return {"ok": True}
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/cultures_perso"})
+@callback
+def cultures_perso(hass, connection, msg) -> None:
+    coordinator = _coordinateur(hass)
+    if coordinator is None:
+        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        return
+    connection.send_result(
+        msg["id"], {"cultures": coordinator.catalogue.perso()}
+    )
+
+
+def _normaliser_fiche(brute: dict, coordinator) -> dict:
+    """Construit une fiche complete a partir du formulaire du panneau.
+
+    Le formulaire parle en mois ; le moteur parle en fenetres. La conversion
+    se fait ici, une seule fois, pour que le reste du code ne connaisse qu'une
+    seule forme de fiche.
+    """
+    nom = (brute.get("nom") or "").strip()
+    identifiant = brute.get("id") or f"{PREFIXE_PERSO}{catalog.slug(nom)}"
+    if not identifiant.startswith(PREFIXE_PERSO):
+        identifiant = f"{PREFIXE_PERSO}{catalog.slug(nom)}"
+
+    fenetres: dict[str, dict] = {}
+    for cle in ("semis_interieur", "semis_direct", "plantation", "recolte"):
+        periode = (brute.get("periodes") or {}).get(cle)
+        if periode and periode.get("debut"):
+            fenetres[cle] = catalog.fenetre_par_mois(
+                periode["debut"], periode.get("fin") or periode["debut"]
+            )
+
+    cycle: dict[str, int] = {
+        "duree_recolte_jours": int(brute.get("duree_recolte_jours") or 30)
+    }
+    for cle, source in (
+        ("jours_semis_a_repiquage", "jours_semis_a_repiquage"),
+        ("jours_semis_a_recolte", "jours_semis_a_recolte"),
+        ("jours_plantation_a_recolte", "jours_plantation_a_recolte"),
+    ):
+        valeur = brute.get(source)
+        if valeur:
+            cycle[cle] = int(valeur)
+
+    return {
+        "id": identifiant,
+        "nom": nom,
+        "nom_scientifique": (brute.get("nom_scientifique") or "").strip(),
+        "famille": (brute.get("famille") or "Non précisée").strip(),
+        "categorie": brute.get("categorie"),
+        "emoji": (brute.get("emoji") or "🌱")[:4],
+        "difficulte": max(1, min(3, int(brute.get("difficulte") or 1))),
+        "exposition": brute.get("exposition"),
+        "arrosage": {
+            "besoin": (brute.get("arrosage") or {}).get("besoin"),
+            "frequence_jours": int(
+                (brute.get("arrosage") or {}).get("frequence_jours") or 4
+            ),
+            "notes": ((brute.get("arrosage") or {}).get("notes") or "").strip(),
+        },
+        "sol": (brute.get("sol") or "ordinaire, bien drainé").strip(),
+        "espacement_cm": int(brute.get("espacement_cm") or 30),
+        "rusticite": {
+            "gel": bool(brute.get("gel", True)),
+            "temp_min_c": brute.get("temp_min_c"),
+        },
+        "perenne": bool(brute.get("perenne")),
+        "fenetres": fenetres,
+        "cycle": cycle,
+        "associations": {"aime": [], "evite": []},
+        "conseils": [c for c in (brute.get("conseils") or []) if c.strip()],
+        "perso": True,
+    }

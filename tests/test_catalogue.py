@@ -125,3 +125,85 @@ class TestCatalogueDansLeMoteur(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestCataloguePersonnel(unittest.TestCase):
+    """Les fiches saisies à la main : conversion, validation, fusion."""
+
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+        import types
+
+        src = RACINE / "custom_components" / "potager"
+        if "potager_cat" not in sys.modules:
+            pkg = types.ModuleType("potager_cat")
+            pkg.__path__ = [str(src)]
+            sys.modules["potager_cat"] = pkg
+            spec = importlib.util.spec_from_file_location(
+                "potager_cat.catalog", src / "catalog.py"
+            )
+            module = importlib.util.module_from_spec(spec)
+            sys.modules["potager_cat.catalog"] = module
+            spec.loader.exec_module(module)
+        cls.cat = sys.modules["potager_cat.catalog"]
+
+    def test_slug_sans_accent_ni_espace(self):
+        self.assertEqual(self.cat.slug("Chou-rave de Vienne"), "chou-rave-de-vienne")
+        self.assertEqual(self.cat.slug("Œillet d'Inde"), "oeillet-d-inde")
+        self.assertEqual(self.cat.slug("   "), "culture")
+
+    def test_une_periode_en_mois_devient_une_fenetre(self):
+        f = self.cat.fenetre_par_mois(3, 7)
+        self.assertEqual(f["ancrage"], "date_fixe")
+        self.assertEqual(f["date"], "03-01")
+        self.assertEqual(f["duree_jours"], 150)
+
+    def test_une_periode_qui_franchit_l_annee(self):
+        """D'octobre à février : cinq mois, pas moins huit."""
+        self.assertEqual(self.cat.fenetre_par_mois(10, 2)["duree_jours"], 150)
+
+    def test_un_mois_unique_couvre_le_mois(self):
+        self.assertEqual(self.cat.fenetre_par_mois(5, 5)["duree_jours"], 30)
+
+    def test_fiche_sans_recolte_calculable_refusee(self):
+        """Sans durée de cycle ni période de récolte, le moteur ne saurait
+        rien annoncer : mieux vaut refuser à la saisie."""
+        fiche = {
+            "nom": "Test", "categorie": "legume-feuille", "exposition": "plein-soleil",
+            "arrosage": {"besoin": "moyen"}, "rusticite": {"gel": True},
+            "fenetres": {"semis_direct": {"ancrage": "date_fixe", "date": "03-01"}},
+            "cycle": {},
+        }
+        soucis = self.cat.valider_fiche(fiche)
+        self.assertTrue(any("récolte" in s for s in soucis), soucis)
+
+    def test_fiche_complete_acceptee(self):
+        fiche = {
+            "nom": "Chou-rave", "categorie": "legume-feuille",
+            "exposition": "plein-soleil", "arrosage": {"besoin": "moyen"},
+            "rusticite": {"gel": True},
+            "fenetres": {"semis_direct": {"ancrage": "date_fixe", "date": "03-01"}},
+            "cycle": {"jours_semis_a_recolte": 70},
+        }
+        self.assertEqual(self.cat.valider_fiche(fiche), [])
+
+    def test_fusion_sans_ecraser_les_fiches_livrees(self):
+        perso = {
+            "id": "perso-chou-rave", "nom": "Chou-rave", "categorie": "legume-feuille",
+            "emoji": "🥬", "difficulte": 1, "exposition": "plein-soleil",
+            "famille": "Brassicacées", "nom_scientifique": "",
+            "arrosage": {"besoin": "moyen", "frequence_jours": 3, "notes": ""},
+            "perso": True,
+        }
+        fusionne = self.cat.Catalogue([perso])
+        self.assertEqual(len(fusionne.toutes()), len(CULTURES) + 1)
+        self.assertEqual([f["nom"] for f in fusionne.perso()], ["Chou-rave"])
+        self.assertEqual(fusionne.culture("tomate")["nom"], "Tomate")
+
+    def test_une_fiche_perso_ne_peut_pas_masquer_une_fiche_livree(self):
+        """Le préfixe garantit qu'aucune saisie ne remplace « tomate »."""
+        self.assertTrue(
+            all(not c["id"].startswith("perso-") for c in CULTURES),
+            "le catalogue livré ne doit pas utiliser le préfixe perso-",
+        )

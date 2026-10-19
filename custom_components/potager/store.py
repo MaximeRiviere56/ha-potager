@@ -36,7 +36,11 @@ class JardinStore:
 
     def __init__(self, hass: HomeAssistant) -> None:
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._donnees: dict[str, Any] = {"plantes": [], "zones": []}
+        self._donnees: dict[str, Any] = {
+            "plantes": [],
+            "zones": [],
+            "cultures_perso": [],
+        }
 
     # --- Cycle de vie du stockage --------------------------------------------
 
@@ -45,6 +49,7 @@ class JardinStore:
         if charge:
             self._donnees = charge
         self._donnees.setdefault("plantes", [])
+        self._donnees.setdefault("cultures_perso", [])
         if not self._donnees.get("zones"):
             self._donnees["zones"] = [dict(z) for z in ZONES_DEFAUT]
         # Les phases sont recalculees au chargement : un journal edite a la main
@@ -152,6 +157,42 @@ class JardinStore:
             self._sauvegarder()
         return retire
 
+    # --- Catalogue personnel -------------------------------------------------
+    #
+    # Les fiches saisies par l'utilisateur vivent ici, et non dans le fichier
+    # livre avec l'integration : une mise a jour ne doit jamais les effacer.
+
+    @property
+    def cultures_perso(self) -> list[dict]:
+        return self._donnees.setdefault("cultures_perso", [])
+
+    def enregistrer_culture(self, fiche: dict) -> dict:
+        """Cree ou remplace une fiche personnelle, selon son id."""
+        cultures = self.cultures_perso
+        for index, existante in enumerate(cultures):
+            if existante["id"] == fiche["id"]:
+                cultures[index] = fiche
+                break
+        else:
+            cultures.append(fiche)
+        self._sauvegarder()
+        return fiche
+
+    def supprimer_culture(self, culture_id: str) -> None:
+        """Refuse tant qu'une plante du jardin s'appuie sur cette fiche :
+        sans elle, la plante deviendrait un orphelin silencieux."""
+        utilisees = [p for p in self.plantes if p["culture_id"] == culture_id]
+        if utilisees:
+            noms = ", ".join(p.get("surnom") or p["culture_id"] for p in utilisees)
+            raise ErreurJournal(
+                f"Cette fiche est utilisée par {len(utilisees)} plante(s) du "
+                f"jardin ({noms}). Retirez-les d'abord."
+            )
+        self._donnees["cultures_perso"] = [
+            c for c in self.cultures_perso if c["id"] != culture_id
+        ]
+        self._sauvegarder()
+
     # --- Etat des rappels ----------------------------------------------------
     #
     # Memoriser ce qui a deja ete envoye est ce qui separe un rappel utile d'un
@@ -163,6 +204,14 @@ class JardinStore:
 
     def notif_deja_envoyee(self, cle: str) -> bool:
         return cle in self.etat_notifs["envoyees"]
+
+    def dernier_envoi(self, cle: str) -> str | None:
+        """Date du dernier rappel envoye pour cette occurrence, ou None.
+
+        La date, et non un simple booleen : une relance de recolte doit savoir
+        depuis combien de jours le dernier message est parti.
+        """
+        return self.etat_notifs["envoyees"].get(cle)
 
     def marquer_notif_envoyee(self, cle: str, jour: str) -> None:
         self.etat_notifs["envoyees"][cle] = jour

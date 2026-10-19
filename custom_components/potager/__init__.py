@@ -251,7 +251,7 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
 
     async def ajouter(call: ServiceCall) -> None:
         coord = _coordinateur()
-        if catalog.culture(call.data["culture_id"]) is None:
+        if coord.catalogue.culture(call.data["culture_id"]) is None:
             raise ServiceValidationError(
                 f"Culture inconnue : {call.data['culture_id']}. "
                 f"Les identifiants sont ceux du catalogue, par exemple « tomate »."
