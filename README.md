@@ -55,7 +55,7 @@ défait la dernière entrée — on se trompe toujours une fois.
 ### Par HACS (recommandé)
 
 1. HACS → menu ⋮ → **Dépôts personnalisés**
-2. URL du dépôt, catégorie **Integration**
+2. URL `https://github.com/MaximeRiviere56/ha-potager`, catégorie **Integration**
 3. Installer **Mon Potager**, puis redémarrer Home Assistant
 4. **Paramètres → Appareils et services → Ajouter une intégration → Mon Potager**
 

@@ -1,13 +1,13 @@
 {
   "domain": "potager",
   "name": "Mon Potager",
-  "codeowners": ["@CHANGEME_GITHUB_USER"],
+  "codeowners": ["@MaximeRiviere56"],
   "config_flow": true,
   "dependencies": ["http", "frontend", "panel_custom", "websocket_api"],
-  "documentation": "https://github.com/CHANGEME_GITHUB_USER/ha-potager",
+  "documentation": "https://github.com/MaximeRiviere56/ha-potager",
   "integration_type": "service",
   "iot_class": "calculated",
-  "issue_tracker": "https://github.com/CHANGEME_GITHUB_USER/ha-potager/issues",
+  "issue_tracker": "https://github.com/MaximeRiviere56/ha-potager/issues",
   "requirements": [],
   "version": "0.1.0"
 }
