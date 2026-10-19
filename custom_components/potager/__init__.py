@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components import panel_custom
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -167,6 +167,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: PotagerEntry) -> bool:
 
     _async_enregistrer_services(hass)
     entry.async_on_unload(entry.add_update_listener(_async_options_modifiees))
+
+    # Filet de securite : Home Assistant n'appelle pas toujours
+    # `async_unload_entry` quand il s'arrete. Cet evenement, lui, est le
+    # dernier moment garanti pour ecrire sur disque.
+    async def _ecrire_a_l_arret(_event) -> None:
+        await store.async_sauvegarder_maintenant()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_FINAL_WRITE, _ecrire_a_l_arret)
+    )
     return True
 
 

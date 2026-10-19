@@ -145,6 +145,13 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         rafraichir, donc entites et panneau ne peuvent pas rester en retard.
         """
         resultat = mutation()
+
+        # Ecriture immediate et attendue. Une sauvegarde differee a deja coute
+        # un jardin entier : les plantes ajoutees avaient disparu au
+        # redemarrage suivant. Quelques kilo-octets par geste de jardinage ne
+        # justifient aucun differe.
+        await self.store.async_sauvegarder_maintenant()
+
         # `async_refresh` et non `async_request_refresh` : ce dernier est
         # debounce, et le panneau qui rappelle `potager/jardin` juste apres
         # recevrait l'etat d'avant la mutation. Le calcul etant pur et local,

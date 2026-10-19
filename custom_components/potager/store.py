@@ -26,8 +26,6 @@ from .lifecycle import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DELAI_SAUVEGARDE = 2
-
 
 class PlanteInconnue(ErreurJournal):
     """Aucune plante du jardin ne porte cet identifiant."""
@@ -55,9 +53,18 @@ class JardinStore:
             plante["phase"] = phase_depuis_evenements(plante.get("evenements") or [])
 
     def _sauvegarder(self) -> None:
-        self._store.async_delay_save(lambda: self._donnees, DELAI_SAUVEGARDE)
+        """Programme une ecriture au prochain tour de boucle.
+
+        Delai zero, et non quelques secondes : le jardin pese quelques kilo-
+        octets, il n'y a rien a gagner a differer, et une fenetre d'attente est
+        une fenetre pendant laquelle un arret de Home Assistant perd des
+        donnees. Les mutations utilisateur passent de toute facon par
+        `async_sauvegarder_maintenant`, qui attend l'ecriture.
+        """
+        self._store.async_delay_save(lambda: self._donnees, 0)
 
     async def async_sauvegarder_maintenant(self) -> None:
+        """Ecrit sur disque et attend que ce soit fait."""
         await self._store.async_save(self._donnees)
 
     # --- Lecture -------------------------------------------------------------
