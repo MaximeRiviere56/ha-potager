@@ -84,6 +84,10 @@
         "uid": {
           "name": "Plant",
           "description": "Plant id, shown on its panel card."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },
@@ -106,6 +110,10 @@
         "note": {
           "name": "Note",
           "description": "Free remark kept in the journal."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },
@@ -124,6 +132,10 @@
         "note": {
           "name": "Note",
           "description": "Free remark."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },
@@ -146,6 +158,10 @@
         "note": {
           "name": "Note",
           "description": "Free remark."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },
@@ -168,6 +184,10 @@
         "note": {
           "name": "Note",
           "description": "Free remark."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },
@@ -186,6 +206,10 @@
         "note": {
           "name": "Note",
           "description": "Free remark."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },
@@ -196,6 +220,10 @@
         "uid": {
           "name": "Plant",
           "description": "Plant id."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: just point at the plant's sensor. Simpler in an automation."
         }
       }
     },

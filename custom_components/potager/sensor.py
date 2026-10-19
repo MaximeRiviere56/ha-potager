@@ -152,6 +152,10 @@ class PlanteSensor(PotagerPlanteEntity, SensorEntity):
         aujourdhui = self.coordinator.data["calcule_le"]
 
         attributs = {
+            # L'uid est ce que reclament les services `potager.*`. Sans lui
+            # expose ici, il faudrait aller le chercher dans le stockage
+            # interne : les services seraient inutilisables en automatisation.
+            "uid": entree["uid"],
             "culture": fiche["nom"],
             "culture_id": fiche["id"],
             "famille": fiche["famille"],

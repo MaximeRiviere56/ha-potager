@@ -238,13 +238,32 @@ class TestPlafondDeGel(unittest.TestCase):
         self.assertEqual(recolte.debut, date(2026, 7, 16))
         self.assertEqual(recolte.fin, date(2026, 10, 14))  # + 90 j, avant le 15/11
 
-    def test_fenetre_entierement_apres_le_gel_laissee_intacte(self):
-        """Semis trop tardif : on ne fabrique pas une fenêtre vide, qui ferait
-        disparaître la culture de l'interface sans explication."""
+    def test_plantation_trop_tardive_ne_promet_aucune_recolte(self):
+        """Plantée le 1er octobre, la tomate gèlera le 15 novembre, bien avant
+        sa récolte : annoncer une date serait un mensonge."""
         p = noter(plante(), lc.EVT_PLANTE, "2026-10-01")
-        recolte = par_type(ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 10, 2)))["recolte"]
-        self.assertEqual(recolte.debut, date(2026, 12, 15))
-        self.assertGreater(recolte.fin, recolte.debut)
+        etapes = ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 10, 2))
+        self.assertEqual(etapes, [])
+
+    def test_le_gel_retenu_est_celui_de_la_saison_pas_de_l_annee_civile(self):
+        """Le bug qui a motivé ce test : une récolte débordant sur janvier
+        faisait chercher la gelée de NOVEMBRE SUIVANT, dix mois trop tard, et
+        la tomate repiquée en octobre annonçait une récolte en janvier."""
+        p = noter(plante(), lc.EVT_SEME, "2026-08-25", mode=lc.MODE_SEMIS_INTERIEUR)
+        p = noter(p, lc.EVT_REPIQUE, "2026-10-19")
+        etapes = ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 10, 20))
+        # 19 oct. + 75 j = 2 janvier 2027, soit après la gelée du 15/11/2026.
+        self.assertEqual(etapes, [])
+
+    def test_recolte_a_cheval_sur_janvier_coupee_a_la_bonne_gelee(self):
+        """Récolte commencée avant la gelée et qui déborderait sur l'année
+        suivante : elle doit s'arrêter à la gelée de CETTE saison."""
+        p = noter(plante(), lc.EVT_PLANTE, "2026-08-20")
+        recolte = par_type(
+            ph.prochaines_etapes(TOMATE, p, GELEES, 0, date(2026, 11, 1))
+        )["recolte"]
+        self.assertEqual(recolte.debut, date(2026, 11, 3))  # 20 août + 75 j
+        self.assertEqual(recolte.fin, date(2026, 11, 15))  # et non février 2027
 
     def test_le_plafond_s_applique_aussi_aux_fenetres_theoriques(self):
         tardive = {

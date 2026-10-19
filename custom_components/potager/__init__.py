@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from contextlib import contextmanager
 from pathlib import Path
 
 import voluptuous as vol
@@ -12,7 +13,9 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from . import catalog, websocket
@@ -35,6 +38,7 @@ from .const import (
 )
 from .coordinator import PotagerCoordinator
 from .lifecycle import (
+    ErreurJournal,
     EVT_PERDU,
     EVT_RECOLTE,
     EVT_REPIQUE,
@@ -59,7 +63,18 @@ PotagerEntry = ConfigEntry[PotagerCoordinator]
 
 # --- Schemas des services -----------------------------------------------------
 
-SCHEMA_UID = vol.Schema({vol.Required("uid"): cv.string})
+# Une plante se designe par son `uid` (visible dans les attributs de son
+# capteur) ou, plus simplement, par l'entite elle-meme : c'est la facon
+# naturelle de cibler quelque chose dans Home Assistant.
+SCHEMA_UID = vol.Schema(
+    vol.All(
+        {
+            vol.Optional("uid"): cv.string,
+            vol.Optional("entity_id"): cv.entity_id,
+        },
+        cv.has_at_least_one_key("uid", "entity_id"),
+    )
+)
 
 SCHEMA_AJOUTER = vol.Schema(
     {
@@ -70,7 +85,14 @@ SCHEMA_AJOUTER = vol.Schema(
     }
 )
 
-SCHEMA_SEMIS = SCHEMA_UID.extend(
+SCHEMA_CIBLE = vol.Schema(
+    {
+        vol.Optional("uid"): cv.string,
+        vol.Optional("entity_id"): cv.entity_id,
+    }
+)
+
+SCHEMA_SEMIS = SCHEMA_CIBLE.extend(
     {
         vol.Optional("date"): cv.date,
         vol.Optional("mode", default=MODE_SEMIS_DIRECT): vol.In(
@@ -80,7 +102,7 @@ SCHEMA_SEMIS = SCHEMA_UID.extend(
     }
 )
 
-SCHEMA_DATE = SCHEMA_UID.extend(
+SCHEMA_DATE = SCHEMA_CIBLE.extend(
     {vol.Optional("date"): cv.date, vol.Optional("note"): cv.string}
 )
 
@@ -89,6 +111,34 @@ SCHEMA_RECOLTE = SCHEMA_DATE.extend(
 )
 
 SCHEMA_PERDU = SCHEMA_DATE.extend({vol.Optional("cause"): cv.string})
+
+
+def _resoudre_uid(hass: HomeAssistant, call: ServiceCall) -> str:
+    """Rend l'uid de la plante visee, qu'on l'ait designee par uid ou entite."""
+    uid = call.data.get("uid")
+    if uid:
+        return uid
+
+    entity_id = call.data.get("entity_id")
+    if not entity_id:
+        raise ServiceValidationError(
+            "Indiquez la plante : son `uid` (attribut de son capteur) ou son "
+            "`entity_id`."
+        )
+
+    entree = er.async_get(hass).async_get(entity_id)
+    if entree is None or entree.platform != DOMAIN:
+        raise ServiceValidationError(
+            f"{entity_id} n'est pas une entite de Mon Potager."
+        )
+
+    # unique_id = <entry_id>_<uid>_<suffixe>
+    morceaux = entree.unique_id.split("_")
+    if len(morceaux) != 3:
+        raise ServiceValidationError(
+            f"{entity_id} ne designe pas une plante du jardin."
+        )
+    return morceaux[1]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -165,6 +215,20 @@ async def _async_enregistrer_panneau(hass: HomeAssistant) -> None:
 # --- Services -----------------------------------------------------------------
 
 
+@contextmanager
+def _refus_lisible():
+    """Transforme un refus du journal en erreur de validation.
+
+    Sans cela, une transition impossible ou une plante disparue remonte en
+    HTTP 500 « Server got itself in trouble » : l'utilisateur n'apprend rien,
+    et le vrai motif reste dans les logs.
+    """
+    try:
+        yield
+    except ErreurJournal as err:
+        raise ServiceValidationError(str(err)) from err
+
+
 def _async_enregistrer_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_AJOUTER_PLANTE):
         return
@@ -178,7 +242,10 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
     async def ajouter(call: ServiceCall) -> None:
         coord = _coordinateur()
         if catalog.culture(call.data["culture_id"]) is None:
-            raise vol.Invalid(f"Culture inconnue : {call.data['culture_id']}")
+            raise ServiceValidationError(
+                f"Culture inconnue : {call.data['culture_id']}. "
+                f"Les identifiants sont ceux du catalogue, par exemple « tomate »."
+            )
         await coord.async_appliquer(
             lambda: coord.store.ajouter_plante(
                 call.data["culture_id"],
@@ -190,26 +257,30 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
 
     async def retirer(call: ServiceCall) -> None:
         coord = _coordinateur()
-        await coord.async_appliquer(
-            lambda: coord.store.retirer_plante(call.data["uid"])
-        )
+        uid = _resoudre_uid(hass, call)
+        with _refus_lisible():
+            await coord.async_appliquer(lambda: coord.store.retirer_plante(uid))
 
     def _noteur(type_evt: str, *champs: str):
         async def noter(call: ServiceCall) -> None:
             coord = _coordinateur()
+            uid = _resoudre_uid(hass, call)
             jour = call.data.get("date") or coord.data["calcule_le"]
             details = {
                 champ: call.data[champ] for champ in champs if champ in call.data
             }
-            await coord.async_appliquer(
-                lambda: coord.store.noter(call.data["uid"], type_evt, jour, **details)
-            )
+            with _refus_lisible():
+                await coord.async_appliquer(
+                    lambda: coord.store.noter(uid, type_evt, jour, **details)
+                )
 
         return noter
 
     async def annuler(call: ServiceCall) -> None:
         coord = _coordinateur()
-        await coord.async_appliquer(lambda: coord.store.annuler(call.data["uid"]))
+        uid = _resoudre_uid(hass, call)
+        with _refus_lisible():
+            await coord.async_appliquer(lambda: coord.store.annuler(uid))
 
     async def rafraichir(_: ServiceCall) -> None:
         await _coordinateur().async_refresh()

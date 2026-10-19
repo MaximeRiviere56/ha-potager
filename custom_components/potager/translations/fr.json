@@ -92,6 +92,10 @@
         "uid": {
           "name": "Plante",
           "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },
@@ -114,6 +118,10 @@
         "note": {
           "name": "Note",
           "description": "Remarque libre, conservée au journal."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },
@@ -132,6 +140,10 @@
         "note": {
           "name": "Note",
           "description": "Remarque libre, conservée au journal."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },
@@ -154,6 +166,10 @@
         "note": {
           "name": "Note",
           "description": "Remarque libre, conservée au journal."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },
@@ -176,6 +192,10 @@
         "note": {
           "name": "Note",
           "description": "Remarque libre, conservée au journal."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },
@@ -194,6 +214,10 @@
         "note": {
           "name": "Note",
           "description": "Remarque libre, conservée au journal."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },
@@ -204,6 +228,10 @@
         "uid": {
           "name": "Plante",
           "description": "Identifiant de la plante du jardin, visible dans sa fiche sur le panneau."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante. Plus simple en automatisation."
         }
       }
     },

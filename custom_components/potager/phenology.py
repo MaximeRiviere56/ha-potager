@@ -153,13 +153,36 @@ def _cycle(culture: dict) -> dict:
     return culture.get("cycle") or {}
 
 
-def caper_au_gel(etape: Etape, culture: dict, gelees: Gelees) -> Etape:
+def premier_gel_apres(reference: date, gelees: Gelees) -> date:
+    """Premiere gelee d'automne a survenir a partir de `reference`.
+
+    Le repere doit etre la saison de culture, jamais l'annee civile de la
+    fenetre calculee : une recolte qui deborde sur janvier appartient encore a
+    la saison precedente, et c'est la gelee de CETTE saison qui tuera le plant.
+    """
+    gel = _jour_mois(gelees.premiere, reference.year)
+    if gel < reference:
+        gel = _jour_mois(gelees.premiere, reference.year + 1)
+    return gel
+
+
+def caper_au_gel(
+    etape: Etape, culture: dict, gelees: Gelees, reference: date | None = None
+) -> Etape | None:
     """Raccourcit une fenetre de recolte a la premiere gelee, si besoin.
 
     Une courgette ne se recolte pas en janvier : elle a gele en novembre. Sans
     ce plafond, une duree de recolte de 90 jours comptee depuis une plantation
     tardive promet des legumes bien apres la mort du plant — et declencherait
     un rappel absurde en plein hiver.
+
+    `reference` est le moment ou la plante occupe le terrain (semis ou mise en
+    place). Il determine quelle gelee compte. Sans lui on retomberait sur
+    l'annee de la fenetre, ce qui choisit une gelee d'un an trop tard des que
+    la recolte franchit le 1er janvier.
+
+    Renvoie None quand la fenetre entiere tombe apres la gelee : la culture
+    n'aura pas le temps, et promettre une recolte serait un mensonge.
 
     Seules les cultures declarees gelives sont concernees ; poireaux, choux et
     arbres fruitiers traversent l'hiver sans y prendre garde.
@@ -169,12 +192,11 @@ def caper_au_gel(etape: Etape, culture: dict, gelees: Gelees) -> Etape:
     if (culture.get("rusticite") or {}).get("gel", True):
         return etape
 
-    gel = _jour_mois(gelees.premiere, etape.debut.year)
-    # Fenetre qui commence deja apres le gel : on ne sait pas trancher (serre,
-    # hiver doux), on laisse telle quelle plutot que de produire une fenetre
-    # vide qui ferait disparaitre la culture.
-    if etape.debut > gel or etape.fin <= gel:
+    gel = premier_gel_apres(reference or etape.debut, gelees)
+    if etape.fin <= gel:
         return etape
+    if etape.debut >= gel:
+        return None
     return replace(etape, fin=gel)
 
 
@@ -205,18 +227,33 @@ def fenetres_theoriques(
             debut, fin = resoudre_fenetre(brute, gelees, annee, decalage_zone)
             etapes.append(Etape(type_etape, debut, fin, SOURCE_PREVUE))
 
+    # La reference du plafond de gel : le moment ou la plante occupe le
+    # terrain, et non l'annee civile de la recolte.
+    reference = _debut_occupation(etapes)
+
     recolte_brute = fenetres.get(ETAPE_RECOLTE)
     if recolte_brute:
         debut, fin = resoudre_fenetre(recolte_brute, gelees, annee, decalage_zone)
-        etapes.append(
-            caper_au_gel(Etape(ETAPE_RECOLTE, debut, fin, SOURCE_PREVUE), culture, gelees)
-        )
+        brute = Etape(ETAPE_RECOLTE, debut, fin, SOURCE_PREVUE)
     else:
-        deduite = _recolte_deduite(etapes, cycle)
-        if deduite is not None:
-            etapes.append(caper_au_gel(deduite, culture, gelees))
+        brute = _recolte_deduite(etapes, cycle)
+
+    if brute is not None:
+        capee = caper_au_gel(brute, culture, gelees, reference)
+        if capee is not None:
+            etapes.append(capee)
 
     return trier(etapes)
+
+
+def _debut_occupation(etapes: list[Etape]) -> date | None:
+    """Date a laquelle la plante prend sa place au jardin."""
+    par_type = {etape.type: etape for etape in etapes}
+    for type_etape in (ETAPE_PLANTATION, ETAPE_SEMIS_DIRECT, ETAPE_SEMIS_INTERIEUR):
+        etape = par_type.get(type_etape)
+        if etape is not None:
+            return etape.debut
+    return None
 
 
 def _recolte_deduite(etapes: list[Etape], cycle: dict) -> Etape | None:
@@ -263,28 +300,7 @@ def _chaine_depuis_semis(
         jours_recolte = cycle.get("jours_plantation_a_recolte")
         if jours_recolte:
             debut_recolte = debut_repiquage + timedelta(days=int(jours_recolte))
-            etapes.append(
-                caper_au_gel(
-                    Etape(
-                        ETAPE_RECOLTE,
-                        debut_recolte,
-                        debut_recolte + timedelta(days=duree_recolte),
-                        SOURCE_REELLE,
-                    ),
-                    culture,
-                    gelees,
-                )
-            )
-        return etapes
-
-    # Semis en place : on va du semis a la recolte sans repiquage.
-    jours_recolte = cycle.get("jours_semis_a_recolte") or cycle.get(
-        "jours_plantation_a_recolte"
-    )
-    if jours_recolte:
-        debut_recolte = jour_semis + timedelta(days=int(jours_recolte))
-        etapes.append(
-            caper_au_gel(
+            capee = caper_au_gel(
                 Etape(
                     ETAPE_RECOLTE,
                     debut_recolte,
@@ -293,8 +309,31 @@ def _chaine_depuis_semis(
                 ),
                 culture,
                 gelees,
+                jour_semis,
             )
+            if capee is not None:
+                etapes.append(capee)
+        return etapes
+
+    # Semis en place : on va du semis a la recolte sans repiquage.
+    jours_recolte = cycle.get("jours_semis_a_recolte") or cycle.get(
+        "jours_plantation_a_recolte"
+    )
+    if jours_recolte:
+        debut_recolte = jour_semis + timedelta(days=int(jours_recolte))
+        capee = caper_au_gel(
+            Etape(
+                ETAPE_RECOLTE,
+                debut_recolte,
+                debut_recolte + timedelta(days=duree_recolte),
+                SOURCE_REELLE,
+            ),
+            culture,
+            gelees,
+            jour_semis,
         )
+        if capee is not None:
+            etapes.append(capee)
     return etapes
 
 
@@ -307,13 +346,13 @@ def _chaine_depuis_mise_en_place(
         return []
     duree = int(cycle.get("duree_recolte_jours", DUREE_FENETRE_DEFAUT))
     debut = jour + timedelta(days=int(jours_recolte))
-    return [
-        caper_au_gel(
-            Etape(ETAPE_RECOLTE, debut, debut + timedelta(days=duree), SOURCE_REELLE),
-            culture,
-            gelees,
-        )
-    ]
+    capee = caper_au_gel(
+        Etape(ETAPE_RECOLTE, debut, debut + timedelta(days=duree), SOURCE_REELLE),
+        culture,
+        gelees,
+        jour,
+    )
+    return [capee] if capee is not None else []
 
 
 def prochaines_etapes(
@@ -381,8 +420,11 @@ def prochaines_etapes(
             ),
             culture,
             gelees,
+            premiere,
         )
-        return [en_cours] if en_cours.fin >= aujourdhui else []
+        if en_cours is None or en_cours.fin < aujourdhui:
+            return []
+        return [en_cours]
 
     return []
 
