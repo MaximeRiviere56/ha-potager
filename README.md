@@ -287,28 +287,15 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 | `potager.annuler_dernier_evenement` | Défait la dernière entrée du journal |
 | `potager.rafraichir` | Recalcule tout de suite |
 
-## Le logo
-
-L'intégration embarque ses propres images de marque dans
-`custom_components/potager/brand/` : icône et logo, en variantes claire et
-sombre. Depuis Home Assistant 2026.3, un composant personnalisé peut les servir
-lui-même, et elles priment sur le dépôt central
-[home-assistant/brands](https://github.com/home-assistant/brands) — aucune pull
-request à déposer, aucune attente de relecture.
-
-Les sources SVG et la marche à suivre pour regénérer les PNG sont dans
-[`tools/brand/`](tools/brand/).
-
 ## Développement
 
 ```bash
 python3 -m unittest discover -s tests -p 'test_*.py'   # 75 tests, sans dépendance
 ```
 
-`lifecycle.py` (le journal) et `phenology.py` (le calcul des étapes) n'importent
-rien de Home Assistant : ils sont testables hors instance, et c'est là que vit
-toute la logique qui coûterait cher si elle était fausse — un calendrier faux ne
-se voit qu'une saison plus tard.
+`lifecycle.py` (le journal), `phenology.py` (le calcul des étapes) et
+`rotation.py` n'importent rien de Home Assistant : ils sont testables hors
+instance.
 
 Le panneau et la carte se vérifient sans instance :
 
