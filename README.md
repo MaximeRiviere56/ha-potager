@@ -26,6 +26,24 @@ progression se remplit pendant la fenêtre en cours.
 Les 108 fiches, filtrables. Le filtre **Semable maintenant** répond à la seule
 question qui compte devant un catalogue de cette taille : qu'est-ce que je peux
 mettre en terre ce week-end ? Les dates affichées sont calculées depuis vos
+propres gelées, pas depuis une moyenne nationale.
+
+![Rien à faire aujourd'hui](docs/aujourdhui.png)
+
+Et quand il n'y a rien à faire, l'application le dit. Un potager n'a pas besoin
+d'attention tous les jours, et inventer des tâches pour meubler serait le plus
+sûr moyen de faire ignorer les vraies.
+
+![Le jardin, par zone](docs/mon-potager.png)
+
+Chaque plante montre sa phase, sa zone et son échéance suivante. La barre de
+progression se remplit pendant la fenêtre en cours.
+
+![Le catalogue](docs/catalogue.png)
+
+Les 108 fiches, filtrables. Le filtre **Semable maintenant** répond à la seule
+question qui compte devant un catalogue de cette taille : qu'est-ce que je peux
+mettre en terre ce week-end ? Les dates affichées sont calculées depuis vos
 propres gelées.
 
 **Des entités** pour vos tableaux de bord et vos automatisations :
