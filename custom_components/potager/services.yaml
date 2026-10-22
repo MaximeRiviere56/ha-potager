@@ -17,6 +17,15 @@ ajouter_plante:
       default: true
       selector:
         boolean:
+    echelonnement_jours:
+      example: 15
+      selector:
+        number:
+          min: 0
+          max: 90
+          step: 1
+          unit_of_measurement: jours
+          mode: box
 
 retirer_plante:
   fields:
@@ -139,6 +148,21 @@ marquer_termine:
     note:
       selector:
         text:
+
+ressemer:
+  fields:
+    uid:
+      example: c3268895
+      selector:
+        text:
+    entity_id:
+      selector:
+        entity:
+          integration: potager
+          domain: sensor
+    date:
+      selector:
+        date:
 
 annuler_dernier_evenement:
   fields:

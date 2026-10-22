@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import rotation
 from .catalog import Catalogue
 from .const import (
     CONF_GELEES_DERNIERE,
@@ -35,7 +36,11 @@ from .const import (
     DOMAIN,
     ETAPES_NOTIFIABLES,
 )
-from .lifecycle import PHASES_LIBELLES, resume as resume_journal
+from .lifecycle import (
+    PHASES_LIBELLES,
+    resume as resume_journal,
+    total_recolte_saison_g,
+)
 from .phenology import Gelees, prochaines_etapes
 from .store import JardinStore
 
@@ -127,6 +132,7 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         plantes: dict[str, dict] = {}
         actions: list[dict] = []
         total_recolte = 0
+        total_saison = 0
 
         for brute in self.store.plantes:
             uid = brute["uid"]
@@ -142,6 +148,14 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             etapes = prochaines_etapes(fiche, brute, gelees, decalage, aujourdhui)
             infos = resume_journal(brute)
             total_recolte += infos["total_recolte_g"]
+            # Le total « de la saison » doit se remettre a zero chaque annee,
+            # sinon son nom ment des la deuxieme. L'annee civile tranche la
+            # saison de maniere comprehensible, et rend les annees comparables.
+            saison = total_recolte_saison_g(
+                brute.get("evenements") or [], aujourdhui.year
+            )
+            infos["recolte_saison_g"] = saison
+            total_saison += saison
 
             entree = {
                 "uid": uid,
@@ -177,9 +191,26 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "plantes": plantes,
             "zones": list(self.store.zones),
             "actions": actions,
-            "total_recolte_g": total_recolte,
+            "total_recolte_g": total_saison,
+            "total_toutes_saisons_g": total_recolte,
+            "saison": aujourdhui.year,
             "calcule_le": aujourdhui,
         }
+
+    # --- Rotation des cultures -----------------------------------------------
+
+    def verifier_rotation(self, culture_id: str, zone_id: str) -> dict | None:
+        """Avertit si la meme famille a deja occupe cette zone recemment."""
+        fiche = self._catalogue.culture(culture_id)
+        if fiche is None:
+            return None
+        return rotation.verifier(
+            fiche,
+            zone_id,
+            self.store.plantes,
+            {c["id"]: c for c in self._catalogue.toutes()},
+            date.today(),
+        )
 
     # --- Ecriture : toute mutation passe par un rafraichissement -------------
 

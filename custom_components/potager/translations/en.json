@@ -74,6 +74,10 @@
         "notifs": {
           "name": "Reminders",
           "description": "Enable reminders for this plant."
+        },
+        "echelonnement_jours": {
+          "name": "Sow again every",
+          "description": "Interval in days for a staggered sowing. 0 disables it."
         }
       }
     },
@@ -230,6 +234,24 @@
     "rafraichir": {
       "name": "Recompute",
       "description": "Recomputes every step immediately."
+    },
+    "ressemer": {
+      "name": "Sow next batch",
+      "description": "Opens the next batch of a staggered sowing: a new plant of the same crop and zone, sown on the given date. The parent then stops asking.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id, shown in its sensor attributes."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: point at the plant's sensor."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        }
+      }
     }
   }
 }

@@ -68,6 +68,7 @@ def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, 
         "zone": entree["zone"],
         "notifs": plante.get("notifs", True),
         "rappel_jours": plante.get("rappel_jours"),
+        "echelonnement_jours": plante.get("echelonnement_jours"),
         "phase": infos["phase"],
         "phase_libelle": libelle_phase(infos["phase"]),
         "perenne": bool(fiche.get("perenne")),
@@ -93,6 +94,9 @@ def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, 
 @callback
 def async_enregistrer(hass: HomeAssistant) -> None:
     for commande in (
+        retablir_culture,
+        rotation,
+        ressemer,
         reglages,
         definir_reglages,
         definir_culture_perso,
@@ -329,6 +333,7 @@ def _avec_coordinateur(fonction):
         vol.Optional("zone", default=ZONE_PLEINE_TERRE): str,
         vol.Optional("surnom"): vol.Any(str, None),
         vol.Optional("notifs", default=True): bool,
+        vol.Optional("echelonnement_jours"): vol.Any(int, None),
     }
 )
 @websocket_api.async_response
@@ -336,15 +341,21 @@ def _avec_coordinateur(fonction):
 async def ajouter(coordinator, msg) -> dict:
     if coordinator.catalogue.culture(msg["culture_id"]) is None:
         raise ErreurJournal(f"Culture inconnue : {msg['culture_id']}")
+
+    # Calcule avant l'ajout : sinon la plante qu'on vient de poser compterait
+    # comme son propre antecedent.
+    avertissement = coordinator.verifier_rotation(msg["culture_id"], msg["zone"])
+
     plante = await coordinator.async_appliquer(
         lambda: coordinator.store.ajouter_plante(
             msg["culture_id"],
             zone=msg["zone"],
             surnom=msg.get("surnom"),
             notifs=msg["notifs"],
+            echelonnement_jours=msg.get("echelonnement_jours"),
         )
     )
-    return {"uid": plante["uid"]}
+    return {"uid": plante["uid"], "rotation": avertissement}
 
 
 @websocket_api.websocket_command(
@@ -355,6 +366,7 @@ async def ajouter(coordinator, msg) -> dict:
         vol.Optional("surnom"): vol.Any(str, None),
         vol.Optional("notifs"): bool,
         vol.Optional("rappel_jours"): vol.Any(int, None),
+        vol.Optional("echelonnement_jours"): vol.Any(int, None),
     }
 )
 @websocket_api.async_response
@@ -362,7 +374,9 @@ async def ajouter(coordinator, msg) -> dict:
 async def modifier(coordinator, msg) -> dict:
     champs = {
         cle: msg[cle]
-        for cle in ("zone", "surnom", "notifs", "rappel_jours")
+        for cle in (
+            "zone", "surnom", "notifs", "rappel_jours", "echelonnement_jours"
+        )
         if cle in msg
     }
     await coordinator.async_appliquer(
@@ -587,6 +601,64 @@ async def supprimer_culture_perso(coordinator, msg) -> dict:
     return {"ok": True}
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/culture_perso/retablir",
+        vol.Required("culture_id"): str,
+    }
+)
+@websocket_api.async_response
+@_avec_coordinateur
+async def retablir_culture(coordinator, msg) -> dict:
+    """Annule une correction et rend la fiche livree."""
+    if not coordinator.catalogue.est_livree(msg["culture_id"]):
+        raise ErreurJournal(
+            "Cette fiche n'existe pas dans le catalogue livré : il n'y a rien "
+            "à rétablir. Supprimez-la plutôt."
+        )
+
+    def _effacer() -> None:
+        coordinator.store.supprimer_culture(msg["culture_id"], retablit=True)
+        coordinator.recharger_catalogue()
+
+    await coordinator.async_appliquer(_effacer)
+    return {"ok": True}
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/rotation",
+        vol.Required("culture_id"): str,
+        vol.Required("zone"): str,
+    }
+)
+@callback
+def rotation(hass, connection, msg) -> None:
+    """Avertissement de rotation, avant d'ajouter une plante a une zone."""
+    coordinator = _coordinateur(hass)
+    if coordinator is None:
+        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        return
+    connection.send_result(
+        msg["id"],
+        {"avertissement": coordinator.verifier_rotation(msg["culture_id"], msg["zone"])},
+    )
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): f"{DOMAIN}/ressemer", vol.Required("uid"): str}
+)
+@websocket_api.async_response
+@_avec_coordinateur
+async def ressemer(coordinator, msg) -> dict:
+    """Ouvre le lot suivant d'un semis echelonne."""
+    jour = coordinator.data["calcule_le"]
+    enfant = await coordinator.async_appliquer(
+        lambda: coordinator.store.ressemer(msg["uid"], jour)
+    )
+    return {"uid": enfant["uid"], "nom": enfant.get("surnom")}
+
+
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/cultures_perso"})
 @callback
 def cultures_perso(hass, connection, msg) -> None:
@@ -607,8 +679,14 @@ def _normaliser_fiche(brute: dict, coordinator) -> dict:
     seule forme de fiche.
     """
     nom = (brute.get("nom") or "").strip()
-    identifiant = brute.get("id") or f"{PREFIXE_PERSO}{catalog.slug(nom)}"
-    if not identifiant.startswith(PREFIXE_PERSO):
+    identifiant = brute.get("id")
+    # Corriger une fiche livree conserve son id : la fiche personnelle la
+    # remplace alors au lieu de la doubler, et les plantes deja au jardin
+    # suivent la correction. Toute autre saisie recoit le prefixe.
+    if not identifiant or not (
+        identifiant.startswith(PREFIXE_PERSO)
+        or coordinator.catalogue.est_livree(identifiant)
+    ):
         identifiant = f"{PREFIXE_PERSO}{catalog.slug(nom)}"
 
     fenetres: dict[str, dict] = {}
@@ -618,6 +696,16 @@ def _normaliser_fiche(brute: dict, coordinator) -> dict:
             fenetres[cle] = catalog.fenetre_par_mois(
                 periode["debut"], periode.get("fin") or periode["debut"]
             )
+
+    # Corriger une fiche livree sans toucher a ses periodes conserve ses
+    # fenetres d'origine, ancrees aux gelees. Les convertir en mois les
+    # figerait sur le calendrier et leur ferait perdre ce qui les rend justes
+    # d'un jardin a l'autre — pour un gain nul, puisque ce qu'on vient
+    # corriger est presque toujours une duree de cycle.
+    if not fenetres:
+        origine = catalog.culture(identifiant)
+        if origine:
+            fenetres = origine["fenetres"]
 
     cycle: dict[str, int] = {
         "duree_recolte_jours": int(brute.get("duree_recolte_jours") or 30)

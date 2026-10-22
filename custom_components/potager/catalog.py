@@ -201,8 +201,13 @@ class Catalogue:
     """Vue fusionnee des fiches livrees et des fiches personnelles."""
 
     def __init__(self, perso: list[dict] | None = None) -> None:
-        self._index = dict(charger())
+        livrees = charger()
+        self._index = dict(livrees)
         for fiche in perso or []:
+            # Une fiche personnelle portant l'id d'une fiche livree ne la
+            # double pas : elle la remplace. C'est ainsi qu'on corrige une
+            # duree de cycle qui ne correspond pas a son propre jardin.
+            fiche = {**fiche, "surcharge": fiche["id"] in livrees}
             self._index[fiche["id"]] = fiche
 
     def culture(self, culture_id: str) -> dict | None:
@@ -215,10 +220,15 @@ class Catalogue:
         return sorted({c["categorie"] for c in self._index.values()})
 
     def perso(self) -> list[dict]:
+        """Fiches inedites et fiches livrees corrigees, les secondes marquees."""
         return sorted(
             (c for c in self._index.values() if c.get("perso")),
             key=lambda c: c["nom"],
         )
+
+    def est_livree(self, culture_id: str) -> bool:
+        """Vrai si cet id existe dans le catalogue d'origine."""
+        return culture_id in charger()
 
     def rechercher(self, requete: str = "", **filtres) -> list[dict]:
         resultats = self.toutes()

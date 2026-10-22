@@ -33,6 +33,7 @@ from .const import (
     SERVICE_MARQUER_SEME,
     SERVICE_MARQUER_TERMINE,
     SERVICE_RAFRAICHIR,
+    SERVICE_RESSEMER,
     SERVICE_RETIRER_PLANTE,
     ZONE_PLEINE_TERRE,
 )
@@ -82,6 +83,9 @@ SCHEMA_AJOUTER = vol.Schema(
         vol.Optional("zone", default=ZONE_PLEINE_TERRE): cv.string,
         vol.Optional("surnom"): cv.string,
         vol.Optional("notifs", default=True): cv.boolean,
+        vol.Optional("echelonnement_jours"): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=90)
+        ),
     }
 )
 
@@ -262,6 +266,7 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
                 zone=call.data["zone"],
                 surnom=call.data.get("surnom"),
                 notifs=call.data["notifs"],
+                echelonnement_jours=call.data.get("echelonnement_jours"),
             )
         )
 
@@ -286,6 +291,13 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
 
         return noter
 
+    async def ressemer(call: ServiceCall) -> None:
+        coord = _coordinateur()
+        uid = _resoudre_uid(hass, call)
+        jour = call.data.get("date") or coord.data["calcule_le"]
+        with _refus_lisible():
+            await coord.async_appliquer(lambda: coord.store.ressemer(uid, jour))
+
     async def annuler(call: ServiceCall) -> None:
         coord = _coordinateur()
         uid = _resoudre_uid(hass, call)
@@ -307,6 +319,7 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
         ),
         (SERVICE_MARQUER_PERDU, _noteur(EVT_PERDU, "cause", "note"), SCHEMA_PERDU),
         (SERVICE_MARQUER_TERMINE, _noteur(EVT_TERMINE, "note"), SCHEMA_DATE),
+        (SERVICE_RESSEMER, ressemer, SCHEMA_DATE),
         (SERVICE_ANNULER, annuler, SCHEMA_UID),
         (SERVICE_RAFRAICHIR, rafraichir, vol.Schema({})),
     )

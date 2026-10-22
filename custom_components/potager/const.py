@@ -76,6 +76,7 @@ SERVICE_MARQUER_REPIQUE = "marquer_repique"
 SERVICE_MARQUER_RECOLTE = "marquer_recolte"
 SERVICE_MARQUER_PERDU = "marquer_perdu"
 SERVICE_MARQUER_TERMINE = "marquer_termine"
+SERVICE_RESSEMER = "ressemer"
 SERVICE_ANNULER = "annuler_dernier_evenement"
 SERVICE_RAFRAICHIR = "rafraichir"
 

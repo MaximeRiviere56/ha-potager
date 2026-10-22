@@ -39,6 +39,7 @@ from .lifecycle import (
 )
 from .phenology import (
     ETAPE_PLANTATION,
+    ETAPE_RESSEMER,
         ETAPE_RECOLTE,
     ETAPE_REPIQUAGE,
     ETAPE_SEMIS_DIRECT,
@@ -67,6 +68,7 @@ VERBES = {
     ETAPE_REPIQUAGE: "Repiquer",
     ETAPE_PLANTATION: "Planter",
     ETAPE_RECOLTE: "Récolter",
+    ETAPE_RESSEMER: "Ressemer",
 }
 
 
@@ -209,7 +211,7 @@ class PotagerNotifier:
         actions_notif = [
             {
                 "action": _encoder("fait", action["uid"], etape.type),
-                "title": "C'est fait",
+                "title": "Semé" if etape.type == ETAPE_RESSEMER else "C'est fait",
             },
             {
                 "action": _encoder("report", action["uid"], etape.type),
@@ -247,16 +249,23 @@ class PotagerNotifier:
             self.coordinator.store.reporter(f"{uid}:{type_etape}", jusqu_au)
             return
 
-        inscription = JOURNAL_POUR_ETAPE.get(type_etape)
-        if inscription is None:
-            return
-        type_evt, details = inscription
-
         store = self.coordinator.store
-        try:
-            await self.coordinator.async_appliquer(
-                lambda: store.noter(uid, type_evt, date.today(), **details)
+
+        # Un ressemis n'est pas un evenement de plus sur la meme plante :
+        # c'est un nouveau lot. D'ou un chemin distinct.
+        if type_etape == ETAPE_RESSEMER:
+            mutation = lambda: store.ressemer(uid, date.today())  # noqa: E731
+        else:
+            inscription = JOURNAL_POUR_ETAPE.get(type_etape)
+            if inscription is None:
+                return
+            type_evt, details = inscription
+            mutation = lambda: store.noter(  # noqa: E731
+                uid, type_evt, date.today(), **details
             )
+
+        try:
+            await self.coordinator.async_appliquer(mutation)
         except Exception:  # noqa: BLE001 - journal deja avance, ou plante retiree
             # entre l'envoi du rappel et la reponse : sans interet a remonter.
             _LOGGER.debug(

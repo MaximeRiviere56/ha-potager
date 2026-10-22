@@ -54,6 +54,9 @@ const EVT_POUR_ETAPE = {
   repiquage: { evenement: "repique" },
   plantation: { evenement: "plante" },
   recolte: { evenement: "recolte" },
+  // Le ressemis ne note rien : il ouvre un nouveau lot, donc une nouvelle
+  // plante. D'ou une commande distincte.
+  ressemer: { commande: "potager/ressemer" },
 };
 
 const LIBELLES_EVT = {
@@ -121,6 +124,10 @@ function _versFormulaire(fiche) {
     jours_plantation_a_recolte: cycle.jours_plantation_a_recolte,
     duree_recolte_jours: cycle.duree_recolte_jours,
     conseils: fiche.conseils || [],
+    // Une fiche livree garde ses fenetres ancrees aux gelees : le formulaire
+    // ne les propose pas en mois, qui les figeraient sur le calendrier.
+    livree: !fiche.perso || !!fiche.surcharge,
+    fenetres_origine: fiche.fenetres || {},
   };
 }
 
@@ -371,6 +378,13 @@ const STYLES = `
   }
   .reglage > span { display: flex; align-items: center; gap: 6px; font-size: 14px;
                     color: var(--secondary-text-color); }
+
+  .avertissement {
+    display: flex; align-items: flex-start; gap: 8px; margin-top: 12px;
+    background: color-mix(in srgb, var(--warning-color, #ef6c00) 16%, transparent);
+    color: var(--primary-text-color); padding: 10px 12px;
+    border-radius: var(--potager-rayon); font-size: 13px; line-height: 1.5;
+  }
 
   .erreur {
     background: color-mix(in srgb, var(--error-color) 15%, transparent);
@@ -674,7 +688,9 @@ class PotagerPanel extends HTMLElement {
           correspondance
             ? `<button class="bouton" data-fait="${action.uid}"
                  data-etape="${etape.type}" title="Enregistrer au journal">
-                 <ha-icon icon="mdi:check"></ha-icon> Fait
+                 <ha-icon icon="mdi:check"></ha-icon> ${
+                   etape.type === "ressemer" ? "Semé" : "Fait"
+                 }
                </button>`
             : ""
         }
@@ -857,6 +873,7 @@ class PotagerPanel extends HTMLElement {
               ? `<span class="badge seme">🌱 maintenant</span>`
               : ""
           }
+          ${culture.perso ? `<span class="badge prevu">✎</span>` : ""}
         </div>
         <div class="detail" style="margin-top:10px;font-size:13px;color:var(--secondary-text-color)">
           <ha-icon icon="${expo.icone || "mdi:weather-sunny"}" style="--mdc-icon-size:16px"></ha-icon>
@@ -1080,15 +1097,18 @@ class PotagerPanel extends HTMLElement {
         ev.stopPropagation();
         el.disabled = true;
         const corr = EVT_POUR_ETAPE[el.dataset.etape];
-        if (corr) {
-          if (corr.evenement === "recolte") {
-            this._demanderRecolte(el.dataset.fait);
-            el.disabled = false;
-            return;
-          }
-          await this._noter(el.dataset.fait, corr.evenement,
-            corr.mode ? { mode: corr.mode } : {});
+        if (!corr) return;
+        if (corr.commande) {
+          await this._appeler({ type: corr.commande, uid: el.dataset.fait });
+          return;
         }
+        if (corr.evenement === "recolte") {
+          this._demanderRecolte(el.dataset.fait);
+          el.disabled = false;
+          return;
+        }
+        await this._noter(el.dataset.fait, corr.evenement,
+          corr.mode ? { mode: corr.mode } : {});
       })
     );
 
@@ -1353,6 +1373,18 @@ class PotagerPanel extends HTMLElement {
                      plante.rappel_jours ?? this._jardin?.rappel_jours ?? 3
                    }" style="width:90px">
           </div>
+          <div class="reglage">
+            <label for="champ-echelon">Ressemer tous les</label>
+            <span><input id="champ-echelon" type="number" min="0" max="90"
+                         data-uid="${plante.uid}"
+                         value="${plante.echelonnement_jours || 0}"
+                         style="width:90px"> jours</span>
+          </div>
+          <p class="aide">
+            Pour les semis échelonnés&nbsp;: radis, laitue, haricot. À chaque
+            intervalle, un rappel propose d'ouvrir le lot suivant — qui devient
+            une plante à part, avec son propre journal. 0 pour désactiver.
+          </p>
         </div>
 
         ${culture ? this._blocCulture(culture) : ""}
@@ -1467,9 +1499,44 @@ class PotagerPanel extends HTMLElement {
             <label for="champ-surnom-ajout">Surnom</label>
             <input id="champ-surnom-ajout" type="text" placeholder="variété, emplacement…">
           </div>
+          <div class="reglage">
+            <label for="champ-echelon-ajout">Ressemer tous les</label>
+            <span><input id="champ-echelon-ajout" type="number" min="0" max="90"
+                         value="0" style="width:90px"> jours</span>
+          </div>
+          <div id="avis-rotation" class="avertissement" hidden></div>
           <button class="bouton" data-ajouter="${culture.id}" style="margin-top:8px">
             <ha-icon icon="mdi:plus"></ha-icon> Ajouter
           </button>
+        </div>
+
+        <div class="carte bloc">
+          <h4>Cette fiche</h4>
+          ${
+            culture.perso
+              ? `<p class="aide">${
+                  culture.surcharge
+                    ? "Vous avez corrigé cette fiche livrée. Vos valeurs remplacent les miennes."
+                    : "Fiche que vous avez créée."
+                }</p>`
+              : `<p class="aide">
+                   Les durées de cette fiche sont des estimations, pas des
+                   mesures. Si votre jardin dit autre chose, corrigez-les : vos
+                   valeurs feront foi.
+                 </p>`
+          }
+          <div class="actions-fiche">
+            <button class="bouton discret" data-corriger="${culture.id}">
+              <ha-icon icon="mdi:pencil"></ha-icon> Corriger cette fiche
+            </button>
+            ${
+              culture.surcharge
+                ? `<button class="bouton discret" data-retablir="${culture.id}">
+                     <ha-icon icon="mdi:restore"></ha-icon> Rétablir l'originale
+                   </button>`
+                : ""
+            }
+          </div>
         </div>
 
         ${this._blocFenetres(detail.fenetres)}
@@ -1628,16 +1695,69 @@ class PotagerPanel extends HTMLElement {
       })
     );
 
+    const zoneAjout = hote.querySelector("#sel-zone-ajout");
+    const avis = hote.querySelector("#avis-rotation");
+    if (zoneAjout && avis && this._fiche?.type === "culture") {
+      const verifier = async () => {
+        try {
+          const r = await this._hass.callWS({
+            type: "potager/rotation",
+            culture_id: this._fiche.id,
+            zone: zoneAjout.value,
+          });
+          if (r?.avertissement) {
+            avis.innerHTML = `<ha-icon icon="mdi:alert-outline"></ha-icon> ${echappe(
+              r.avertissement.message
+            )}`;
+            avis.hidden = false;
+          } else {
+            avis.hidden = true;
+          }
+        } catch (err) {
+          avis.hidden = true;
+        }
+      };
+      zoneAjout.addEventListener("change", verifier);
+      verifier();
+    }
+
+    hote.querySelectorAll("[data-corriger]").forEach((el) =>
+      el.addEventListener("click", () => {
+        const fiche = this._ficheDetail?.culture;
+        this._fiche = {
+          type: "perso",
+          fiche: fiche ? _versFormulaire(fiche) : null,
+        };
+        this._rendreFiche();
+      })
+    );
+
+    hote.querySelectorAll("[data-retablir]").forEach((el) =>
+      el.addEventListener("click", async () => {
+        if (!confirm("Rétablir la fiche d'origine et perdre vos corrections ?")) return;
+        el.disabled = true;
+        await this._appeler({
+          type: "potager/culture_perso/retablir",
+          culture_id: el.dataset.retablir,
+        });
+        this._fermerFiche();
+      })
+    );
+
     hote.querySelectorAll("[data-ajouter]").forEach((el) =>
       el.addEventListener("click", async () => {
         el.disabled = true;
         const zone = hote.querySelector("#sel-zone-ajout")?.value;
         const surnom = hote.querySelector("#champ-surnom-ajout")?.value?.trim();
+        const echelon = Number(
+          hote.querySelector("#champ-echelon-ajout")?.value || 0
+        );
         const reponse = await this._appeler({
           type: "potager/ajouter",
           culture_id: el.dataset.ajouter,
           zone: zone || "pleine-terre",
           surnom: surnom || null,
+          echelonnement_jours: echelon || null,
         });
         if (reponse?.uid) {
           this._vue = "potager";
@@ -1714,6 +1834,15 @@ class PotagerPanel extends HTMLElement {
     if (rappel) {
       rappel.addEventListener("change", () =>
         modifier({ uid: rappel.dataset.uid, rappel_jours: Number(rappel.value) })
+      );
+    }
+    const echelon = hote.querySelector("#champ-echelon");
+    if (echelon) {
+      echelon.addEventListener("change", () =>
+        modifier({
+          uid: echelon.dataset.uid,
+          echelonnement_jours: Number(echelon.value) || null,
+        })
       );
     }
   }
@@ -1950,7 +2079,7 @@ class PotagerPanel extends HTMLElement {
               <span style="flex:1">${c.emoji} ${echappe(c.nom)}
                 <span class="aide" style="margin:0">· ${
                   CATEGORIES[c.categorie] || c.categorie
-                }</span>
+                }${c.surcharge ? " · fiche livrée corrigée" : " · fiche inédite"}</span>
               </span>
               <button class="icone" data-perso-editer="${c.id}" title="Modifier">
                 <ha-icon icon="mdi:pencil"></ha-icon>
@@ -2097,19 +2226,34 @@ class PotagerPanel extends HTMLElement {
 
         <div class="carte bloc">
           <h4>Périodes</h4>
-          <p class="aide">
-            En mois, comme sur un sachet de graines. Les fiches livrées sont
-            calées sur vos gelées&nbsp;; une fiche saisie à la main reste sur
-            le calendrier, ce qui est plus simple et suffit largement.
-          </p>
-          ${periode("semis_interieur", "Semer à l'abri")}
-          ${periode("semis_direct", "Semer en place")}
-          ${periode("plantation", "Planter")}
-          ${periode("recolte", "Récolter")}
-          <p class="aide">
-            Pour une pérenne, seule «&nbsp;Récolter&nbsp;» compte vraiment&nbsp;:
-            sa récolte revient chaque année.
-          </p>
+          ${
+            f.livree
+              ? `<p class="aide">
+                   Les périodes de cette fiche sont calées sur <strong>vos dates
+                   de gelées</strong>, et non sur des mois fixes&nbsp;: c'est ce
+                   qui les rend justes chez vous. Elles sont conservées telles
+                   quelles.
+                 </p>
+                 ${(this._ficheDetail?.fenetres || [])
+                   .map(
+                     (w) => `<div class="reglage">
+                       <label>${echappe(w.libelle)}</label>
+                       <span>${fmtCourt(w.debut)} → ${fmtCourt(w.fin)}</span>
+                     </div>`
+                   )
+                   .join("")}`
+              : `<p class="aide">
+                   En mois, comme sur un sachet de graines.
+                 </p>
+                 ${periode("semis_interieur", "Semer à l'abri")}
+                 ${periode("semis_direct", "Semer en place")}
+                 ${periode("plantation", "Planter")}
+                 ${periode("recolte", "Récolter")}
+                 <p class="aide">
+                   Pour une pérenne, seule «&nbsp;Récolter&nbsp;» compte
+                   vraiment&nbsp;: sa récolte revient chaque année.
+                 </p>`
+          }
         </div>
 
         <div class="carte bloc">
@@ -2208,12 +2352,16 @@ class PotagerPanel extends HTMLElement {
       difficulte: n("pf-difficulte") || 1,
       gel: sr.querySelector("#pf-gel")?.checked ?? true,
       perenne: sr.querySelector("#pf-perenne")?.checked || false,
-      periodes: {
-        semis_interieur: periode("semis_interieur"),
-        semis_direct: periode("semis_direct"),
-        plantation: periode("plantation"),
-        recolte: periode("recolte"),
-      },
+      // Une fiche livree ne renvoie aucune periode : le serveur conserve
+      // alors ses fenetres d'origine.
+      periodes: this._fiche.fiche?.livree
+        ? {}
+        : {
+            semis_interieur: periode("semis_interieur"),
+            semis_direct: periode("semis_direct"),
+            plantation: periode("plantation"),
+            recolte: periode("recolte"),
+          },
       jours_semis_a_recolte: n("pf-semis-recolte"),
       jours_semis_a_repiquage: n("pf-semis-repiquage"),
       jours_plantation_a_recolte: n("pf-plantation-recolte"),

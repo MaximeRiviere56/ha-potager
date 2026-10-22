@@ -41,6 +41,7 @@ ETAPE_SEMIS_DIRECT = "semis_direct"
 ETAPE_REPIQUAGE = "repiquage"
 ETAPE_PLANTATION = "plantation"
 ETAPE_RECOLTE = "recolte"
+ETAPE_RESSEMER = "ressemer"
 
 LIBELLES_ETAPES = {
     ETAPE_SEMIS_INTERIEUR: "Semer à l'abri",
@@ -48,6 +49,7 @@ LIBELLES_ETAPES = {
     ETAPE_REPIQUAGE: "Repiquer",
     ETAPE_PLANTATION: "Planter",
     ETAPE_RECOLTE: "Récolter",
+    ETAPE_RESSEMER: "Ressemer",
 }
 
 # Ordre canonique d'affichage quand deux etapes tombent le meme jour.
@@ -56,6 +58,7 @@ ORDRE_ETAPES = [
     ETAPE_SEMIS_DIRECT,
     ETAPE_REPIQUAGE,
     ETAPE_PLANTATION,
+    ETAPE_RESSEMER,
     ETAPE_RECOLTE,
 ]
 
@@ -398,6 +401,9 @@ def prochaines_etapes(
         jour_semis = date_evenement(evenements, EVT_SEME)
         direct = mode_semis(evenements) != MODE_SEMIS_INTERIEUR
         etapes = _chaine_depuis_semis(culture, jour_semis, direct, gelees)
+        etapes += _etape_echelonnement(
+            culture, plante, jour_semis, gelees, decalage_zone
+        )
         return _a_venir(etapes, aujourdhui)
 
     if phase == PHASE_PLANTE:
@@ -427,6 +433,47 @@ def prochaines_etapes(
         return [en_cours]
 
     return []
+
+
+def _etape_echelonnement(
+    culture: dict,
+    plante: dict,
+    jour_semis: date,
+    gelees: Gelees,
+    decalage_zone: int,
+) -> list[Etape]:
+    """Le prochain semis d'une serie echelonnee.
+
+    Semer des radis tous les quinze jours est le geste le plus repetitif d'un
+    potager, et celui qu'on oublie le plus surement. L'etape n'est proposee
+    que tant que la fenetre de semis reste ouverte : rien ne sert de reclamer
+    un semis de radis en decembre.
+    """
+    intervalle = plante.get("echelonnement_jours")
+    if not intervalle:
+        return []
+
+    prochain = jour_semis + timedelta(days=int(intervalle))
+
+    # La fenetre de semis de l'annee concernee borne la serie.
+    fenetres = [
+        etape
+        for etape in fenetres_theoriques(
+            culture, gelees, decalage_zone, prochain.year
+        )
+        if etape.type in (ETAPE_SEMIS_DIRECT, ETAPE_SEMIS_INTERIEUR)
+    ]
+    if not fenetres or prochain > max(f.fin for f in fenetres):
+        return []
+
+    return [
+        Etape(
+            ETAPE_RESSEMER,
+            prochain,
+            prochain + timedelta(days=DUREE_FENETRE_DEFAUT),
+            SOURCE_REELLE,
+        )
+    ]
 
 
 def prochaine_etape(

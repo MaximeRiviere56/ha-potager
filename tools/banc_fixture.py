@@ -175,10 +175,32 @@ def main() -> None:
         "gelees": {"derniere": GELEES.derniere, "premiere": GELEES.premiere},
         "rappel_jours": 3,
     }
+    # Une fiche marquee « corrigee », pour voir le badge et le libelle.
     catalogue = {
-        "cultures": [{**cat.info_minimale(c), **depart(c)} for c in cat.toutes()],
+        "cultures": [
+            {
+                **cat.info_minimale(c),
+                **depart(c),
+                "perso": c["id"] == "carotte",
+                "surcharge": c["id"] == "carotte",
+            }
+            for c in cat.toutes()
+        ],
         "categories": cat.categories(),
         "total": len(cat.toutes()),
+    }
+
+    # Un avertissement de rotation realiste : la tomate apres l'aubergine.
+    rotation = {
+        "avertissement": {
+            "famille": "Solanacées",
+            "delai_ans": 4,
+            "precedents": [{"nom": "Aubergine", "annee": AUJ.year}],
+            "message": (
+                f"Solanacées déjà cultivées ici : Aubergine ({AUJ.year}). "
+                f"Cette famille demande 4 ans avant de revenir au même endroit."
+            ),
+        }
     }
     reglages = {
         "options": {
@@ -273,9 +295,17 @@ def main() -> None:
         f'      "potager/reglages": {json.dumps(reglages, ensure_ascii=False)},\n'
         f'      "potager/cultures_perso": {json.dumps(cultures_perso, ensure_ascii=False)},\n'
         f'      "potager/calendrier": {json.dumps(calendrier, ensure_ascii=False)},\n'
+        f'      "potager/rotation": {json.dumps(rotation, ensure_ascii=False)},\n'
         "    };\n"
-        '    if (!(msg.type in reponses)) throw new Error("commande non simulee : " + msg.type);\n'
-        "    return reponses[msg.type];\n  },\n};\n",
+        "    if (msg.type in reponses) return reponses[msg.type];\n"
+        "    // Les commandes d'ecriture n'ont rien a simuler : le banc verifie\n"
+        "    // que l'interface les emet, pas qu'elles aboutissent.\n"
+        '    if (/\\/(ajouter|modifier|retirer|noter|annuler|zones|ressemer|definir|supprimer|retablir)/.test(msg.type)) {\n'
+        '      console.log("ECRITURE", JSON.stringify(msg));\n'
+        "      return { ok: true, uid: \"simule\" };\n"
+        "    }\n"
+        '    throw new Error("commande non simulee : " + msg.type);\n'
+        "  },\n};\n",
         encoding="utf-8",
     )
     print(f"{sortie.relative_to(RACINE)} : {len(plantes)} plantes, {len(actions)} actions")

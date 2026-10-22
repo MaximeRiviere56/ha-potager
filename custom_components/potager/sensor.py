@@ -97,17 +97,22 @@ class RecolteSensor(PotagerEntity, SensorEntity):
     def extra_state_attributes(self) -> dict:
         par_culture: dict[str, int] = {}
         for entree in self.coordinator.data["plantes"].values():
-            grammes = entree["resume"]["total_recolte_g"]
+            grammes = entree["resume"].get("recolte_saison_g", 0)
             if grammes:
                 nom = entree["culture"]["nom"]
                 par_culture[nom] = par_culture.get(nom, 0) + grammes
         return {
+            "saison": self.coordinator.data["saison"],
             "par_culture_g": dict(
                 sorted(par_culture.items(), key=lambda kv: -kv[1])
             ),
             "nb_recoltes": sum(
                 e["resume"]["nb_recoltes"]
                 for e in self.coordinator.data["plantes"].values()
+            ),
+            # Conserve pour ne rien perdre : le cumul de toutes les saisons.
+            "total_toutes_saisons_kg": round(
+                self.coordinator.data["total_toutes_saisons_g"] / 1000, 3
             ),
         }
 
@@ -178,6 +183,8 @@ class PlanteSensor(PotagerPlanteEntity, SensorEntity):
             ),
             "nb_recoltes": infos["nb_recoltes"],
             "recolte_totale_g": infos["total_recolte_g"],
+            "recolte_saison_g": infos.get("recolte_saison_g", 0),
+            "echelonnement_jours": entree["plante"].get("echelonnement_jours"),
             "notifs_actives": entree["plante"].get("notifs", True),
         }
 

@@ -23,6 +23,7 @@ from .coordinator import PotagerCoordinator
 from .entity import PotagerEntity
 from .lifecycle import ErreurJournal
 from .notifier import JOURNAL_POUR_ETAPE
+from .phenology import ETAPE_RESSEMER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ class PotagerTodo(PotagerEntity, TodoListEntity):
 
         for action in self.coordinator.data["actions"]:
             etape = action["etape"]
-            if etape.type not in JOURNAL_POUR_ETAPE:
+            if etape.type not in JOURNAL_POUR_ETAPE and etape.type != ETAPE_RESSEMER:
                 continue
             elements.append(
                 TodoItem(
@@ -87,16 +88,19 @@ class PotagerTodo(PotagerEntity, TodoListEntity):
             return
         uid, type_etape, _ = morceaux
 
-        inscription = JOURNAL_POUR_ETAPE.get(type_etape)
-        if inscription is None:
-            return
-        type_evt, details = inscription
-
         store = self.coordinator.store
         jour = self.coordinator.data["calcule_le"]
+
+        if type_etape == ETAPE_RESSEMER:
+            mutation = lambda: store.ressemer(uid, jour)  # noqa: E731
+        else:
+            inscription = JOURNAL_POUR_ETAPE.get(type_etape)
+            if inscription is None:
+                return
+            type_evt, details = inscription
+            mutation = lambda: store.noter(uid, type_evt, jour, **details)  # noqa: E731
+
         try:
-            await self.coordinator.async_appliquer(
-                lambda: store.noter(uid, type_evt, jour, **details)
-            )
+            await self.coordinator.async_appliquer(mutation)
         except ErreurJournal as err:
             _LOGGER.debug("Tache non enregistrable (%s) : %s", uid, err)

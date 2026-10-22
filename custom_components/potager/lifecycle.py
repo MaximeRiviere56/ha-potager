@@ -164,6 +164,19 @@ def recoltes(evenements: Iterable[dict]) -> list[dict]:
     return [evt for evt in evenements if evt.get("type") == EVT_RECOLTE]
 
 
+def total_recolte_saison_g(evenements: Iterable[dict], annee: int) -> int:
+    """Recoltes de l'annee demandee, en grammes.
+
+    Un total cumule depuis toujours ne dit plus rien des la deuxieme saison,
+    et empeche de comparer une annee a la precedente.
+    """
+    return sum(
+        int(evt.get("quantite_g") or 0)
+        for evt in recoltes(evenements)
+        if str(evt.get("date", ""))[:4] == str(annee)
+    )
+
+
 def total_recolte_g(evenements: Iterable[dict]) -> int:
     """Somme des quantites recoltees, en grammes. Les recoltes non pesees
     comptent pour zero mais restent au journal."""

@@ -33,7 +33,7 @@ propres gelées.
 | Entité | Rôle |
 |---|---|
 | `sensor.mon_potager_actions_a_mener` | Nombre d'actions du jour, détail en attributs |
-| `sensor.mon_potager_recolte_de_la_saison` | Total récolté en kg (`state_class: total`, exploitable dans les statistiques) |
+| `sensor.mon_potager_recolte_de_la_saison` | Récolte de l'année en cours en kg (`state_class: total`) ; le cumul de toutes les saisons reste en attribut |
 | `sensor.<plante>` | Phase de la plante, et toute sa fiche en attributs |
 | `switch.rappels_<plante>` | Rappels de cette plante — automatisable (« coupe tout pendant les vacances ») |
 | `calendar.mon_potager` | Étapes prévues **et** journal passé |
@@ -146,6 +146,33 @@ porte un décalage en jours qui avance ou retarde tout le calendrier de ses
 plantes. Il ne s'applique **jamais** à une date de votre journal : un fait
 n'est pas une prévision.
 
+### Semis échelonnés
+
+Semer des radis tous les quinze jours est le geste le plus répétitif d'un
+potager, et celui qu'on oublie le plus sûrement. Réglez un intervalle sur une
+plante et, à chaque échéance, un rappel propose d'ouvrir le lot suivant.
+
+Ce lot devient une **plante à part entière**, avec son propre journal : deux
+semis à trois semaines d'écart sont à deux stades différents, et les confondre
+n'aurait aucun sens. Le parent cesse alors de réclamer, pour que la série ne se
+dédouble pas. Les ressemis s'arrêtent d'eux-mêmes à la fermeture de la fenêtre
+de semis — personne ne veut qu'on lui réclame des radis en décembre.
+
+### Rotation des cultures
+
+Au moment d'ajouter une plante, si la même famille botanique a occupé cette
+zone récemment, un avertissement le signale — avec quoi, et en quelle année.
+
+| Famille | Délai |
+|---|---|
+| Solanacées, Brassicacées | 4 ans |
+| Apiacées, Cucurbitacées, Amaryllidacées, Amaranthacées | 3 ans |
+| Astéracées, Fabacées | 2 ans |
+
+L'avertissement ne bloque rien : c'est au jardinier de trancher. Les pérennes
+sont écartées — un pommier n'entre pas dans une rotation, il occupe sa place
+pour vingt ans.
+
 ### Mes fiches
 
 Le catalogue livré ne contiendra jamais votre variété locale. Ajoutez-la :
@@ -197,6 +224,42 @@ Permapeople ne fournit pas de calendrier de semis.
 Une culture gélive voit sa fenêtre de récolte plafonnée à la première gelée :
 une courgette ne se récolte pas en janvier.
 
+### Peut-on s'y fier ?
+
+Autant le dire franchement : **ces 108 fiches n'ont été confrontées à aucune
+base de référence.** Les API du domaine n'offrent pas ce qu'il faudrait —
+OpenFarm est mort, Growstuff n'a pas d'API officielle, et Permapeople ne
+fournit pas de calendriers de semis. Le catalogue a donc été écrit de mémoire
+horticole.
+
+Trois garde-fous compensent, par ordre d'efficacité.
+
+**Le réel prime, toujours.** Dès que vous notez un semis, l'estimation ne sert
+plus : la récolte se calcule depuis votre date. Mes chiffres ne pilotent que la
+première saison d'une culture donnée — ensuite c'est votre jardin qui parle.
+C'est la raison d'être du suivi réel.
+
+**Vous pouvez corriger n'importe quelle fiche**, y compris livrée, depuis le
+catalogue. Vos valeurs remplacent les miennes et les plantes déjà au jardin
+suivent la correction.
+
+**Un audit de cohérence** passe les 108 fiches au crible :
+
+```bash
+python3 tools/auditer_catalogue.py
+```
+
+Il ne peut pas dire qu'une fiche est *juste* — il n'a aucune source de vérité.
+Il dit qu'elle est *impossible*, ce qui est déjà beaucoup : une gélive semée
+après les gelées, une récolte qui précède son semis, un arbre espacé de trente
+centimètres, des durées de cycle qui se contredisent. Huit règles, toutes
+vérifiables sans connaissance extérieure. **Au dernier passage : 0 impossible,
+0 douteuse.**
+
+Ce qui reste hors de portée, ce sont les durées de cycle — elles varient de
+plusieurs semaines selon la variété, et seul un relevé au jardin peut trancher.
+C'est précisément ce que la correction de fiche permet de rattraper.
+
 ### Ajouter une culture
 
 Les fiches vivent dans une table compacte, une ligne par culture :
@@ -220,6 +283,7 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 | `potager.marquer_recolte` | Récolte, avec `quantite_g` facultatif |
 | `potager.marquer_perdu` | Perte, avec sa `cause` |
 | `potager.marquer_termine` | Clôt la culture |
+| `potager.ressemer` | Ouvre le lot suivant d'un semis échelonné |
 | `potager.annuler_dernier_evenement` | Défait la dernière entrée du journal |
 | `potager.rafraichir` | Recalcule tout de suite |
 
@@ -238,7 +302,7 @@ Les sources SVG et la marche à suivre pour regénérer les PNG sont dans
 ## Développement
 
 ```bash
-python3 -m unittest discover -s tests -p 'test_*.py'   # 62 tests, sans dépendance
+python3 -m unittest discover -s tests -p 'test_*.py'   # 75 tests, sans dépendance
 ```
 
 `lifecycle.py` (le journal) et `phenology.py` (le calcul des étapes) n'importent

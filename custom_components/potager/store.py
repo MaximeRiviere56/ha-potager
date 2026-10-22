@@ -17,10 +17,13 @@ from homeassistant.helpers.storage import Store
 from .const import STORAGE_KEY, STORAGE_VERSION, ZONE_PLEINE_TERRE, ZONES_DEFAUT
 from .lifecycle import (
     ErreurJournal,
+    EVT_SEME,
+    MODE_SEMIS_DIRECT,
     PHASE_PREVU,
     ajouter_evenement,
     annuler_dernier_evenement,
     construire_evenement,
+    mode_semis,
     phase_depuis_evenements,
 )
 
@@ -107,6 +110,7 @@ class JardinStore:
         surnom: str | None = None,
         notifs: bool = True,
         rappel_jours: int | None = None,
+        echelonnement_jours: int | None = None,
     ) -> dict:
         """Une culture peut etre ajoutee plusieurs fois : deux semis echelonnes,
         ou le meme legume en serre et en pleine terre. D'ou l'uid."""
@@ -118,6 +122,7 @@ class JardinStore:
             "phase": PHASE_PREVU,
             "notifs": notifs,
             "rappel_jours": rappel_jours,
+            "echelonnement_jours": echelonnement_jours,
             "evenements": [],
         }
         self.plantes.append(plante)
@@ -134,11 +139,68 @@ class JardinStore:
     def modifier_plante(self, uid: str, **champs: Any) -> dict:
         """Modifie les reglages d'une plante. Le journal n'est pas touchable ici."""
         plante = self.plante(uid)
-        for cle in ("zone", "surnom", "notifs", "rappel_jours"):
+        for cle in ("zone", "surnom", "notifs", "rappel_jours",
+                    "echelonnement_jours"):
             if cle in champs:
                 plante[cle] = champs[cle]
         self._sauvegarder()
         return plante
+
+    def ressemer(self, uid: str, jour: Any) -> dict:
+        """Ouvre la serie suivante d'un semis echelonne.
+
+        Un semis echelonne n'est pas un evenement de plus sur la meme plante :
+        c'est un second lot, a un stade different, qui vit sa propre vie. On
+        cree donc une nouvelle plante, et on coupe l'echelonnement du parent —
+        sans quoi les deux reclameraient le meme ressemis indefiniment.
+        """
+        parent = self.plante(uid)
+        intervalle = parent.get("echelonnement_jours")
+
+        rang = sum(
+            1
+            for p in self.plantes
+            if p["culture_id"] == parent["culture_id"]
+            and p.get("zone") == parent.get("zone")
+        ) + 1
+        base = parent.get("surnom") or ""
+        surnom = f"{base} · lot {rang}".strip(" ·") if base else f"lot {rang}"
+
+        enfant = self.ajouter_plante(
+            parent["culture_id"],
+            zone=parent.get("zone", ZONE_PLEINE_TERRE),
+            surnom=surnom,
+            notifs=parent.get("notifs", True),
+            rappel_jours=parent.get("rappel_jours"),
+            echelonnement_jours=intervalle,
+        )
+        mode = mode_semis(parent.get("evenements") or []) or MODE_SEMIS_DIRECT
+        ajouter_evenement(
+            enfant, construire_evenement(EVT_SEME, jour, mode=mode)
+        )
+
+        parent["echelonnement_jours"] = None
+        self._sauvegarder()
+        return enfant
+
+    def familles_recentes(self, zone_id: str, depuis_annee: int) -> dict[str, list]:
+        """Familles botaniques deja cultivees dans cette zone, par famille.
+
+        Sert a la rotation des cultures. Les plantes terminees et perdues
+        comptent : c'est precisement l'historique qui nous interesse.
+        """
+        trouve: dict[str, list] = {}
+        for plante in self.plantes:
+            if plante.get("zone") != zone_id:
+                continue
+            annees = {
+                int(evt["date"][:4])
+                for evt in plante.get("evenements") or []
+            } or {depuis_annee}
+            recentes = [a for a in annees if a >= depuis_annee]
+            if recentes:
+                trouve.setdefault(plante["culture_id"], []).extend(sorted(recentes))
+        return trouve
 
     # --- Ecriture : journal --------------------------------------------------
 
@@ -178,10 +240,16 @@ class JardinStore:
         self._sauvegarder()
         return fiche
 
-    def supprimer_culture(self, culture_id: str) -> None:
+    def supprimer_culture(self, culture_id: str, retablit: bool = False) -> None:
         """Refuse tant qu'une plante du jardin s'appuie sur cette fiche :
-        sans elle, la plante deviendrait un orphelin silencieux."""
-        utilisees = [p for p in self.plantes if p["culture_id"] == culture_id]
+        sans elle, la plante deviendrait un orphelin silencieux.
+
+        `retablit` leve ce refus : supprimer une surcharge rend sa fiche
+        d'origine, donc aucune plante ne se retrouve sans reference.
+        """
+        utilisees = [] if retablit else [
+            p for p in self.plantes if p["culture_id"] == culture_id
+        ]
         if utilisees:
             noms = ", ".join(p.get("surnom") or p["culture_id"] for p in utilisees)
             raise ErreurJournal(

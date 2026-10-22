@@ -82,6 +82,10 @@
         "notifs": {
           "name": "Rappels",
           "description": "Activer les rappels pour cette plante."
+        },
+        "echelonnement_jours": {
+          "name": "Ressemer tous les",
+          "description": "Intervalle en jours pour un semis échelonné : radis, laitue, haricot. 0 pour désactiver."
         }
       }
     },
@@ -238,6 +242,24 @@
     "rafraichir": {
       "name": "Recalculer",
       "description": "Recalcule immédiatement toutes les étapes du potager."
+    },
+    "ressemer": {
+      "name": "Ressemer (semis échelonné)",
+      "description": "Ouvre le lot suivant d'un semis échelonné : une nouvelle plante de la même culture et de la même zone, semée à la date indiquée. Le parent cesse alors de réclamer un ressemis.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante, visible dans les attributs de son capteur."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle du nouveau semis. Par défaut : aujourd'hui."
+        }
+      }
     }
   },
   "entity": {
