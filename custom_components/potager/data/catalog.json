@@ -98,6 +98,52 @@
    "profondeur_semis_cm": 3
   },
   {
+   "id": "ail-ours",
+   "nom": "Ail des ours",
+   "nom_scientifique": "Allium ursinum",
+   "famille": "Amaryllidacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Aime les sols frais et ombragés de sous-bois."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -15,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "03-15",
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 60
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "La seule allium qui préfère l'ombre : idéale sous un arbre",
+    "Se récolte en feuilles avant la floraison, de mars à mai",
+    "Ne jamais le confondre avec le muguet : froisser et sentir l'ail"
+   ],
+   "perenne": true
+  },
+  {
    "id": "ail-rose",
    "nom": "Ail rose",
    "nom_scientifique": "Allium sativum",
@@ -145,6 +191,51 @@
    "profondeur_semis_cm": 3
   },
   {
+   "id": "amandier",
+   "nom": "Amandier",
+   "nom_scientifique": "Prunus dulcis",
+   "famille": "Rosacées",
+   "categorie": "fruitier",
+   "emoji": "🌰",
+   "difficulte": 3,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 12,
+    "notes": "Très sobre ; il redoute l'humidité bien plus que la sécheresse."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 450,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -18
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": 15,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "09-01",
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Floraison en février : une gelée tardive suffit à supprimer la récolte",
+    "Sous climat océanique, la cloque est son ennemie principale"
+   ],
+   "perenne": true
+  },
+  {
    "id": "aneth",
    "nom": "Aneth",
    "nom_scientifique": "Anethum graveolens",
@@ -189,6 +280,142 @@
    },
    "conseils": [
     "Se ressème seul année après année si on le laisse fleurir"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
+   "id": "angelique",
+   "nom": "Angélique",
+   "nom_scientifique": "Angelica archangelica",
+   "famille": "Apiacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 2,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "eleve",
+    "frequence_jours": 3,
+    "notes": "Aime les sols humides et frais, au bord de l'eau si possible."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 100,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -60,
+     "duree_jours": 45
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "05-01",
+     "duree_jours": 90
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 90
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Bisannuelle : elle fleurit et meurt la deuxième année, mais se ressème",
+    "Monte à 2 m : à placer au fond, elle ferait de l'ombre à tout"
+   ],
+   "profondeur_semis_cm": 0.5,
+   "perenne": true
+  },
+  {
+   "id": "argousier",
+   "nom": "Argousier",
+   "nom_scientifique": "Hippophae rhamnoides",
+   "famille": "Éléagnacées",
+   "categorie": "petit-fruit",
+   "emoji": "🫐",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 12,
+    "notes": "Aucun arrosage : il pousse dans les dunes."
+   },
+   "sol": "pauvre, sableux, très drainé",
+   "espacement_cm": 250,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -30
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "09-10",
+     "duree_jours": 40
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 40
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Un pied mâle pour cinq femelles, sans quoi aucun fruit",
+    "Très épineux : cueillir en coupant les rameaux entiers",
+    "Drageonne beaucoup : poser une barrière anti-rhizome"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "arroche",
+   "nom": "Arroche",
+   "nom_scientifique": "Atriplex hortensis",
+   "famille": "Amaranthacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Modéré ; bien plus tolérante que l'épinard."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -5
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 90,
+    "jours_semis_a_recolte": 55
+   },
+   "associations": {
+    "aime": [
+     "laitue",
+     "radis"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "L'épinard des étés secs : elle monte beaucoup moins vite",
+    "Se ressème seule d'année en année"
    ],
    "profondeur_semis_cm": 1
   },
@@ -594,6 +821,51 @@
    "profondeur_semis_cm": 1
   },
   {
+   "id": "camerisier",
+   "nom": "Camerisier (baie de mai)",
+   "nom_scientifique": "Lonicera caerulea",
+   "famille": "Caprifoliacées",
+   "categorie": "petit-fruit",
+   "emoji": "🫐",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Aime la fraîcheur, redoute la sécheresse estivale."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 150,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -40
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "05-20",
+     "duree_jours": 25
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 25
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Le tout premier fruit de l'année, avant même les fraises",
+    "Deux variétés différentes sont indispensables pour fructifier"
+   ],
+   "perenne": true
+  },
+  {
    "id": "camomille",
    "nom": "Camomille romaine",
    "nom_scientifique": "Chamaemelum nobile",
@@ -916,6 +1188,244 @@
    "conseils": [
     "Tailler le moins possible, et seulement après la récolte : il gomme",
     "Un filet est la seule défense réaliste contre les oiseaux"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "chayotte",
+   "nom": "Chayotte (christophine)",
+   "nom_scientifique": "Sechium edule",
+   "famille": "Cucurbitacées",
+   "categorie": "legume-fruit",
+   "emoji": "🥒",
+   "difficulte": 3,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "eleve",
+    "frequence_jours": 3,
+    "notes": "Très gourmande en eau pendant toute la végétation."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 200,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 10
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 20,
+     "duree_jours": 30
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "09-20",
+     "duree_jours": 50
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 50
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Se plante en enterrant le fruit entier, germe vers le haut",
+    "Prévoir une treille solide : une liane de 8 m en une saison",
+    "Pailler lourdement la souche pour la faire repartir l'an prochain"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "chervis",
+   "nom": "Chervis",
+   "nom_scientifique": "Sium sisarum",
+   "famille": "Apiacées",
+   "categorie": "legume-racine",
+   "emoji": "🥕",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Aime la fraîcheur, comme toutes les apiacées."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 30,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 45
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "10-15",
+     "duree_jours": 120
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120
+   },
+   "associations": {
+    "aime": [
+     "carotte"
+    ],
+    "evite": [
+     "panais",
+     "celeri-rave"
+    ]
+   },
+   "conseils": [
+    "Légume oublié, très sucré, à la mode avant la pomme de terre",
+    "Se multiplie par éclat de souche au printemps"
+   ],
+   "profondeur_semis_cm": 1,
+   "perenne": true
+  },
+  {
+   "id": "chicoree-frisee",
+   "nom": "Chicorée frisée",
+   "nom_scientifique": "Cichorium endivia var. crispum",
+   "famille": "Astéracées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Au pied uniquement : le cœur mouillé pourrit."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 30,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -5
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 40,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 45,
+    "jours_semis_a_recolte": 80
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "radis"
+    ],
+    "evite": [
+     "persil"
+    ]
+   },
+   "conseils": [
+    "Lier les feuilles deux semaines avant pour blanchir le cœur"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "pain-de-sucre",
+   "nom": "Chicorée pain de sucre",
+   "nom_scientifique": "Cichorium intybus",
+   "famille": "Astéracées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Modéré."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 30,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -10
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 90,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 75,
+    "jours_semis_a_recolte": 100
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "poireau"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "La salade d'hiver la plus facile : semée en juillet, récoltée en décembre",
+    "Son cœur serré se conserve des semaines en cave"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
+   "id": "chou-daubenton",
+   "nom": "Chou Daubenton",
+   "nom_scientifique": "Brassica oleracea var. ramosa",
+   "famille": "Brassicacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Sobre une fois installé."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 100,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "01-01",
+     "duree_jours": 364
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 364
+   },
+   "associations": {
+    "aime": [
+     "betterave",
+     "aneth"
+    ],
+    "evite": [
+     "tomate",
+     "fraisier"
+    ]
+   },
+   "conseils": [
+    "Un chou vivace qui donne des feuilles toute l'année, pendant 5 à 6 ans",
+    "Se bouture en plantant simplement un rameau en terre",
+    "Le meilleur rapport effort/récolte du potager"
    ],
    "perenne": true
   },
@@ -1287,6 +1797,99 @@
    "profondeur_semis_cm": 1
   },
   {
+   "id": "chou-rave",
+   "nom": "Chou-rave",
+   "nom_scientifique": "Brassica oleracea var. gongylodes",
+   "famille": "Brassicacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Régulier : un à-coup le rend ligneux."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 25,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -6
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 120
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 70
+   },
+   "associations": {
+    "aime": [
+     "betterave",
+     "laitue",
+     "aneth"
+    ],
+    "evite": [
+     "tomate",
+     "fraisier"
+    ]
+   },
+   "conseils": [
+    "Récolter à la taille d'une balle de tennis, pas plus gros",
+    "La boule pousse au-dessus du sol : ne jamais la butter"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
+   "id": "chataignier",
+   "nom": "Châtaignier",
+   "nom_scientifique": "Castanea sativa",
+   "famille": "Fagacées",
+   "categorie": "fruitier",
+   "emoji": "🌰",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 12,
+    "notes": "Aucun arrosage une fois installé."
+   },
+   "sol": "acide, drainé, sans calcaire",
+   "espacement_cm": 1000,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": 15,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "10-01",
+     "duree_jours": 35
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 35
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Refuse absolument le calcaire : inutile d'insister en sol crayeux",
+    "Deux variétés pour la pollinisation, et vingt mètres de dégagement"
+   ],
+   "perenne": true
+  },
+  {
    "id": "ciboule",
    "nom": "Ciboule",
    "nom_scientifique": "Allium fistulosum",
@@ -1438,6 +2041,97 @@
    "profondeur_semis_cm": 3
   },
   {
+   "id": "claytone",
+   "nom": "Claytone de Cuba",
+   "nom_scientifique": "Claytonia perfoliata",
+   "famille": "Montiacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Garder frais ; elle apprécie la mi-ombre."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 15,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -75,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 90,
+    "jours_semis_a_recolte": 60
+   },
+   "associations": {
+    "aime": [
+     "mache",
+     "epinard"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Salade d'hiver increvable, elle pousse sous la neige",
+    "Se ressème toute seule une fois installée"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "cognassier",
+   "nom": "Cognassier",
+   "nom_scientifique": "Cydonia oblonga",
+   "famille": "Rosacées",
+   "categorie": "fruitier",
+   "emoji": "🍐",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 10,
+    "notes": "Aime les sols frais, mais ne demande aucun arrosage une fois pris."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 400,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": 15,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "10-05",
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30
+   },
+   "associations": {
+    "aime": [
+     "capucine"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Autofertile : un seul arbre suffit",
+    "Cueillir quand le duvet s'efface et que le parfum embaume"
+   ],
+   "perenne": true
+  },
+  {
    "id": "concombre",
    "nom": "Concombre",
    "nom_scientifique": "Cucumis sativus",
@@ -1490,6 +2184,55 @@
     "Palisser à la verticale : fruits plus droits, moins de maladies"
    ],
    "profondeur_semis_cm": 2
+  },
+  {
+   "id": "consoude",
+   "nom": "Consoude officinale",
+   "nom_scientifique": "Symphytum officinale",
+   "famille": "Boraginacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Aime les sols riches et frais."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 80,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "05-01",
+     "duree_jours": 150
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 150
+   },
+   "associations": {
+    "aime": [
+     "tomate",
+     "pomme-de-terre"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Trois à quatre coupes par an pour le purin, riche en potasse",
+    "Choisir la variété Bocking 14, stérile : les autres envahissent tout",
+    "Ses racines descendent à deux mètres et remontent les minéraux"
+   ],
+   "perenne": true
   },
   {
    "id": "coriandre",
@@ -1588,6 +2331,50 @@
    "profondeur_semis_cm": 2
   },
   {
+   "id": "cosmos",
+   "nom": "Cosmos",
+   "nom_scientifique": "Cosmos bipinnatus",
+   "famille": "Astéracées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 6,
+    "notes": "Sobre."
+   },
+   "sol": "pauvre : trop riche, il ne fait que des feuilles",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 4
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 0,
+     "duree_jours": 75
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120,
+    "jours_semis_a_recolte": 70
+   },
+   "associations": {
+    "aime": [
+     "tomate",
+     "courgette"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Aimant à syrphes et à chrysopes, dont les larves mangent les pucerons",
+    "Fleurit jusqu'aux gelées et se ressème seul"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
    "id": "courge-butternut",
    "nom": "Courge butternut",
    "nom_scientifique": "Cucurbita moschata",
@@ -1638,6 +2425,114 @@
    "conseils": [
     "Récolter quand le pédoncule est sec et liégeux",
     "Laisser ressuyer une semaine au soleil avant de stocker"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
+   "id": "courge-muscade",
+   "nom": "Courge muscade de Provence",
+   "nom_scientifique": "Cucurbita moschata",
+   "famille": "Cucurbitacées",
+   "categorie": "legume-fruit",
+   "emoji": "🎃",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Gros buveur en été, à sevrer en fin de cycle."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 150,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 12
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 20
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 18,
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 45,
+    "jours_semis_a_repiquage": 28,
+    "jours_semis_a_recolte": 125,
+    "jours_plantation_a_recolte": 110
+   },
+   "associations": {
+    "aime": [
+     "mais-doux",
+     "bourrache"
+    ],
+    "evite": [
+     "pomme-de-terre",
+     "courgette"
+    ]
+   },
+   "conseils": [
+    "Exige une longue saison chaude : à réserver aux étés francs",
+    "Un seul fruit nourrit une famille pendant des semaines"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
+   "id": "courge-spaghetti",
+   "nom": "Courge spaghetti",
+   "nom_scientifique": "Cucurbita pepo",
+   "famille": "Cucurbitacées",
+   "categorie": "legume-fruit",
+   "emoji": "🎃",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Copieux mais espacés ; couper l'eau à l'approche de la récolte."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 110,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 10
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 20
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 45,
+    "jours_semis_a_repiquage": 28,
+    "jours_semis_a_recolte": 110,
+    "jours_plantation_a_recolte": 95
+   },
+   "associations": {
+    "aime": [
+     "mais-doux",
+     "capucine",
+     "bourrache"
+    ],
+    "evite": [
+     "pomme-de-terre"
+    ]
+   },
+   "conseils": [
+    "Sa chair se défait en filaments à la cuisson, d'où son nom",
+    "Récolter quand l'écorce résiste à l'ongle, vers la mi-septembre"
    ],
    "profondeur_semis_cm": 3
   },
@@ -1745,6 +2640,52 @@
    "profondeur_semis_cm": 0.5
   },
   {
+   "id": "cresson-fontaine",
+   "nom": "Cresson de fontaine",
+   "nom_scientifique": "Nasturtium officinale",
+   "famille": "Brassicacées",
+   "categorie": "legume-feuille",
+   "emoji": "🌿",
+   "difficulte": 3,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "eleve",
+    "frequence_jours": 1,
+    "notes": "Les pieds littéralement dans l'eau : bac, mare ou ruisseau."
+   },
+   "sol": "toujours détrempé, au bord de l'eau",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -8
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "04-01",
+     "duree_jours": 210
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 210
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Impossible en pleine terre ordinaire : il lui faut l'eau courante ou un bac",
+    "Ne jamais récolter de cresson sauvage : risque de douve du foie"
+   ],
+   "profondeur_semis_cm": 0.5,
+   "perenne": true
+  },
+  {
    "id": "crosne",
    "nom": "Crosne du Japon",
    "nom_scientifique": "Stachys affinis",
@@ -1839,6 +2780,54 @@
    "profondeur_semis_cm": 0.2
   },
   {
+   "id": "celeri-couper",
+   "nom": "Céleri à couper",
+   "nom_scientifique": "Apium graveolens var. secalinum",
+   "famille": "Apiacées",
+   "categorie": "legume-feuille",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "eleve",
+    "frequence_jours": 3,
+    "notes": "Jamais sec, comme tous les céleris."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -10
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 180,
+    "jours_semis_a_recolte": 90
+   },
+   "associations": {
+    "aime": [
+     "poireau",
+     "tomate",
+     "chou-cabus"
+    ],
+    "evite": [
+     "carotte",
+     "persil"
+    ]
+   },
+   "conseils": [
+    "Bien plus facile que le céleri branche, et aussi parfumé",
+    "Se coupe au fur et à mesure pendant des mois"
+   ],
+   "profondeur_semis_cm": 0.2
+  },
+  {
    "id": "celeri-rave",
    "nom": "Céleri-rave",
    "nom_scientifique": "Apium graveolens var. rapaceum",
@@ -1891,6 +2880,52 @@
     "Dégager la base de la boule en fin d'été pour qu'elle grossisse"
    ],
    "profondeur_semis_cm": 0.2
+  },
+  {
+   "id": "daikon",
+   "nom": "Daikon (radis blanc)",
+   "nom_scientifique": "Raphanus sativus var. longipinnatus",
+   "famille": "Brassicacées",
+   "categorie": "legume-racine",
+   "emoji": "🥗",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Régulier, sinon la racine devient piquante et creuse."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -5
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -80,
+     "duree_jours": 50
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 60,
+    "jours_semis_a_recolte": 70
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "laitue"
+    ],
+    "evite": [
+     "chou-cabus"
+    ]
+   },
+   "conseils": [
+    "Semé fin août, il se récolte d'octobre aux gelées",
+    "Sa racine descend profond : ameublir sur 30 cm"
+   ],
+   "profondeur_semis_cm": 2
   },
   {
    "id": "endive",
@@ -1982,6 +3017,59 @@
     "Protéger le pied l'hiver par un paillage sec",
     "Diviser tous les 3 ans, il s'épuise"
    ],
+   "perenne": true
+  },
+  {
+   "id": "fenouil-aromatique",
+   "nom": "Fenouil aromatique",
+   "nom_scientifique": "Foeniculum vulgare",
+   "famille": "Apiacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 7,
+    "notes": "Très sobre une fois installé."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 60,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -12
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "06-01",
+     "duree_jours": 150
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 150
+   },
+   "associations": {
+    "aime": [
+     "concombre"
+    ],
+    "evite": [
+     "tomate",
+     "haricot-nain",
+     "carotte",
+     "coriandre"
+    ]
+   },
+   "conseils": [
+    "Mauvais voisin notoire : lui réserver un coin à l'écart",
+    "Ses ombelles jaunes attirent quantité d'insectes auxiliaires"
+   ],
+   "profondeur_semis_cm": 1,
    "perenne": true
   },
   {
@@ -2331,6 +3419,105 @@
    "profondeur_semis_cm": 5
   },
   {
+   "id": "goji",
+   "nom": "Goji (lyciet)",
+   "nom_scientifique": "Lycium barbarum",
+   "famille": "Solanacées",
+   "categorie": "petit-fruit",
+   "emoji": "🫐",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Très sobre, il préfère le sec."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 180,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "08-01",
+     "duree_jours": 75
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 75
+   },
+   "associations": {
+    "aime": [],
+    "evite": [
+     "pomme-de-terre",
+     "tomate"
+    ]
+   },
+   "conseils": [
+    "Palisser : laissé libre, il devient un buisson retombant ingérable",
+    "Ne fructifie vraiment qu'à partir de la troisième année"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "gombo",
+   "nom": "Gombo (okra)",
+   "nom_scientifique": "Abelmoschus esculentus",
+   "famille": "Malvacées",
+   "categorie": "legume-fruit",
+   "emoji": "🫑",
+   "difficulte": 3,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Régulier, mais il déteste les pieds mouillés."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 50,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 15
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -45,
+     "duree_jours": 25
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 25,
+     "duree_jours": 25
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 60,
+    "jours_semis_a_repiquage": 40,
+    "jours_semis_a_recolte": 110,
+    "jours_plantation_a_recolte": 70
+   },
+   "associations": {
+    "aime": [
+     "basilic",
+     "poivron"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Demande une vraie chaleur : serre ou mur plein sud sous climat océanique",
+    "Cueillir les gousses à 7-8 cm, elles deviennent filandreuses ensuite"
+   ],
+   "profondeur_semis_cm": 2
+  },
+  {
    "id": "groseillier",
    "nom": "Groseillier",
    "nom_scientifique": "Ribes rubrum",
@@ -2376,6 +3563,100 @@
     "Supprimer le bois de plus de 4 ans en hiver"
    ],
    "perenne": true
+  },
+  {
+   "id": "groseillier-maquereau",
+   "nom": "Groseillier à maquereau",
+   "nom_scientifique": "Ribes uva-crispa",
+   "famille": "Grossulariacées",
+   "categorie": "petit-fruit",
+   "emoji": "🫐",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Modéré ; il supporte bien la mi-ombre."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 120,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "06-20",
+     "duree_jours": 35
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 35
+   },
+   "associations": {
+    "aime": [
+     "ciboulette"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Épineux : tailler en gobelet pour pouvoir cueillir",
+    "Se récolte vert pour les tartes, mûr pour le frais"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "haricot-espagne",
+   "nom": "Haricot d'Espagne",
+   "nom_scientifique": "Phaseolus coccineus",
+   "famille": "Fabacées",
+   "categorie": "legume-gousse",
+   "emoji": "🫘",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Régulier à la floraison."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 8
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 70,
+    "jours_semis_a_recolte": 80
+   },
+   "associations": {
+    "aime": [
+     "mais-doux",
+     "courgette"
+    ],
+    "evite": [
+     "ail-blanc",
+     "oignon-jaune"
+    ]
+   },
+   "conseils": [
+    "Fleurs rouges très décoratives, et comestibles",
+    "Plus rustique que le haricot vert : il supporte les étés frais"
+   ],
+   "profondeur_semis_cm": 4
   },
   {
    "id": "haricot-sec",
@@ -2523,6 +3804,101 @@
     "Produit plus longtemps que le nain"
    ],
    "profondeur_semis_cm": 3
+  },
+  {
+   "id": "hysope",
+   "nom": "Hysope",
+   "nom_scientifique": "Hyssopus officinalis",
+   "famille": "Lamiacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Sobre : une méditerranéenne de plus."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "06-01",
+     "duree_jours": 120
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120
+   },
+   "associations": {
+    "aime": [
+     "chou-cabus",
+     "vigne-table"
+    ],
+    "evite": [
+     "radis"
+    ]
+   },
+   "conseils": [
+    "Ses fleurs bleues attirent les abeilles tout l'été",
+    "Plantée près des choux, elle détourne la piéride"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "kaki",
+   "nom": "Kaki (plaqueminier)",
+   "nom_scientifique": "Diospyros kaki",
+   "famille": "Ébénacées",
+   "categorie": "fruitier",
+   "emoji": "🍊",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 8,
+    "notes": "Arroser les trois premières années, puis plus rien."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 450,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": 15,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "10-25",
+     "duree_jours": 35
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 35
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Se récolte après la chute des feuilles, quand le fruit est translucide",
+    "Choisir une variété non astringente si l'on veut croquer le fruit ferme"
+   ],
+   "perenne": true
   },
   {
    "id": "kiwi",
@@ -2717,6 +4093,100 @@
    "perenne": true
   },
   {
+   "id": "lavande",
+   "nom": "Lavande",
+   "nom_scientifique": "Lavandula angustifolia",
+   "famille": "Lamiacées",
+   "categorie": "aromatique",
+   "emoji": "💜",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 12,
+    "notes": "Aucun arrosage : elle meurt d'excès d'eau, jamais de sécheresse."
+   },
+   "sol": "pauvre, caillouteux, très drainé",
+   "espacement_cm": 60,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "06-20",
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 45
+   },
+   "associations": {
+    "aime": [
+     "chou-cabus",
+     "carotte"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Tailler en boule après la floraison, sans jamais couper dans le vieux bois",
+    "Une bordure de lavande éloigne les pucerons et nourrit les abeilles"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "lentille",
+   "nom": "Lentille",
+   "nom_scientifique": "Lens culinaris",
+   "famille": "Fabacées",
+   "categorie": "legume-gousse",
+   "emoji": "🫘",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 10,
+    "notes": "Ne jamais arroser : l'excès d'eau la fait verser."
+   },
+   "sol": "pauvre, caillouteux, très drainé",
+   "espacement_cm": 5,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -6
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -45,
+     "duree_jours": 40
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 20,
+    "jours_semis_a_recolte": 110
+   },
+   "associations": {
+    "aime": [
+     "sarriette"
+    ],
+    "evite": [
+     "ail-blanc",
+     "oignon-jaune"
+    ]
+   },
+   "conseils": [
+    "Réussit en sol pauvre, là où rien d'autre ne donne",
+    "Arracher les plants entiers quand les gousses du bas brunissent"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
    "id": "liveche",
    "nom": "Livèche (ache des montagnes)",
    "nom_scientifique": "Levisticum officinale",
@@ -2759,6 +4229,103 @@
     "Goût de céleri en plus puissant : quelques feuilles suffisent",
     "Monte à 2 m : à placer au fond du jardin"
    ],
+   "perenne": true
+  },
+  {
+   "id": "marjolaine",
+   "nom": "Marjolaine",
+   "nom_scientifique": "Origanum majorana",
+   "famille": "Lamiacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 6,
+    "notes": "Sobre."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 25,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 3
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -45,
+     "duree_jours": 30
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 40
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120,
+    "jours_semis_a_repiquage": 35,
+    "jours_semis_a_recolte": 90,
+    "jours_plantation_a_recolte": 60
+   },
+   "associations": {
+    "aime": [
+     "tomate",
+     "courgette"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Plus douce et plus fine que l'origan, mais gélive : à rentrer ou ressemer",
+    "Se cultive très bien en pot"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "mauve",
+   "nom": "Mauve sylvestre",
+   "nom_scientifique": "Malva sylvestris",
+   "famille": "Malvacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 7,
+    "notes": "Très sobre."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 50,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "06-01",
+     "duree_jours": 120
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Fleurs et jeunes feuilles comestibles, en salade ou en tisane",
+    "Se ressème abondamment : arracher les surnuméraires au printemps"
+   ],
+   "profondeur_semis_cm": 1,
    "perenne": true
   },
   {
@@ -2915,6 +4482,98 @@
    "perenne": true
   },
   {
+   "id": "mizuna",
+   "nom": "Mizuna (moutarde japonaise)",
+   "nom_scientifique": "Brassica rapa var. nipposinica",
+   "famille": "Brassicacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Régulier ; le sec la rend très piquante."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -10
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -75,
+     "duree_jours": 90
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 90,
+    "jours_semis_a_recolte": 45
+   },
+   "associations": {
+    "aime": [
+     "laitue",
+     "mache"
+    ],
+    "evite": [
+     "chou-cabus"
+    ]
+   },
+   "conseils": [
+    "Se coupe et repousse trois ou quatre fois",
+    "Résiste au froid bien mieux que la roquette"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "moutarde-blanche",
+   "nom": "Moutarde blanche (engrais vert)",
+   "nom_scientifique": "Sinapis alba",
+   "famille": "Brassicacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Aucun arrosage."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 10,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -5
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -60,
+     "duree_jours": 150
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 50
+   },
+   "associations": {
+    "aime": [],
+    "evite": [
+     "chou-cabus",
+     "chou-fleur",
+     "radis"
+    ]
+   },
+   "conseils": [
+    "Pousse en six semaines sur toute planche vide",
+    "Faucher avant la floraison et laisser sur place",
+    "Jamais avant ni après un chou : même famille, mêmes maladies"
+   ],
+   "profondeur_semis_cm": 2
+  },
+  {
    "id": "myrtillier",
    "nom": "Myrtillier",
    "nom_scientifique": "Vaccinium corymbosum",
@@ -3005,6 +4664,54 @@
    "profondeur_semis_cm": 0.5
   },
   {
+   "id": "melisse",
+   "nom": "Mélisse citronnelle",
+   "nom_scientifique": "Melissa officinalis",
+   "famille": "Lamiacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Aime la fraîcheur et la mi-ombre."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "05-01",
+     "duree_jours": 150
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 150
+   },
+   "associations": {
+    "aime": [
+     "tomate",
+     "chou-cabus"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Envahissante par semis spontané : couper les fleurs avant qu'elles montent",
+    "Rabattre en juillet pour une repousse tendre"
+   ],
+   "perenne": true
+  },
+  {
    "id": "murier",
    "nom": "Mûrier (ronce)",
    "nom_scientifique": "Rubus fruticosus",
@@ -3046,6 +4753,53 @@
    "conseils": [
     "Choisir une variété sans épines, la cueillette change de nature",
     "Palisser sur un grillage et rabattre chaque hiver"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "nashi",
+   "nom": "Nashi (poirier asiatique)",
+   "nom_scientifique": "Pyrus pyrifolia",
+   "famille": "Rosacées",
+   "categorie": "fruitier",
+   "emoji": "🍐",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 8,
+    "notes": "Un peu plus exigeant en eau que le poirier européen."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 400,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": 15,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "09-05",
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30
+   },
+   "associations": {
+    "aime": [
+     "capucine"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Croquant comme une pomme, juteux comme une poire",
+    "Éclaircir sévèrement : il met trop de fruits et les fait tous petits"
    ],
    "perenne": true
   },
@@ -3189,6 +4943,94 @@
    "perenne": true
   },
   {
+   "id": "neflier",
+   "nom": "Néflier",
+   "nom_scientifique": "Mespilus germanica",
+   "famille": "Rosacées",
+   "categorie": "fruitier",
+   "emoji": "🍐",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 10,
+    "notes": "Aucun arrosage une fois établi."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 350,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": 15,
+     "duree_jours": 75
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "11-05",
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Les nèfles ne se mangent que blettes, après les premières gelées",
+    "Petit arbre très rustique, et un des derniers fruits de l'année"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "oca-perou",
+   "nom": "Oca du Pérou",
+   "nom_scientifique": "Oxalis tuberosa",
+   "famille": "Oxalidacées",
+   "categorie": "legume-racine",
+   "emoji": "🥔",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Modéré ; elle grossit surtout à l'automne."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 2
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 0,
+     "duree_jours": 40
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 45,
+    "jours_plantation_a_recolte": 210
+   },
+   "associations": {
+    "aime": [
+     "pomme-de-terre"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Les tubercules ne se forment qu'aux jours courts, en octobre",
+    "Récolter après le premier gel du feuillage, pas avant"
+   ],
+   "profondeur_semis_cm": 6
+  },
+  {
    "id": "oignon-blanc",
    "nom": "Oignon blanc",
    "nom_scientifique": "Allium cepa",
@@ -3285,6 +5127,105 @@
    "profondeur_semis_cm": 1
   },
   {
+   "id": "oignon-rocambole",
+   "nom": "Oignon rocambole",
+   "nom_scientifique": "Allium × proliferum",
+   "famille": "Amaryllidacées",
+   "categorie": "legume-bulbe",
+   "emoji": "🧅",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Rustique et sobre."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 25,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "07-01",
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 60
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "fraisier"
+    ],
+    "evite": [
+     "haricot-nain",
+     "petit-pois"
+    ]
+   },
+   "conseils": [
+    "Il produit ses bulbilles en haut de la tige, qui se replantent seules",
+    "Une fois installé, il revient indéfiniment sans qu'on s'en occupe"
+   ],
+   "profondeur_semis_cm": 3,
+   "perenne": true
+  },
+  {
+   "id": "oignon-rouge",
+   "nom": "Oignon rouge",
+   "nom_scientifique": "Allium cepa",
+   "famille": "Amaryllidacées",
+   "categorie": "legume-bulbe",
+   "emoji": "🧅",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 7,
+    "notes": "Très peu d'eau, comme tous les oignons."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 12,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -8
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -60,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 150
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "betterave",
+     "fraisier"
+    ],
+    "evite": [
+     "haricot-nain",
+     "petit-pois"
+    ]
+   },
+   "conseils": [
+    "Se conserve moins longtemps que le jaune : à consommer en premier"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
    "id": "origan",
    "nom": "Origan",
    "nom_scientifique": "Origanum vulgare",
@@ -3330,6 +5271,52 @@
    "conseils": [
     "Le plus parfumé juste avant la floraison : c'est le moment de le sécher"
    ],
+   "perenne": true
+  },
+  {
+   "id": "oseille",
+   "nom": "Oseille",
+   "nom_scientifique": "Rumex acetosa",
+   "famille": "Polygonacées",
+   "categorie": "legume-feuille",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Aime les sols frais ; elle monte si elle a soif."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 30,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "04-01",
+     "duree_jours": 180
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 180
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Une touffe suffit pour des années",
+    "Couper les hampes florales dès qu'elles montent, pour garder les feuilles tendres"
+   ],
+   "profondeur_semis_cm": 1,
    "perenne": true
   },
   {
@@ -3519,6 +5506,53 @@
    "conseils": [
     "Germination très lente (3 semaines) : tremper les graines une nuit",
     "Bisannuel : il monte en graines la deuxième année, mieux vaut le ressemer"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
+   "id": "persil-tubereux",
+   "nom": "Persil tubéreux",
+   "nom_scientifique": "Petroselinum crispum var. tuberosum",
+   "famille": "Apiacées",
+   "categorie": "legume-racine",
+   "emoji": "🥕",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Régulier au départ, la levée est lente."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 15,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 90,
+    "jours_semis_a_recolte": 160
+   },
+   "associations": {
+    "aime": [
+     "radis",
+     "laitue"
+    ],
+    "evite": [
+     "carotte",
+     "celeri-rave"
+    ]
+   },
+   "conseils": [
+    "Racine au goût de persil et de panais, feuillage utilisable aussi",
+    "Comme le panais, le gel l'adoucit"
    ],
    "profondeur_semis_cm": 1
   },
@@ -4207,6 +6241,65 @@
    "perenne": true
   },
   {
+   "id": "patisson",
+   "nom": "Pâtisson",
+   "nom_scientifique": "Cucurbita pepo",
+   "famille": "Cucurbitacées",
+   "categorie": "legume-fruit",
+   "emoji": "🎃",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "eleve",
+    "frequence_jours": 2,
+    "notes": "Comme la courgette : beaucoup d'eau au pied."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 90,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 10
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 20
+    },
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 40
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 75,
+    "jours_semis_a_repiquage": 28,
+    "jours_semis_a_recolte": 70,
+    "jours_plantation_a_recolte": 55
+   },
+   "associations": {
+    "aime": [
+     "mais-doux",
+     "haricot-nain",
+     "capucine"
+    ],
+    "evite": [
+     "pomme-de-terre"
+    ]
+   },
+   "conseils": [
+    "Se cueille jeune, à la taille d'une soucoupe",
+    "Plus il grossit, plus il devient cotonneux"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
    "id": "pecher",
    "nom": "Pêcher",
    "nom_scientifique": "Prunus persica",
@@ -4622,6 +6715,47 @@
    "profondeur_semis_cm": 2
   },
   {
+   "id": "sarrasin",
+   "nom": "Sarrasin (engrais vert)",
+   "nom_scientifique": "Fagopyrum esculentum",
+   "famille": "Polygonacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Aucun arrosage."
+   },
+   "sol": "pauvre, même ingrat",
+   "espacement_cm": 10,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 2
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 90
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 45
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Étouffe les adventices mieux que tout autre engrais vert",
+    "Gèle au premier froid, ce qui évite d'avoir à le faucher"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
    "id": "sarriette",
    "nom": "Sarriette",
    "nom_scientifique": "Satureja hortensis",
@@ -4761,6 +6895,148 @@
    "profondeur_semis_cm": 0.5
   },
   {
+   "id": "scorsonere",
+   "nom": "Scorsonère",
+   "nom_scientifique": "Scorzonera hispanica",
+   "famille": "Astéracées",
+   "categorie": "legume-racine",
+   "emoji": "🥕",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Sobre une fois levée."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 10,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 90,
+    "jours_semis_a_recolte": 170
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "oignon-jaune"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Racine noire, chair plus fine que le salsifis",
+    "Se laisse en terre tout l'hiver et s'arrache au besoin"
+   ],
+   "profondeur_semis_cm": 2
+  },
+  {
+   "id": "shiso",
+   "nom": "Shiso (périlla)",
+   "nom_scientifique": "Perilla frutescens",
+   "famille": "Lamiacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Régulier ; il flétrit vite au sec."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 35,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 8
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -45,
+     "duree_jours": 30
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 40
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120,
+    "jours_semis_a_repiquage": 35,
+    "jours_semis_a_recolte": 85,
+    "jours_plantation_a_recolte": 55
+   },
+   "associations": {
+    "aime": [
+     "tomate",
+     "concombre"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Goût entre la menthe et le cumin : la feuille des sushis",
+    "Se ressème seul si on le laisse fleurir"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "edamame",
+   "nom": "Soja edamame",
+   "nom_scientifique": "Glycine max",
+   "famille": "Fabacées",
+   "categorie": "legume-gousse",
+   "emoji": "🫛",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Soutenu à la formation des gousses."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 15,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 10
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 20,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 25,
+    "jours_semis_a_recolte": 95
+   },
+   "associations": {
+    "aime": [
+     "mais-doux",
+     "concombre"
+    ],
+    "evite": [
+     "ail-blanc",
+     "oignon-jaune"
+    ]
+   },
+   "conseils": [
+    "Se récolte vert, quand les gousses sont pleines mais encore tendres",
+    "Blanchir 5 minutes dans l'eau salée, puis déguster à la main"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
    "id": "souci",
    "nom": "Souci (calendula)",
    "nom_scientifique": "Calendula officinalis",
@@ -4805,6 +7081,52 @@
     "Fleurit du printemps aux gelées et se ressème seul"
    ],
    "profondeur_semis_cm": 1
+  },
+  {
+   "id": "sureau-noir",
+   "nom": "Sureau noir",
+   "nom_scientifique": "Sambucus nigra",
+   "famille": "Adoxacées",
+   "categorie": "petit-fruit",
+   "emoji": "🫐",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Aucun arrosage une fois établi."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 300,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -15,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "08-20",
+     "duree_jours": 30
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Deux récoltes : les fleurs en juin pour le sirop, les baies en août",
+    "Les baies crues sont indigestes : toujours les cuire",
+    "Pousse vite et partout, y compris en haie"
+   ],
+   "perenne": true
   },
   {
    "id": "thym",
@@ -4968,6 +7290,60 @@
    "profondeur_semis_cm": 0.5
   },
   {
+   "id": "tomatille",
+   "nom": "Tomatille",
+   "nom_scientifique": "Physalis philadelphica",
+   "famille": "Solanacées",
+   "categorie": "legume-fruit",
+   "emoji": "🫒",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 3,
+    "notes": "Supporte le sec mieux que la tomate."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 80,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 8
+   },
+   "fenetres": {
+    "semis_interieur": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -60,
+     "duree_jours": 30
+    },
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 25
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 70,
+    "jours_semis_a_repiquage": 45,
+    "jours_semis_a_recolte": 120,
+    "jours_plantation_a_recolte": 80
+   },
+   "associations": {
+    "aime": [
+     "basilic",
+     "oeillet-inde",
+     "capucine"
+    ],
+    "evite": [
+     "pomme-de-terre"
+    ]
+   },
+   "conseils": [
+    "Deux pieds minimum : elle ne se féconde pas elle-même",
+    "Mûre quand le fruit fait éclater son calice"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
    "id": "topinambour",
    "nom": "Topinambour",
    "nom_scientifique": "Helianthus tuberosus",
@@ -5011,6 +7387,90 @@
    "profondeur_semis_cm": 10
   },
   {
+   "id": "trefle-incarnat",
+   "nom": "Trèfle incarnat (engrais vert)",
+   "nom_scientifique": "Trifolium incarnatum",
+   "famille": "Fabacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Aucun arrosage."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 8,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -12
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -60,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 40,
+    "jours_semis_a_recolte": 210
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Semé en septembre, il couvre le sol tout l'hiver et fixe l'azote",
+    "Ses fleurs rouges en mai sont un festin pour les abeilles"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
+   "id": "trevise",
+   "nom": "Trévise (radicchio)",
+   "nom_scientifique": "Cichorium intybus var. foliosum",
+   "famille": "Astéracées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Modéré."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 30,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -8
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 90,
+     "duree_jours": 40
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 60,
+    "jours_semis_a_recolte": 100
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "poireau"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "C'est le froid qui fait rougir les feuilles : ne pas récolter trop tôt"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
    "id": "tetragone",
    "nom": "Tétragone (épinard d'été)",
    "nom_scientifique": "Tetragonia tetragonoides",
@@ -5052,6 +7512,92 @@
     "La solution à l'épinard qui monte en été : elle ne monte pas"
    ],
    "profondeur_semis_cm": 2
+  },
+  {
+   "id": "verveine-citronnelle",
+   "nom": "Verveine citronnelle",
+   "nom_scientifique": "Aloysia citrodora",
+   "famille": "Verbénacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Modéré ; elle craint surtout l'humidité hivernale."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 100,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -8
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 0,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "06-01",
+     "duree_jours": 120
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 120
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Pailler le pied généreusement l'hiver, elle gèle facilement",
+    "Elle perd toutes ses feuilles l'hiver et repart tard : ne pas l'arracher trop vite"
+   ],
+   "perenne": true
+  },
+  {
+   "id": "vesce",
+   "nom": "Vesce d'hiver (engrais vert)",
+   "nom_scientifique": "Vicia villosa",
+   "famille": "Fabacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌼",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 10,
+    "notes": "Aucun arrosage."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 8,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -60,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 40,
+    "jours_semis_a_recolte": 200
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Se sème avec du seigle, qui lui sert de tuteur",
+    "L'engrais vert d'hiver le plus riche en azote"
+   ],
+   "profondeur_semis_cm": 3
   },
   {
    "id": "vigne-table",

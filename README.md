@@ -3,7 +3,7 @@
 [![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-potager&category=integration)
 
 Une intégration Home Assistant pour gérer un potager : choisir ses légumes dans
-un catalogue de 108 cultures, les suivre dans un jardin virtuel, et recevoir au
+un catalogue de 162 cultures, les suivre dans un jardin virtuel, et recevoir au
 bon moment un rappel pour semer, repiquer ou récolter.
 
 > **L'idée centrale.** Le calendrier n'est pas une fiche théorique figée : il
@@ -23,7 +23,7 @@ progression se remplit pendant la fenêtre en cours.
 
 ![Le catalogue](docs/catalogue.png)
 
-Les 108 fiches, filtrables. Le filtre **Semable maintenant** répond à la seule
+Les 162 fiches, filtrables. Le filtre **Semable maintenant** répond à la seule
 question qui compte devant un catalogue de cette taille : qu'est-ce que je peux
 mettre en terre ce week-end ? Les dates affichées sont calculées depuis vos
 propres gelées, pas depuis une moyenne nationale.
@@ -118,7 +118,7 @@ pages de configuration de Home Assistant.
 
 Les deux dates qui calent **tout** le calendrier. Un préréglage climatique
 (Ouest océanique, Nord et Est, Midi, Montagne) les remplit, ou vous saisissez
-les vôtres. Les modifier redessine immédiatement les 108 fiches.
+les vôtres. Les modifier redessine immédiatement les 162 fiches.
 
 ### Rappels
 
@@ -216,10 +216,26 @@ Tout cela se modifie ensuite depuis l'onglet **Réglages** du panneau.
 
 ## Le catalogue
 
-108 cultures : légumes-fruits, racines, gousses, bulbes, feuilles, aromatiques,
-petits fruits, arbres fruitiers et fleurs compagnes. Chaque fiche porte
-l'exposition, les besoins en eau, le sol, l'espacement, la rusticité, les bons
-et mauvais voisins, des conseils, et ses fenêtres culturales.
+162 cultures. Chaque fiche porte l'exposition, les besoins en eau, le sol,
+l'espacement, la rusticité, les bons et mauvais voisins, des conseils, et ses
+fenêtres culturales.
+
+| Famille | Nombre |
+|---|---|
+| Feuilles | 36 |
+| Aromatiques | 25 |
+| Légumes-fruits | 21 |
+| Racines et tubercules | 19 |
+| Fruitiers | 15 |
+| Petits fruits | 15 |
+| Fleurs compagnes et engrais verts | 12 |
+| Gousses | 10 |
+| Bulbes | 9 |
+
+Le parti pris : une fiche par culture ayant **son propre calendrier**, et non
+par variété. La tomate cerise est là parce qu'elle mûrit nettement plus tôt
+qu'une cœur de bœuf ; une « carotte de Colmar » n'apporterait rien qu'une
+correction de fiche ne règle mieux.
 
 Le catalogue est **embarqué** : aucune API, aucun compte, aucun service externe
 susceptible de disparaître. Il est extensible depuis le panneau (voir
@@ -232,7 +248,7 @@ une courgette ne se récolte pas en janvier.
 
 ### Peut-on s'y fier ?
 
-Autant le dire franchement : **ces 108 fiches n'ont été confrontées à aucune
+Autant le dire franchement : **ces 162 fiches n'ont été confrontées à aucune
 base de référence.** Les API du domaine n'offrent pas ce qu'il faudrait —
 OpenFarm est mort, Growstuff n'a pas d'API officielle, et Permapeople ne
 fournit pas de calendriers de semis. Le catalogue a donc été écrit de mémoire
@@ -249,7 +265,7 @@ C'est la raison d'être du suivi réel.
 catalogue. Vos valeurs remplacent les miennes et les plantes déjà au jardin
 suivent la correction.
 
-**Un audit de cohérence** passe les 108 fiches au crible :
+**Un audit de cohérence** passe les 162 fiches au crible :
 
 ```bash
 python3 tools/auditer_catalogue.py

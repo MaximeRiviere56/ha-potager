@@ -59,10 +59,15 @@ ESPACEMENTS = {
     "fruitier": (200, 1200),
 }
 
+# Catégories plausibles pour une famille botanique donnée. Le but est
+# d'attraper une faute de frappe — « Solanacées » sur un cerisier — pas de
+# trancher des débats de classification. Les ensembles couvrent donc les
+# usages réels : le goji est bien une solanacée et bien un petit fruit, et
+# trèfle et vesce sont des fabacées que l'on sème comme engrais verts.
 FAMILLES_ATTENDUES = {
-    "Solanacées": {"legume-fruit", "legume-racine"},
+    "Solanacées": {"legume-fruit", "legume-racine", "petit-fruit"},
     "Cucurbitacées": {"legume-fruit"},
-    "Fabacées": {"legume-gousse"},
+    "Fabacées": {"legume-gousse", "fleur-compagne"},
     "Amaryllidacées": {"legume-bulbe", "aromatique"},
     "Rosacées": {"fruitier", "petit-fruit"},
 }
