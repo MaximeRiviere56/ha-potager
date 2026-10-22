@@ -355,7 +355,8 @@ C("rutabaga", "Rutabaga", "Brassica napobrassica", "Brassicacées", "legume-raci
 
 C("topinambour", "Topinambour", "Helianthus tuberosus", "Astéracées", "legume-racine", "🥔",
   eau="faible", freq=8, sol=SOL_ORDINAIRE, espacement=60, prof=10, diff=1, gel=True, tmin=-20,
-  plantation=(-45, 45), cycle=(None, None, 210, 120),
+  perenne=True, plantation=(-45, 45), recolte=("10-15", 150),
+  cycle=(None, None, None, 150),
   eau_notes="Se débrouille seul, même en sol pauvre.",
   aime=[], evite=["pomme-de-terre"],
   conseils=["Très envahissant : lui réserver un coin dont il ne sortira pas",
@@ -363,7 +364,8 @@ C("topinambour", "Topinambour", "Helianthus tuberosus", "Astéracées", "legume-
 
 C("crosne", "Crosne du Japon", "Stachys affinis", "Lamiacées", "legume-racine", "🥔",
   eau="moyen", freq=5, sol=SOL_LEGER, espacement=40, prof=8, diff=2, gel=True, tmin=-15,
-  plantation=(-30, 30), cycle=(None, None, 210, 90),
+  perenne=True, plantation=(-30, 30), recolte=("11-01", 120),
+  cycle=(None, None, None, 120),
   eau_notes="Arroser en été pour grossir les tubercules.",
   aime=[], evite=[],
   conseils=["Récolter après les premières gelées et ne pas chercher à les conserver"])
@@ -1471,3 +1473,109 @@ C("mauve", "Mauve sylvestre", "Malva sylvestris", "Malvacées", "fleur-compagne"
   aime=[], evite=[],
   conseils=["Fleurs et jeunes feuilles comestibles, en salade ou en tisane",
             "Se ressème abondamment : arracher les surnuméraires au printemps"])
+
+# =============================================================================
+# Céréales et graines — on les cultive pour leurs graines, pas pour leurs
+# feuilles ni leurs fruits. Les ranger ailleurs les rendrait introuvables.
+# =============================================================================
+
+C("tournesol", "Tournesol", "Helianthus annuus", "Astéracées", "cereale", "🌻",
+  eau="moyen", freq=5, sol=SOL_ORDINAIRE, espacement=50, prof=3, diff=1,
+  gel=False, tmin=6, semis_dir=(0, 60), cycle=(None, 110, None, 30),
+  eau_notes="Modéré ; ses racines descendent chercher loin.",
+  aime=["concombre", "courgette", "mais-doux"], evite=["pomme-de-terre", "haricot-a-rames"],
+  conseils=["Récolter quand le dos du capitule jaunit et que les graines se détachent",
+            "Laisser une tête sur pied : les mésanges s'en chargeront tout l'hiver",
+            "Il assèche et épuise le sol : ne pas le mettre à côté d'un gourmand"])
+
+C("mais-popcorn", "Maïs à pop-corn", "Zea mays var. everta", "Poacées", "cereale", "🌽",
+  eau="moyen", freq=4, sol=SOL_RICHE, espacement=35, prof=3, diff=1, gel=False, tmin=10,
+  semis_dir=(15, 45), cycle=(None, 115, None, 30),
+  eau_notes="Assoiffé à la floraison, comme le maïs doux.",
+  aime=["courgette", "haricot-a-rames"], evite=["betterave", "mais-doux"],
+  conseils=["Se récolte sec, à l'inverse du maïs doux : attendre que les tiges brunissent",
+            "Jamais près du maïs doux : ils se croisent et gâchent les deux",
+            "Faire sécher les épis deux mois avant de tenter le premier pop"])
+
+C("quinoa", "Quinoa", "Chenopodium quinoa", "Amaranthacées", "cereale", "🌾",
+  eau="faible", freq=7, sol=SOL_ORDINAIRE, espacement=30, prof=1, diff=2,
+  gel=True, tmin=-4, semis_dir=(-15, 45), cycle=(None, 130, None, 30),
+  eau_notes="Très sobre : il vient de l'Altiplano.",
+  aime=["mais-doux"], evite=["betterave", "epinard"],
+  conseils=["Les graines portent une saponine amère : les rincer longuement",
+            "Les jeunes feuilles se mangent comme des épinards",
+            "Récolter quand les feuilles tombent et que la graine résiste à l'ongle"])
+
+C("amarante", "Amarante", "Amaranthus caudatus", "Amaranthacées", "cereale", "🌾",
+  eau="faible", freq=6, sol=SOL_ORDINAIRE, espacement=40, prof=0.5, diff=1,
+  gel=False, tmin=6, semis_dir=(5, 60), cycle=(None, 110, None, 40),
+  eau_notes="Supporte très bien la sécheresse.",
+  aime=["mais-doux", "tournesol"], evite=["betterave"],
+  conseils=["Double usage : feuilles en épinard tout l'été, graines à l'automne",
+            "Se ressème très abondamment : couper les épis avant qu'ils ne lâchent"])
+
+C("houblon", "Houblon", "Humulus lupulus", "Cannabacées", "aromatique", "🌿",
+  expo="mi-ombre", eau="moyen", freq=4, sol=SOL_RICHE, espacement=150, diff=2,
+  gel=True, tmin=-25, perenne=True, plantation=(-30, 60), recolte=("08-25", 35),
+  cycle=(None, None, None, 35),
+  eau_notes="Aime les sols frais et profonds.",
+  aime=[], evite=[],
+  conseils=["Six mètres en une saison : il lui faut un fil solide jusqu'au toit",
+            "Seuls les pieds femelles donnent des cônes",
+            "Les jeunes pousses de printemps se mangent comme des asperges"])
+
+# --- Engrais verts céréaliers ------------------------------------------------
+
+C("seigle", "Seigle (engrais vert)", "Secale cereale", "Poacées", "fleur-compagne", "🌾",
+  eau="faible", freq=10, sol="pauvre, même ingrat", espacement=8, prof=3,
+  diff=1, gel=True, tmin=-25, semis_dir=(-60, 50), anchor_sd="premiere",
+  cycle=(None, 200, None, 40),
+  eau_notes="Aucun arrosage.",
+  aime=["vesce", "trefle-incarnat"], evite=[],
+  conseils=["Le plus rustique des engrais verts : il lève encore à 3 °C",
+            "Se sème avec la vesce, à qui il sert de tuteur",
+            "Ses racines décompactent les sols tassés en profondeur"])
+
+C("avoine", "Avoine (engrais vert)", "Avena sativa", "Poacées", "fleur-compagne", "🌾",
+  eau="faible", freq=10, sol=SOL_ORDINAIRE, espacement=8, prof=3, diff=1,
+  gel=True, tmin=-12, semis_dir=(-60, 60), anchor_sd="premiere",
+  cycle=(None, 120, None, 40),
+  eau_notes="Aucun arrosage.",
+  aime=["vesce", "trefle-incarnat"], evite=[],
+  conseils=["Gèle vers -12 °C et forme alors un paillage naturel : rien à faucher",
+            "Idéale avant une culture exigeante au printemps suivant"])
+
+# =============================================================================
+# Légumes perpétuels — plantés une fois, récoltés des années durant
+# =============================================================================
+
+C("poireau-perpetuel", "Poireau perpétuel", "Allium ampeloprasum var. sectivum",
+  "Amaryllidacées", "legume-bulbe", "🥬", eau="faible", freq=8, sol=SOL_ORDINAIRE,
+  espacement=20, prof=3, diff=1, gel=True, tmin=-20, perenne=True,
+  plantation=(-30, 60), anchor_pl="premiere", recolte=("01-01", 364),
+  cycle=(None, None, None, 364),
+  eau_notes="Sobre une fois installé ; il se débrouille seul.",
+  aime=["carotte", "fraisier", "celeri-rave"], evite=["haricot-nain", "petit-pois"],
+  conseils=["Planté une fois, il se récolte toute l'année pendant des années",
+            "Couper le fût au ras du sol : il repousse depuis la souche",
+            "Il se multiplie seul par bulbilles — diviser la touffe tous les 3 ans"])
+
+C("epinard-perpetuel", "Épinard perpétuel (Bon-Henri)", "Blitum bonus-henricus",
+  "Amaranthacées", "legume-feuille", "🥬", expo="mi-ombre", eau="moyen", freq=5,
+  sol=SOL_RICHE, espacement=40, prof=1, diff=1, gel=True, tmin=-20, perenne=True,
+  semis_dir=(-30, 60), recolte=("04-01", 180), cycle=(None, None, None, 180),
+  eau_notes="Aime la fraîcheur et la mi-ombre.",
+  aime=["oseille"], evite=["betterave", "epinard"],
+  conseils=["Une touffe donne des feuilles d'avril à octobre, pendant dix ans",
+            "Ne rien récolter la première année, le temps qu'il s'installe",
+            "Les jeunes pousses se préparent comme des asperges"])
+
+C("roquette-vivace", "Roquette vivace", "Diplotaxis tenuifolia", "Brassicacées",
+  "legume-feuille", "🥬", eau="faible", freq=6, sol=SOL_LEGER, espacement=25,
+  prof=0.5, diff=1, gel=True, tmin=-15, perenne=True, semis_dir=(-30, 90),
+  recolte=("03-15", 240), cycle=(None, None, None, 240),
+  eau_notes="Très sobre, bien plus que la roquette annuelle.",
+  aime=["laitue", "carotte"], evite=["chou-cabus"],
+  conseils=["Plus piquante et bien plus rustique que la roquette cultivée",
+            "Se coupe et repousse sans fin, de mars à novembre",
+            "Supprimer les fleurs jaunes pour garder des feuilles tendres"])

@@ -28,6 +28,7 @@ const CATEGORIES = {
   "petit-fruit": "Petits fruits",
   fruitier: "Fruitiers",
   "fleur-compagne": "Fleurs compagnes",
+  cereale: "Céréales et graines",
 };
 
 const EXPOSITIONS = {
@@ -67,6 +68,11 @@ const LIBELLES_EVT = {
   termine: "Terminé",
   perdu: "Perdu",
 };
+
+// Au-delà de ce seuil, la récolte couvre l'essentiel de l'année : c'est ce
+// qui sépare le poireau perpétuel, qu'on coupe en janvier comme en juillet,
+// de l'asperge, qui ne donne que six semaines.
+const RECOLTE_CONTINUE_JOURS = 240;
 
 const MOIS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const MOIS_LONGS = [
@@ -414,6 +420,7 @@ class PotagerPanel extends HTMLElement {
     this._recherche = "";
     this._filtreCategorie = null;
     this._filtreDifficulte = null;
+    this._filtreVie = null;
     this._filtreJournal = null;
     this._anneeCal = new Date().getFullYear();
     this._signature = null;
@@ -800,6 +807,18 @@ class PotagerPanel extends HTMLElement {
                 aria-pressed="${this._filtreDifficulte === "facile"}">
           ★ Facile
         </button>
+        <button class="puce" data-filtre-vie="vivace"
+                aria-pressed="${this._filtreVie === "vivace"}">
+          🔁 Vivace
+        </button>
+        <button class="puce" data-filtre-vie="continue"
+                aria-pressed="${this._filtreVie === "continue"}">
+          ♾️ Récolte toute l'année
+        </button>
+        <button class="puce" data-filtre-vie="annuelle"
+                aria-pressed="${this._filtreVie === "annuelle"}">
+          ↻ Annuelle
+        </button>
         ${categories
           .map(
             (c) => `<button class="puce" data-filtre-cat="${c}"
@@ -834,6 +853,17 @@ class PotagerPanel extends HTMLElement {
     if (this._filtreDifficulte === "semable") {
       cultures = cultures.filter((c) => c.semable_maintenant);
     }
+    if (this._filtreVie === "vivace") {
+      cultures = cultures.filter((c) => c.perenne);
+    }
+    if (this._filtreVie === "annuelle") {
+      cultures = cultures.filter((c) => !c.perenne);
+    }
+    if (this._filtreVie === "continue") {
+      cultures = cultures.filter(
+        (c) => c.perenne && (c.duree_recolte_jours || 0) >= RECOLTE_CONTINUE_JOURS
+      );
+    }
     if (this._recherche) {
       const terme = this._recherche
         .toLowerCase()
@@ -864,6 +894,12 @@ class PotagerPanel extends HTMLElement {
             <div class="plante-nom">${echappe(culture.nom)}</div>
             <div class="plante-zone">${CATEGORIES[culture.categorie] || ""} · ${
       "★".repeat(culture.difficulte)
+    }${
+      culture.perenne
+        ? (culture.duree_recolte_jours || 0) >= RECOLTE_CONTINUE_JOURS
+          ? " · ♾️ perpétuelle"
+          : " · 🔁 vivace"
+        : ""
     }</div>
           </div>
           ${
@@ -1160,6 +1196,13 @@ class PotagerPanel extends HTMLElement {
     hote.querySelectorAll("[data-filtre-facile]").forEach((el) =>
       el.addEventListener("click", () => {
         this._filtreDifficulte = this._filtreDifficulte === "facile" ? null : "facile";
+        this._rendreVue();
+      })
+    );
+    hote.querySelectorAll("[data-filtre-vie]").forEach((el) =>
+      el.addEventListener("click", () => {
+        this._filtreVie =
+          this._filtreVie === el.dataset.filtreVie ? null : el.dataset.filtreVie;
         this._rendreVue();
       })
     );
@@ -1593,6 +1636,15 @@ class PotagerPanel extends HTMLElement {
             <div class="valeur">${"★".repeat(culture.difficulte)}${"☆".repeat(
       3 - culture.difficulte
     )}</div></div>
+          <div class="fait"><div class="cle">Cycle</div>
+            <div class="valeur">${
+              culture.perenne
+                ? ((culture.cycle || {}).duree_recolte_jours || 0) >=
+                  RECOLTE_CONTINUE_JOURS
+                  ? "Perpétuelle — récolte quasi continue"
+                  : "Vivace — elle revient chaque année"
+                : "Annuelle — à ressemer chaque année"
+            }</div></div>
           <div class="fait"><div class="cle">Gel</div>
             <div class="valeur">${
               culture.rusticite.gel

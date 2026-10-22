@@ -236,6 +236,52 @@
    "perenne": true
   },
   {
+   "id": "amarante",
+   "nom": "Amarante",
+   "nom_scientifique": "Amaranthus caudatus",
+   "famille": "Amaranthacées",
+   "categorie": "cereale",
+   "emoji": "🌾",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 6,
+    "notes": "Supporte très bien la sécheresse."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 6
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 5,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 40,
+    "jours_semis_a_recolte": 110
+   },
+   "associations": {
+    "aime": [
+     "mais-doux",
+     "tournesol"
+    ],
+    "evite": [
+     "betterave"
+    ]
+   },
+   "conseils": [
+    "Double usage : feuilles en épinard tout l'été, graines à l'automne",
+    "Se ressème très abondamment : couper les épis avant qu'ils ne lâchent"
+   ],
+   "profondeur_semis_cm": 0.5
+  },
+  {
    "id": "aneth",
    "nom": "Aneth",
    "nom_scientifique": "Anethum graveolens",
@@ -571,6 +617,50 @@
     "Limiter à 4-5 fruits par plant"
    ],
    "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "avoine",
+   "nom": "Avoine (engrais vert)",
+   "nom_scientifique": "Avena sativa",
+   "famille": "Poacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌾",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 10,
+    "notes": "Aucun arrosage."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 8,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -12
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -60,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 40,
+    "jours_semis_a_recolte": 120
+   },
+   "associations": {
+    "aime": [
+     "vesce",
+     "trefle-incarnat"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Gèle vers -12 °C et forme alors un paillage naturel : rien à faucher",
+    "Idéale avant une culture exigeante au printemps suivant"
+   ],
+   "profondeur_semis_cm": 3
   },
   {
    "id": "basilic",
@@ -2710,11 +2800,15 @@
      "ancrage": "gelees_derniere",
      "offset_jours": -30,
      "duree_jours": 30
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "11-01",
+     "duree_jours": 120
     }
    },
    "cycle": {
-    "duree_recolte_jours": 90,
-    "jours_plantation_a_recolte": 210
+    "duree_recolte_jours": 120
    },
    "associations": {
     "aime": [],
@@ -2723,7 +2817,8 @@
    "conseils": [
     "Récolter après les premières gelées et ne pas chercher à les conserver"
    ],
-   "profondeur_semis_cm": 8
+   "profondeur_semis_cm": 8,
+   "perenne": true
   },
   {
    "id": "celeri-branche",
@@ -3806,6 +3901,52 @@
    "profondeur_semis_cm": 3
   },
   {
+   "id": "houblon",
+   "nom": "Houblon",
+   "nom_scientifique": "Humulus lupulus",
+   "famille": "Cannabacées",
+   "categorie": "aromatique",
+   "emoji": "🌿",
+   "difficulte": 2,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Aime les sols frais et profonds."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 150,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "08-25",
+     "duree_jours": 35
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 35
+   },
+   "associations": {
+    "aime": [],
+    "evite": []
+   },
+   "conseils": [
+    "Six mètres en une saison : il lui faut un fil solide jusqu'au toit",
+    "Seuls les pieds femelles donnent des cônes",
+    "Les jeunes pousses de printemps se mangent comme des asperges"
+   ],
+   "perenne": true
+  },
+  {
    "id": "hysope",
    "nom": "Hysope",
    "nom_scientifique": "Hyssopus officinalis",
@@ -4373,6 +4514,54 @@
    "conseils": [
     "Semer en bloc carré, jamais en ligne unique : la pollinisation en dépend",
     "Récolter quand les soies brunissent"
+   ],
+   "profondeur_semis_cm": 3
+  },
+  {
+   "id": "mais-popcorn",
+   "nom": "Maïs à pop-corn",
+   "nom_scientifique": "Zea mays var. everta",
+   "famille": "Poacées",
+   "categorie": "cereale",
+   "emoji": "🌽",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 4,
+    "notes": "Assoiffé à la floraison, comme le maïs doux."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 35,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 10
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 15,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 115
+   },
+   "associations": {
+    "aime": [
+     "courgette",
+     "haricot-a-rames"
+    ],
+    "evite": [
+     "betterave",
+     "mais-doux"
+    ]
+   },
+   "conseils": [
+    "Se récolte sec, à l'inverse du maïs doux : attendre que les tiges brunissent",
+    "Jamais près du maïs doux : ils se croisent et gâchent les deux",
+    "Faire sécher les épis deux mois avant de tenter le premier pop"
    ],
    "profondeur_semis_cm": 3
   },
@@ -5806,6 +5995,60 @@
    "profondeur_semis_cm": 1
   },
   {
+   "id": "poireau-perpetuel",
+   "nom": "Poireau perpétuel",
+   "nom_scientifique": "Allium ampeloprasum var. sectivum",
+   "famille": "Amaryllidacées",
+   "categorie": "legume-bulbe",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 8,
+    "notes": "Sobre une fois installé ; il se débrouille seul."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 20,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "plantation": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "01-01",
+     "duree_jours": 364
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 364
+   },
+   "associations": {
+    "aime": [
+     "carotte",
+     "fraisier",
+     "celeri-rave"
+    ],
+    "evite": [
+     "haricot-nain",
+     "petit-pois"
+    ]
+   },
+   "conseils": [
+    "Planté une fois, il se récolte toute l'année pendant des années",
+    "Couper le fût au ras du sol : il repousse depuis la souche",
+    "Il se multiplie seul par bulbilles — diviser la touffe tous les 3 ans"
+   ],
+   "profondeur_semis_cm": 3,
+   "perenne": true
+  },
+  {
    "id": "poirier",
    "nom": "Poirier",
    "nom_scientifique": "Pyrus communis",
@@ -6348,6 +6591,53 @@
    "perenne": true
   },
   {
+   "id": "quinoa",
+   "nom": "Quinoa",
+   "nom_scientifique": "Chenopodium quinoa",
+   "famille": "Amaranthacées",
+   "categorie": "cereale",
+   "emoji": "🌾",
+   "difficulte": 2,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 7,
+    "notes": "Très sobre : il vient de l'Altiplano."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 30,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -4
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -15,
+     "duree_jours": 45
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 130
+   },
+   "associations": {
+    "aime": [
+     "mais-doux"
+    ],
+    "evite": [
+     "betterave",
+     "epinard"
+    ]
+   },
+   "conseils": [
+    "Les graines portent une saponine amère : les rincer longuement",
+    "Les jeunes feuilles se mangent comme des épinards",
+    "Récolter quand les feuilles tombent et que la graine résiste à l'ongle"
+   ],
+   "profondeur_semis_cm": 1
+  },
+  {
    "id": "radis",
    "nom": "Radis",
    "nom_scientifique": "Raphanus sativus",
@@ -6624,6 +6914,58 @@
     "Pousse si vite qu'un semis de printemps et un d'automne suffisent"
    ],
    "profondeur_semis_cm": 0.5
+  },
+  {
+   "id": "roquette-vivace",
+   "nom": "Roquette vivace",
+   "nom_scientifique": "Diplotaxis tenuifolia",
+   "famille": "Brassicacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 6,
+    "notes": "Très sobre, bien plus que la roquette annuelle."
+   },
+   "sol": "léger, meuble, sans cailloux",
+   "espacement_cm": 25,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -15
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 90
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "03-15",
+     "duree_jours": 240
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 240
+   },
+   "associations": {
+    "aime": [
+     "laitue",
+     "carotte"
+    ],
+    "evite": [
+     "chou-cabus"
+    ]
+   },
+   "conseils": [
+    "Plus piquante et bien plus rustique que la roquette cultivée",
+    "Se coupe et repousse sans fin, de mars à novembre",
+    "Supprimer les fleurs jaunes pour garder des feuilles tendres"
+   ],
+   "profondeur_semis_cm": 0.5,
+   "perenne": true
   },
   {
    "id": "rutabaga",
@@ -6937,6 +7279,51 @@
     "Se laisse en terre tout l'hiver et s'arrache au besoin"
    ],
    "profondeur_semis_cm": 2
+  },
+  {
+   "id": "seigle",
+   "nom": "Seigle (engrais vert)",
+   "nom_scientifique": "Secale cereale",
+   "famille": "Poacées",
+   "categorie": "fleur-compagne",
+   "emoji": "🌾",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "faible",
+    "frequence_jours": 10,
+    "notes": "Aucun arrosage."
+   },
+   "sol": "pauvre, même ingrat",
+   "espacement_cm": 8,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -25
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_premiere",
+     "offset_jours": -60,
+     "duree_jours": 50
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 40,
+    "jours_semis_a_recolte": 200
+   },
+   "associations": {
+    "aime": [
+     "vesce",
+     "trefle-incarnat"
+    ],
+    "evite": []
+   },
+   "conseils": [
+    "Le plus rustique des engrais verts : il lève encore à 3 °C",
+    "Se sème avec la vesce, à qui il sert de tuteur",
+    "Ses racines décompactent les sols tassés en profondeur"
+   ],
+   "profondeur_semis_cm": 3
   },
   {
    "id": "shiso",
@@ -7368,11 +7755,15 @@
      "ancrage": "gelees_derniere",
      "offset_jours": -45,
      "duree_jours": 45
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "10-15",
+     "duree_jours": 150
     }
    },
    "cycle": {
-    "duree_recolte_jours": 120,
-    "jours_plantation_a_recolte": 210
+    "duree_recolte_jours": 150
    },
    "associations": {
     "aime": [],
@@ -7384,7 +7775,57 @@
     "Très envahissant : lui réserver un coin dont il ne sortira pas",
     "Récolter au fur et à mesure, il ne se conserve pas hors de terre"
    ],
-   "profondeur_semis_cm": 10
+   "profondeur_semis_cm": 10,
+   "perenne": true
+  },
+  {
+   "id": "tournesol",
+   "nom": "Tournesol",
+   "nom_scientifique": "Helianthus annuus",
+   "famille": "Astéracées",
+   "categorie": "cereale",
+   "emoji": "🌻",
+   "difficulte": 1,
+   "exposition": "plein-soleil",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Modéré ; ses racines descendent chercher loin."
+   },
+   "sol": "ordinaire, bien drainé",
+   "espacement_cm": 50,
+   "rusticite": {
+    "gel": false,
+    "temp_min_c": 6
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": 0,
+     "duree_jours": 60
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 30,
+    "jours_semis_a_recolte": 110
+   },
+   "associations": {
+    "aime": [
+     "concombre",
+     "courgette",
+     "mais-doux"
+    ],
+    "evite": [
+     "pomme-de-terre",
+     "haricot-a-rames"
+    ]
+   },
+   "conseils": [
+    "Récolter quand le dos du capitule jaunit et que les graines se détachent",
+    "Laisser une tête sur pied : les mésanges s'en chargeront tout l'hiver",
+    "Il assèche et épuise le sol : ne pas le mettre à côté d'un gourmand"
+   ],
+   "profondeur_semis_cm": 3
   },
   {
    "id": "trefle-incarnat",
@@ -7741,6 +8182,58 @@
     "Couper les feuilles extérieures, le pied continue de produire"
    ],
    "profondeur_semis_cm": 2
+  },
+  {
+   "id": "epinard-perpetuel",
+   "nom": "Épinard perpétuel (Bon-Henri)",
+   "nom_scientifique": "Blitum bonus-henricus",
+   "famille": "Amaranthacées",
+   "categorie": "legume-feuille",
+   "emoji": "🥬",
+   "difficulte": 1,
+   "exposition": "mi-ombre",
+   "arrosage": {
+    "besoin": "moyen",
+    "frequence_jours": 5,
+    "notes": "Aime la fraîcheur et la mi-ombre."
+   },
+   "sol": "riche en humus, frais et bien drainé",
+   "espacement_cm": 40,
+   "rusticite": {
+    "gel": true,
+    "temp_min_c": -20
+   },
+   "fenetres": {
+    "semis_direct": {
+     "ancrage": "gelees_derniere",
+     "offset_jours": -30,
+     "duree_jours": 60
+    },
+    "recolte": {
+     "ancrage": "date_fixe",
+     "date": "04-01",
+     "duree_jours": 180
+    }
+   },
+   "cycle": {
+    "duree_recolte_jours": 180
+   },
+   "associations": {
+    "aime": [
+     "oseille"
+    ],
+    "evite": [
+     "betterave",
+     "epinard"
+    ]
+   },
+   "conseils": [
+    "Une touffe donne des feuilles d'avril à octobre, pendant dix ans",
+    "Ne rien récolter la première année, le temps qu'il s'installe",
+    "Les jeunes pousses se préparent comme des asperges"
+   ],
+   "profondeur_semis_cm": 1,
+   "perenne": true
   },
   {
    "id": "oeillet-inde",

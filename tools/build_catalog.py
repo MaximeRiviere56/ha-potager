@@ -29,6 +29,7 @@ CATEGORIES = {
     "petit-fruit",
     "fruitier",
     "fleur-compagne",
+    "cereale",
 }
 EXPOSITIONS = {"plein-soleil", "mi-ombre", "ombre"}
 BESOINS_EAU = {"faible", "moyen", "eleve"}

@@ -57,6 +57,7 @@ ESPACEMENTS = {
     "fleur-compagne": (5, 80),
     "petit-fruit": (30, 500),
     "fruitier": (200, 1200),
+    "cereale": (5, 120),
 }
 
 # Catégories plausibles pour une famille botanique donnée. Le but est

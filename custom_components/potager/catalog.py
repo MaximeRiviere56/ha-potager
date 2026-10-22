@@ -103,6 +103,12 @@ def info_minimale(fiche: dict) -> dict[str, Any]:
         "difficulte": fiche["difficulte"],
         "exposition": fiche["exposition"],
         "perenne": bool(fiche.get("perenne")),
+        # Sert a distinguer une vivace saisonniere (pommier, asperge) d'une
+        # vivace que l'on cueille presque sans interruption (poireau
+        # perpetuel, chou Daubenton, romarin).
+        "duree_recolte_jours": (fiche.get("cycle") or {}).get(
+            "duree_recolte_jours", 0
+        ),
         "arrosage": fiche["arrosage"],
     }
 
@@ -117,6 +123,7 @@ def info_minimale(fiche: dict) -> dict[str, Any]:
 CATEGORIES_VALIDES = {
     "legume-fruit", "legume-racine", "legume-gousse", "legume-bulbe",
     "legume-feuille", "aromatique", "petit-fruit", "fruitier", "fleur-compagne",
+    "cereale",
 }
 EXPOSITIONS_VALIDES = {"plein-soleil", "mi-ombre", "ombre"}
 BESOINS_EAU_VALIDES = {"faible", "moyen", "eleve"}
