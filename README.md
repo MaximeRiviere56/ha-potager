@@ -211,6 +211,18 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 | `potager.annuler_dernier_evenement` | Défait la dernière entrée du journal |
 | `potager.rafraichir` | Recalcule tout de suite |
 
+## Le logo
+
+L'intégration embarque ses propres images de marque dans
+`custom_components/potager/brand/` : icône et logo, en variantes claire et
+sombre. Depuis Home Assistant 2026.3, un composant personnalisé peut les servir
+lui-même, et elles priment sur le dépôt central
+[home-assistant/brands](https://github.com/home-assistant/brands) — aucune pull
+request à déposer, aucune attente de relecture.
+
+Les sources SVG et la marche à suivre pour regénérer les PNG sont dans
+[`tools/brand/`](tools/brand/).
+
 ## Développement
 
 ```bash

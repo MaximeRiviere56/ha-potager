@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#AED77A"/><stop offset="1" stop-color="#6FB23C"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#96C95E"/><stop offset="1" stop-color="#5A9630"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A98A7D"/><stop offset="1" stop-color="#7A5B4E"/></linearGradient>
+  </defs>
+  <g transform="translate(16,10) scale(0.68)">
+    <path d="M38 372c0-32 38-50 86-50h192c48 0 86 18 86 50v12H38z" fill="url(#g3)"/>
+    <ellipse cx="220" cy="322" rx="182" ry="24" fill="#C4A99C"/>
+    <path d="M211 322V150a9 9 0 0 1 18 0v172z" fill="#6FB23C"/>
+    <path d="M211 252c-16-60-70-94-126-90-7 50 34 104 97 108 11 1 21 0 29-2z" fill="url(#g2)"/>
+    <path d="M229 214c11-72 70-112 133-108 9 56-36 119-106 124-10 1-19 0-27-1z" fill="url(#g1)"/>
+  </g>
+  <text x="352" y="150" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="104" font-weight="300" fill="#EDF2E6">Mon</text>
+  <text x="352" y="258" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="104" font-weight="600" fill="#EDF2E6">Potager</text>
+</svg>
