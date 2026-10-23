@@ -6,6 +6,7 @@ TOMATE = {
     "id": "tomate",
     "nom": "Tomate",
     "rusticite": {"gel": False, "temp_min_c": 5},
+    "arrosage": {"besoin": "eleve", "frequence_jours": 2, "notes": ""},
     "fenetres": {
         "semis_interieur": {
             "ancrage": "gelees_derniere",
@@ -30,6 +31,7 @@ RADIS = {
     "id": "radis",
     "nom": "Radis",
     "rusticite": {"gel": True, "temp_min_c": -4},
+    "arrosage": {"besoin": "eleve", "frequence_jours": 2, "notes": ""},
     "fenetres": {
         "semis_direct": {
             "ancrage": "gelees_derniere",
@@ -47,6 +49,7 @@ POMMIER = {
     "id": "pommier",
     "nom": "Pommier",
     "rusticite": {"gel": True, "temp_min_c": -25},
+    "arrosage": {"besoin": "faible", "frequence_jours": 10, "notes": ""},
     "perenne": True,
     "fenetres": {
         "plantation": {

@@ -50,6 +50,8 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_ACTION_MOBILE = "mobile_app_notification_action"
 PREFIXE = "POTAGER"
+# L'arrosage n'est pas une etape du cycle : il a son propre type d'action.
+ETAPE_ARROSAGE = "arrosage"
 SEPARATEUR = "|"
 JOURS_REPORT = 3
 
@@ -156,6 +158,18 @@ class PotagerNotifier:
             a_envoyer.append(action)
             self.coordinator.store.marquer_notif_envoyee(cle, aujourdhui_iso)
 
+        # Les arrosages dus, une entree par plante et par jour.
+        if self.coordinator.arrosage_actif:
+            for besoin in self.coordinator.data["arrosages"]:
+                cle = f"{besoin['uid']}:arrosage:{aujourdhui_iso}"
+                if self.coordinator.store.notif_deja_envoyee(cle):
+                    continue
+                entree = self.coordinator.data["plantes"].get(besoin["uid"])
+                if entree is None or not entree["plante"].get("notifs", True):
+                    continue
+                await self._async_envoyer_arrosage(cibles, besoin)
+                self.coordinator.store.marquer_notif_envoyee(cle, aujourdhui_iso)
+
         if not a_envoyer:
             return
 
@@ -164,6 +178,53 @@ class PotagerNotifier:
         else:
             for action in a_envoyer:
                 await self._async_envoyer(cibles, action)
+
+    async def _async_envoyer_arrosage(self, cibles: list[str], besoin: dict) -> None:
+        """Un rappel d'arrosage, avec un bouton qui le note d'un geste."""
+        etat = besoin["etat"]
+        retard = -etat.jours_restants
+        if retard <= 0:
+            quand = "C'est le jour"
+        elif retard == 1:
+            quand = "Depuis hier"
+        else:
+            quand = f"Depuis {retard} jours"
+
+        dernier = (
+            f"Dernier arrosage le {etat.dernier:%d/%m}"
+            if etat.dernier
+            else "Jamais arrosée depuis sa mise en terre"
+        )
+
+        charge: dict[str, Any] = {
+            "title": f"💧 Arroser : {besoin['nom']}",
+            "message": f"{quand} — {besoin['zone']}. {dernier}.",
+        }
+        actions_notif = [
+            {
+                "action": _encoder("fait", besoin["uid"], ETAPE_ARROSAGE),
+                "title": "Arrosé",
+            },
+            {
+                "action": _encoder("report", besoin["uid"], ETAPE_ARROSAGE),
+                "title": f"Rappeler dans {JOURS_REPORT} j",
+            },
+        ]
+        for cible in cibles:
+            service = cible.split(".", 1)[-1]
+            donnees = dict(charge)
+            if service != "persistent_notification":
+                donnees["data"] = {
+                    "actions": actions_notif,
+                    "tag": f"{DOMAIN}_{besoin['uid']}_arrosage",
+                    "group": f"{DOMAIN}_arrosage",
+                }
+            try:
+                await self.hass.services.async_call(
+                    "notify", service, donnees, blocking=False
+                )
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Echec du rappel d'arrosage vers notify.%s", service)
 
     async def _async_envoyer_resume(
         self, cibles: list[str], actions: list[dict]
@@ -250,6 +311,12 @@ class PotagerNotifier:
             return
 
         store = self.coordinator.store
+
+        if type_etape == ETAPE_ARROSAGE:
+            await self.coordinator.async_appliquer(
+                lambda: store.arroser(uid, date.today())
+            )
+            return
 
         # Un ressemis n'est pas un evenement de plus sur la meme plante :
         # c'est un nouveau lot. D'ou un chemin distinct.

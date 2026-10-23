@@ -11,7 +11,8 @@
           "gelees_premiere": "First autumn frost",
           "notify_targets": "Reminder recipients",
           "notify_heure": "Reminder time",
-          "rappel_jours": "Days of advance notice"
+          "rappel_jours": "Days of advance notice",
+          "arrosage_actif": "Watering tracking"
         },
         "data_description": {
           "preset_climat": "Preset that sets your frost dates. Pick \"Custom dates\" to enter your own.",
@@ -19,7 +20,8 @@
           "gelees_premiere": "Format MM-DD. The anchor for winter crops and tree planting.",
           "notify_targets": "Mobile apps get a \"Done\" button that fills in your journal in one tap.",
           "notify_heure": "Time of the daily check.",
-          "rappel_jours": "How long before a window opens. Adjustable per plant afterwards."
+          "rappel_jours": "How long before a window opens. Adjustable per plant afterwards.",
+          "arrosage_actif": "Enables watering reminders, based on each crop's frequency and the date you say you watered."
         }
       }
     },
@@ -38,7 +40,8 @@
           "gelees_premiere": "First autumn frost",
           "notify_targets": "Reminder recipients",
           "notify_heure": "Reminder time",
-          "rappel_jours": "Days of advance notice"
+          "rappel_jours": "Days of advance notice",
+          "arrosage_actif": "Watering tracking"
         }
       }
     }
@@ -250,6 +253,28 @@
         "date": {
           "name": "Date",
           "description": "Defaults to today."
+        }
+      }
+    },
+    "marquer_arrose": {
+      "name": "Log a watering",
+      "description": "Records a watering on the given date. The countdown to the next one restarts from there.",
+      "fields": {
+        "uid": {
+          "name": "Plant",
+          "description": "Plant id, shown in its sensor attributes."
+        },
+        "entity_id": {
+          "name": "Plant entity",
+          "description": "An alternative to the uid: point at the plant's sensor."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Defaults to today."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Free remark kept with the watering."
         }
       }
     }

@@ -11,7 +11,8 @@
           "gelees_premiere": "Première gelée d'automne",
           "notify_targets": "Destinataires des rappels",
           "notify_heure": "Heure des rappels",
-          "rappel_jours": "Prévenir combien de jours à l'avance"
+          "rappel_jours": "Prévenir combien de jours à l'avance",
+          "arrosage_actif": "Suivi de l'arrosage"
         },
         "data_description": {
           "preset_climat": "Préselection qui cale les gelées. Choisissez « Dates personnalisées » pour saisir les vôtres.",
@@ -19,7 +20,8 @@
           "gelees_premiere": "Format MM-JJ. Repère des cultures d'hiver et des plantations d'arbres.",
           "notify_targets": "Les applications mobiles reçoivent des boutons « C'est fait » qui remplissent votre journal d'un geste.",
           "notify_heure": "Heure de la vérification quotidienne.",
-          "rappel_jours": "Délai avant l'ouverture d'une fenêtre. Réglable ensuite plante par plante."
+          "rappel_jours": "Délai avant l'ouverture d'une fenêtre. Réglable ensuite plante par plante.",
+          "arrosage_actif": "Active les rappels d'arrosage, calculés depuis la fréquence de chaque fiche et la date où vous déclarez avoir arrosé."
         }
       }
     },
@@ -38,7 +40,8 @@
           "gelees_premiere": "Première gelée d'automne",
           "notify_targets": "Destinataires des rappels",
           "notify_heure": "Heure des rappels",
-          "rappel_jours": "Prévenir combien de jours à l'avance"
+          "rappel_jours": "Prévenir combien de jours à l'avance",
+          "arrosage_actif": "Suivi de l'arrosage"
         },
         "data_description": {
           "preset_climat": "Préselection qui cale les gelées. Choisissez « Dates personnalisées » pour saisir les vôtres.",
@@ -46,7 +49,8 @@
           "gelees_premiere": "Format MM-JJ. Repère des cultures d'hiver et des plantations d'arbres.",
           "notify_targets": "Les applications mobiles reçoivent des boutons « C'est fait » qui remplissent votre journal d'un geste.",
           "notify_heure": "Heure de la vérification quotidienne.",
-          "rappel_jours": "Délai avant l'ouverture d'une fenêtre. Réglable ensuite plante par plante."
+          "rappel_jours": "Délai avant l'ouverture d'une fenêtre. Réglable ensuite plante par plante.",
+          "arrosage_actif": "Active les rappels d'arrosage, calculés depuis la fréquence de chaque fiche et la date où vous déclarez avoir arrosé."
         }
       }
     }
@@ -258,6 +262,28 @@
         "date": {
           "name": "Date",
           "description": "Date réelle du nouveau semis. Par défaut : aujourd'hui."
+        }
+      }
+    },
+    "marquer_arrose": {
+      "name": "Noter un arrosage",
+      "description": "Enregistre un arrosage à la date indiquée. Le compte à rebours jusqu'au prochain repart de là.",
+      "fields": {
+        "uid": {
+          "name": "Plante",
+          "description": "Identifiant de la plante, visible dans les attributs de son capteur."
+        },
+        "entity_id": {
+          "name": "Entité de la plante",
+          "description": "Alternative à l'uid : désignez simplement le capteur de la plante."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Date réelle de l'arrosage. Par défaut : aujourd'hui."
+        },
+        "note": {
+          "name": "Note",
+          "description": "Remarque libre, conservée avec l'arrosage."
         }
       }
     }

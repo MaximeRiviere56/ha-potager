@@ -39,6 +39,7 @@ sûr moyen de faire ignorer les vraies.
 | Entité | Rôle |
 |---|---|
 | `sensor.mon_potager_actions_a_mener` | Nombre d'actions du jour, détail en attributs |
+| `sensor.mon_potager_a_arroser` | Nombre de plantes qui attendent de l'eau, détail en attributs |
 | `sensor.mon_potager_recolte_de_la_saison` | Récolte de l'année en cours en kg (`state_class: total`) ; le cumul de toutes les saisons reste en attribut |
 | `sensor.<plante>` | Phase de la plante, et toute sa fiche en attributs |
 | `switch.rappels_<plante>` | Rappels de cette plante — automatisable (« coupe tout pendant les vacances ») |
@@ -106,8 +107,12 @@ Tableaux de bord → Ressources** :
 ```yaml
 type: custom:potager-card
 titre: Au potager
-max: 5
+vue: tout        # tout (défaut) · actions · arrosage
+max: 8
 ```
+
+La carte liste ce qu'il y a à faire et les plantes à arroser, chacune avec son
+bouton. En `vue: arrosage`, elle ne montre que l'eau.
 
 ## Réglages
 
@@ -151,6 +156,32 @@ Pleine terre, serre, châssis, balcon — ajoutez, renommez, supprimez. Chacune
 porte un décalage en jours qui avance ou retarde tout le calendrier de ses
 plantes. Il ne s'applique **jamais** à une date de votre journal : un fait
 n'est pas une prévision.
+
+### Arrosage
+
+Un bouton **Arrosé** sur chaque plante — dans « Aujourd'hui », sur sa carte, dans
+sa fiche, et sur la carte Lovelace. C'est le geste le plus fréquent du potager :
+il doit coûter un clic, jamais un formulaire. Quand plusieurs plantes attendent,
+un bouton **Tout arroser** règle la tournée d'un coup.
+
+Le calcul est **théorique, et assumé comme tel**. Il part de la fréquence
+indiquée sur la fiche, et le compte à rebours repart quand *vous* déclarez avoir
+arrosé. Rien n'observe le sol ni la météo : si vous décidez de ne pas arroser,
+c'est votre affaire.
+
+Quatre garde-fous évitent les rappels absurdes, parce qu'un rappel qu'on ignore
+discrédite tous les autres :
+
+| Règle | Pourquoi |
+|---|---|
+| Une plante pas encore en terre, terminée ou perdue ne réclame rien | Elle ne boit pas |
+| Un semis boit deux fois plus souvent qu'un plant installé | La graine est en surface et ne pardonne pas un dessèchement |
+| Pas de rappel en zone non abritée entre la première et la dernière gelée | Personne n'arrose son jardin en décembre |
+| Une pérenne sobre en terre depuis plus de deux ans se tait | Les fiches le disent elles-mêmes : « aucun arrosage une fois établi » |
+
+Une zone cochée **abritée** — serre, châssis, pots — sèche toute l'année : les
+rappels y continuent l'hiver. La fréquence se règle plante par plante, et le
+suivi s'éteint globalement depuis les réglages.
 
 ### Semis échelonnés
 
@@ -311,6 +342,7 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 | `potager.marquer_recolte` | Récolte, avec `quantite_g` facultatif |
 | `potager.marquer_perdu` | Perte, avec sa `cause` |
 | `potager.marquer_termine` | Clôt la culture |
+| `potager.marquer_arrose` | Note un arrosage ; le compte à rebours repart de là |
 | `potager.ressemer` | Ouvre le lot suivant d'un semis échelonné |
 | `potager.annuler_dernier_evenement` | Défait la dernière entrée du journal |
 | `potager.rafraichir` | Recalcule tout de suite |
@@ -318,11 +350,11 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 ## Développement
 
 ```bash
-python3 -m unittest discover -s tests -p 'test_*.py'   # 75 tests, sans dépendance
+python3 -m unittest discover -s tests -p 'test_*.py'   # 94 tests, sans dépendance
 ```
 
-`lifecycle.py` (le journal), `phenology.py` (le calcul des étapes) et
-`rotation.py` n'importent rien de Home Assistant : ils sont testables hors
+`lifecycle.py` (le journal), `phenology.py` (le calcul des étapes),
+`rotation.py` et `watering.py` n'importent rien de Home Assistant : ils sont testables hors
 instance.
 
 Le panneau et la carte se vérifient sans instance :

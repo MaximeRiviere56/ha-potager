@@ -22,6 +22,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_ARROSAGE_ACTIF,
     CONF_GELEES_DERNIERE,
     CONF_GELEES_PREMIERE,
     CONF_NOTIFY_HEURE,
@@ -31,6 +32,7 @@ from .const import (
     DEFAUT_GELEES_DERNIERE,
     DEFAUT_GELEES_PREMIERE,
     DEFAUT_NOTIFY_HEURE,
+    DEFAUT_ARROSAGE_ACTIF,
     DEFAUT_RAPPEL_JOURS,
     DOMAIN,
     PRESET_PERSONNALISE,
@@ -107,6 +109,10 @@ def _schema(hass, valeurs: dict[str, Any]) -> vol.Schema:
                 CONF_NOTIFY_HEURE,
                 default=valeurs.get(CONF_NOTIFY_HEURE, DEFAUT_NOTIFY_HEURE),
             ): selector.TimeSelector(),
+            vol.Required(
+                CONF_ARROSAGE_ACTIF,
+                default=valeurs.get(CONF_ARROSAGE_ACTIF, DEFAUT_ARROSAGE_ACTIF),
+            ): selector.BooleanSelector(),
             vol.Required(
                 CONF_RAPPEL_JOURS,
                 default=valeurs.get(CONF_RAPPEL_JOURS, DEFAUT_RAPPEL_JOURS),

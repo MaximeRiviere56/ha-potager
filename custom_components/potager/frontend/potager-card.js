@@ -1,16 +1,15 @@
 /**
- * Carte Lovelace « Tâches du potager ».
+ * Carte Lovelace « Mon Potager ».
  *
- * Elle lit les attributs du capteur `sensor.*_actions_a_mener` : aucune requête
+ * Elle lit les attributs des capteurs déjà présents : aucune requête
  * supplémentaire, donc elle s'affiche instantanément sur un tableau de bord
- * déjà chargé. Le bouton « Fait » écrit au journal par la même commande que le
- * panneau, ce qui en fait un troisième chemin vers le suivi réel.
+ * déjà chargé. Les boutons écrivent par les mêmes commandes que le panneau.
  *
  * Usage :
  *   type: custom:potager-card
- *   entity: sensor.mon_potager_actions_a_mener   # facultatif, détecté sinon
  *   titre: Au potager
- *   max: 5
+ *   vue: tout        # tout (défaut) · actions · arrosage
+ *   max: 8
  */
 
 const EVT_POUR_ETAPE = {
@@ -19,6 +18,7 @@ const EVT_POUR_ETAPE = {
   repiquage: { evenement: "repique" },
   plantation: { evenement: "plante" },
   recolte: { evenement: "recolte" },
+  ressemer: { commande: "potager/ressemer" },
 };
 
 const echappe = (texte) => {
@@ -35,20 +35,26 @@ const quand = (jours, enCours) => {
   return `depuis ${Math.abs(jours)} jours`;
 };
 
+const quandEau = (jours) => {
+  if (jours > 1) return `depuis ${jours} jours`;
+  if (jours === 1) return "depuis hier";
+  if (jours === 0) return "aujourd'hui";
+  return `dans ${-jours} j`;
+};
+
 class PotagerCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._occupe = new Set();
   }
 
   setConfig(config) {
-    this._config = { titre: "Au potager", max: 5, ...config };
+    this._config = { titre: "Au potager", vue: "tout", max: 8, ...config };
     this._rendu = false;
   }
 
   getCardSize() {
-    return 1 + Math.min(this._actions().length, this._config?.max ?? 5);
+    return 1 + Math.min(this._lignes().length, this._config?.max ?? 8);
   }
 
   set hass(hass) {
@@ -56,9 +62,9 @@ class PotagerCard extends HTMLElement {
     this._rendre();
   }
 
-  /** Le capteur est détecté si l'utilisateur ne l'a pas nommé : une entité de
-   *  plus à saisir pour rien est une entité de trop. */
-  _entite() {
+  /** Le capteur d'actions est détecté si l'utilisateur ne l'a pas nommé :
+   *  une entité de plus à saisir pour rien est une entité de trop. */
+  _entiteActions() {
     if (this._config?.entity) return this._config.entity;
     return Object.keys(this._hass?.states || {}).find(
       (id) => id.startsWith("sensor.") && id.endsWith("_actions_a_mener")
@@ -66,60 +72,112 @@ class PotagerCard extends HTMLElement {
   }
 
   _actions() {
-    const etat = this._hass?.states?.[this._entite()];
+    const etat = this._hass?.states?.[this._entiteActions()];
     return etat?.attributes?.actions || [];
   }
 
-  async _noter(action, bouton) {
-    const corr = EVT_POUR_ETAPE[action.etape];
-    if (!corr) return;
+  /** Les plantes concernées par l'arrosage, les plus assoiffées d'abord.
+   *
+   *  On balaie les capteurs de plantes plutôt que le capteur « À arroser » :
+   *  celui-ci ne liste que ce qui est dû, alors que la carte doit montrer
+   *  tout le potager, avec son bouton à portée de pouce. */
+  _plantesArrosables() {
+    const etats = this._hass?.states || {};
+    // On passe par les clés : elles portent toujours l'entity_id, là où
+    // l'objet d'état ne le garantit pas.
+    return Object.entries(etats)
+      .filter(
+        ([id, e]) =>
+          id.startsWith("sensor.") &&
+          e?.attributes?.uid &&
+          e.attributes.arrosage_concernee
+      )
+      .map(([, e]) => ({
+        uid: e.attributes.uid,
+        nom: e.attributes.culture,
+        zone: e.attributes.zone,
+        jours: -e.attributes.arrosage_jours_restants,
+        aFaire: !!e.attributes.arrosage_a_faire,
+        dernier: e.attributes.arrosage_dernier,
+        frequence: e.attributes.arrosage_frequence_jours,
+        nomComplet: e.attributes.friendly_name,
+      }))
+      .sort((a, b) => b.jours - a.jours);
+  }
+
+  _lignes() {
+    const vue = this._config?.vue || "tout";
+    return [
+      ...(vue !== "arrosage" ? this._actions() : []),
+      ...(vue !== "actions" ? this._plantesArrosables() : []),
+    ];
+  }
+
+  async _commander(message, bouton) {
     bouton.disabled = true;
-    this._occupe.add(action.uid);
     try {
-      await this._hass.callWS({
-        type: "potager/noter",
-        uid: action.uid,
-        evenement: corr.evenement,
-        ...(corr.mode ? { mode: corr.mode } : {}),
-      });
+      await this._hass.callWS(message);
     } catch (err) {
       bouton.disabled = false;
       this._erreur = err?.message || "Action refusée.";
       this._rendu = false;
       this._rendre();
-    } finally {
-      this._occupe.delete(action.uid);
     }
   }
 
   _rendre() {
     if (!this._hass || !this._config) return;
 
-    const entite = this._entite();
-    if (!entite) {
-      this.shadowRoot.innerHTML = `<ha-card header="${echappe(this._config.titre)}">
-          <div style="padding:16px;color:var(--secondary-text-color)">
-            Capteur du potager introuvable. L'intégration Mon Potager est-elle installée ?
-          </div>
-        </ha-card>`;
-      return;
-    }
+    const vue = this._config.vue;
+    const actions = vue === "arrosage" ? [] : this._actions().slice(0, this._config.max);
+    const eau = vue === "actions" ? [] : this._plantesArrosables();
+    const aArroser = eau.filter((p) => p.aFaire);
+    const reste = eau.filter((p) => !p.aFaire).slice(0, Math.max(0, this._config.max - aArroser.length));
 
-    const actions = this._actions().slice(0, this._config.max);
-    const signature = JSON.stringify(actions) + (this._erreur || "");
+    const signature = JSON.stringify([actions, aArroser, reste, this._erreur]);
     if (this._rendu && signature === this._signature) return;
     this._signature = signature;
     this._rendu = true;
 
+    if (!this._entiteActions()) {
+      this.shadowRoot.innerHTML = `<ha-card header="${echappe(this._config.titre)}">
+          <div class="vide">Capteur du potager introuvable. L'intégration
+          Mon Potager est-elle installée ?</div>
+        </ha-card>`;
+      return;
+    }
+
+    const ligneEau = (p) => `
+      <div class="ligne ${p.aFaire ? "urgent" : ""}">
+        <ha-icon icon="mdi:watering-can" class="goutte"></ha-icon>
+        <div class="corps">
+          <div class="nom">${echappe(p.nom)}</div>
+          <div class="detail">
+            ${p.aFaire ? `<span class="verbe">À arroser</span> · ` : ""}${quandEau(
+      p.jours
+    )} · ${echappe(p.zone)}${
+      p.frequence ? ` · tous les ${p.frequence} j` : ""
+    }
+          </div>
+        </div>
+        <button data-eau="${p.uid}">Arrosé</button>
+      </div>`;
+
     this.shadowRoot.innerHTML = `
       <style>
         ha-card { overflow: hidden; }
+        .section {
+          padding: 10px 16px 4px; font-size: 12px; font-weight: 500;
+          text-transform: uppercase; letter-spacing: .5px;
+          color: var(--secondary-text-color);
+        }
         .ligne {
           display: flex; align-items: center; gap: 12px;
           padding: 10px 16px; border-top: 1px solid var(--divider-color);
         }
-        .ligne:first-of-type { border-top: 0; }
+        .section + .ligne { border-top: 0; }
         .emoji { font-size: 24px; line-height: 1; }
+        .goutte { color: var(--potager-eau, #29b6f6); }
         .corps { flex: 1; min-width: 0; }
         .nom { font-size: 15px; }
         .detail { font-size: 12px; color: var(--secondary-text-color); margin-top: 1px; }
@@ -130,6 +188,9 @@ class PotagerCard extends HTMLElement {
           font-size: 13px; font-weight: 500; font-family: inherit;
         }
         button:disabled { opacity: .5; cursor: default; }
+        button.discret {
+          background: var(--divider-color); color: var(--primary-text-color);
+        }
         .vide { padding: 20px 16px; color: var(--secondary-text-color); text-align: center; }
         .erreur { padding: 10px 16px; color: var(--error-color); font-size: 13px; }
         a.lien {
@@ -140,11 +201,13 @@ class PotagerCard extends HTMLElement {
       </style>
       <ha-card header="${echappe(this._config.titre)}">
         ${this._erreur ? `<div class="erreur">${echappe(this._erreur)}</div>` : ""}
+
         ${
           actions.length
-            ? actions
+            ? `<div class="section">À faire</div>` +
+              actions
                 .map(
-                  (a, index) => `
+                  (a, i) => `
               <div class="ligne ${a.en_cours ? "urgent" : ""}">
                 <div class="emoji">${a.emoji || "🌱"}</div>
                 <div class="corps">
@@ -156,27 +219,90 @@ class PotagerCard extends HTMLElement {
                 </div>
                 ${
                   EVT_POUR_ETAPE[a.etape]
-                    ? `<button data-index="${index}">Fait</button>`
+                    ? `<button data-action="${i}">Fait</button>`
                     : ""
                 }
               </div>`
                 )
                 .join("")
-            : `<div class="vide">Rien à faire au potager aujourd'hui 🌿</div>`
+            : ""
         }
+
+        ${
+          aArroser.length
+            ? `<div class="section">À arroser · ${aArroser.length}</div>` +
+              aArroser.map(ligneEau).join("") +
+              (aArroser.length > 1
+                ? `<div class="ligne" style="justify-content:center">
+                     <button class="discret" data-eau-tout="${aArroser
+                       .map((p) => p.uid)
+                       .join(",")}">
+                       Tout arroser (${aArroser.length})
+                     </button>
+                   </div>`
+                : "")
+            : ""
+        }
+
+        ${
+          reste.length
+            ? `<div class="section">Prochains arrosages</div>` +
+              reste.map(ligneEau).join("")
+            : ""
+        }
+
+        ${
+          !actions.length && !eau.length
+            ? `<div class="vide">Rien à faire au potager aujourd'hui 🌿</div>`
+            : ""
+        }
+
         <a class="lien" href="/potager">Ouvrir Mon Potager →</a>
       </ha-card>`;
 
-    this.shadowRoot.querySelectorAll("button[data-index]").forEach((bouton) =>
+    this.shadowRoot.querySelectorAll("button[data-action]").forEach((bouton) =>
       bouton.addEventListener("click", () => {
         this._erreur = null;
-        this._noter(actions[Number(bouton.dataset.index)], bouton);
+        const a = actions[Number(bouton.dataset.action)];
+        const corr = EVT_POUR_ETAPE[a.etape];
+        if (!corr) return;
+        this._commander(
+          corr.commande
+            ? { type: corr.commande, uid: a.uid }
+            : {
+                type: "potager/noter",
+                uid: a.uid,
+                evenement: corr.evenement,
+                ...(corr.mode ? { mode: corr.mode } : {}),
+              },
+          bouton
+        );
+      })
+    );
+
+    this.shadowRoot.querySelectorAll("button[data-eau]").forEach((bouton) =>
+      bouton.addEventListener("click", () => {
+        this._erreur = null;
+        this._commander(
+          { type: "potager/arroser", uid: bouton.dataset.eau },
+          bouton
+        );
+      })
+    );
+
+    this.shadowRoot.querySelectorAll("button[data-eau-tout]").forEach((bouton) =>
+      bouton.addEventListener("click", () => {
+        this._erreur = null;
+        this._commander(
+          { type: "potager/arroser", uid: bouton.dataset.eauTout.split(",") },
+          bouton
+        );
       })
     );
   }
 
   static getStubConfig() {
-    return { titre: "Au potager", max: 5 };
+    return { titre: "Au potager", vue: "tout", max: 8 };
   }
 }
 
@@ -185,7 +311,8 @@ customElements.define("potager-card", PotagerCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "potager-card",
-  name: "Tâches du potager",
-  description: "Ce qu'il y a à semer, repiquer ou récolter, avec un bouton pour le noter.",
+  name: "Mon Potager",
+  description:
+    "Ce qu'il y a à semer, repiquer, récolter ou arroser, avec un bouton pour le noter.",
   preview: true,
 });

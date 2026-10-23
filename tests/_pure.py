@@ -36,3 +36,4 @@ def _charger(nom_module: str):
 lifecycle = _charger("lifecycle")
 phenology = _charger("phenology")
 rotation = _charger("rotation")
+watering = _charger("watering")

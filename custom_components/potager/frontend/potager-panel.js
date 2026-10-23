@@ -168,6 +168,7 @@ const STYLES = `
     --potager-semis: #7cb342;
     --potager-plantation: #00897b;
     --potager-recolte: #ef6c00;
+    --potager-eau: #29b6f6;
     --potager-rayon: var(--ha-card-border-radius, 12px);
     display: block;
     height: 100%;
@@ -241,6 +242,16 @@ const STYLES = `
   .plante-zone { font-size: 12px; color: var(--secondary-text-color); }
   .progression { height: 5px; border-radius: 3px; background: var(--divider-color); margin-top: 12px; overflow: hidden; }
   .progression > div { height: 100%; border-radius: 3px; }
+
+  .pied-eau {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--divider-color);
+    font-size: 12px; color: var(--secondary-text-color);
+  }
+  .pied-eau > span { display: inline-flex; align-items: center; gap: 5px; }
+  .pied-eau .soif { color: var(--potager-eau); font-weight: 500; }
+  button.bouton.mini { padding: 5px 12px; font-size: 12px; }
 
   .badge {
     display: inline-flex; align-items: center; gap: 4px;
@@ -590,14 +601,14 @@ class PotagerPanel extends HTMLElement {
           <div class="gros">🌱</div>
           <p>Votre potager est vide.<br>
              Choisissez vos premiers légumes dans le catalogue&nbsp;:
-             ${this._catalogue?.total || 108} cultures vous attendent.</p>
+             ${this._catalogue?.total || 172} cultures vous attendent.</p>
           <button class="bouton" data-aller="catalogue">
             <ha-icon icon="mdi:book-open-variant"></ha-icon> Ouvrir le catalogue
           </button>
         </div>`;
     }
 
-    if (!actions.length) {
+    if (!actions.length && !(this._jardin?.arrosages || []).length) {
       return `<div class="vide">
           <div class="gros">☕</div>
           <p>Rien à faire au potager aujourd'hui.<br>
@@ -612,9 +623,10 @@ class PotagerPanel extends HTMLElement {
 
     const maintenant = actions.filter((a) => a.en_cours);
     const bientot = actions.filter((a) => !a.en_cours);
-    const arrosage = this._pensebeteArrosage();
+    const arrosage = this._blocArrosage();
 
     return `
+      ${arrosage}
       ${
         maintenant.length
           ? `<h2>C'est le moment</h2>
@@ -630,40 +642,60 @@ class PotagerPanel extends HTMLElement {
                .map((a) => this._carteAction(a, false))
                .join("")}</div>`
           : ""
-      }
-      ${arrosage}`;
+      }`;
   }
 
-  /** Pense-bete, et non planning : l'integration ne sait pas quand vous avez
-   *  arrose pour la derniere fois, et pretendre le contraire serait mentir. */
-  _pensebeteArrosage() {
-    const assoiffees = (this._jardin?.plantes || [])
-      .filter(
-        (p) =>
-          ["seme", "plante", "en_recolte"].includes(p.phase) &&
-          p.arrosage.besoin === "eleve"
-      )
-      .sort((a, b) => a.arrosage.frequence_jours - b.arrosage.frequence_jours);
+  /** Ce qui attend de l'eau, avec de quoi le noter d'un clic.
+   *
+   *  Le compte a rebours est theorique : il part de la frequence de la fiche
+   *  et repart quand vous declarez avoir arrose. Rien n'observe le sol. */
+  _blocArrosage() {
+    const besoins = this._jardin?.arrosages || [];
+    if (!this._jardin?.arrosage_actif || !besoins.length) return "";
 
-    if (!assoiffees.length) return "";
-    return `<h2>Pense-bête arrosage</h2>
-      <div class="carte" style="padding:4px 0">
-        ${assoiffees
-          .map(
-            (p) => `<div class="journal-ligne">
-              <div style="font-size:22px">${p.emoji}</div>
-              <div class="journal-corps">
-                <div>${echappe(p.nom)} <span class="badge">${echappe(
-              p.zone.nom
-            )}</span></div>
-                <div class="journal-note">Tous les ${
-                  p.arrosage.frequence_jours
-                } jours — ${echappe(p.arrosage.notes)}</div>
+    return `<h2>À arroser · ${besoins.length}</h2>
+      <div class="grille grille-large">${besoins
+        .map((b) => {
+          const retard = -b.etat.jours_restants;
+          const quand =
+            retard <= 0
+              ? "C'est le jour"
+              : retard === 1
+              ? "Depuis hier"
+              : `Depuis ${retard} jours`;
+          return `<div class="carte action ${retard > 1 ? "urgent" : ""}">
+            <div class="emoji">${b.emoji}</div>
+            <div class="corps">
+              <div class="titre">${echappe(b.nom)}</div>
+              <div class="detail">
+                <span class="verbe">${quand}</span> · ${echappe(b.zone)} ·
+                tous les ${b.etat.frequence_jours} j
               </div>
-            </div>`
-          )
-          .join("")}
-      </div>`;
+              <div class="detail">${
+                b.etat.dernier
+                  ? `Dernier arrosage le ${fmtCourt(b.etat.dernier)}`
+                  : "Jamais arrosée depuis sa mise en terre"
+              }</div>
+            </div>
+            <button class="bouton" data-arroser="${b.uid}">
+              <ha-icon icon="mdi:watering-can"></ha-icon> Arrosé
+            </button>
+          </div>`;
+        })
+        .join("")}
+      </div>
+      ${
+        besoins.length > 1
+          ? `<div class="actions-fiche" style="margin-top:12px">
+               <button class="bouton discret" data-arroser-tout="${besoins
+                 .map((b) => b.uid)
+                 .join(",")}">
+                 <ha-icon icon="mdi:watering-can"></ha-icon>
+                 Tout arroser (${besoins.length})
+               </button>
+             </div>`
+          : ""
+      }`;
   }
 
   _carteAction(action, urgent) {
@@ -777,6 +809,33 @@ class PotagerPanel extends HTMLElement {
               }"></div></div>`
             : ""
         }
+        ${this._pieDArrosage(plante)}
+      </div>`;
+  }
+
+  /** Ligne d'arrosage d'une carte de plante : l'état, et le bouton qui le
+   *  note sans avoir à ouvrir la fiche. C'est le geste le plus fréquent du
+   *  potager, il doit coûter un clic. */
+  _pieDArrosage(plante) {
+    const eau = plante.arrosage;
+    if (!this._jardin?.arrosage_actif || !eau || !eau.concernee) return "";
+
+    const retard = -eau.jours_restants;
+    const texte =
+      retard > 0
+        ? `À arroser · depuis ${retard} j`
+        : retard === 0
+        ? "À arroser aujourd'hui"
+        : `Arrosée · prochain dans ${-retard} j`;
+
+    return `<div class="pied-eau">
+        <span class="${eau.a_arroser ? "soif" : ""}">
+          <ha-icon icon="mdi:watering-can" style="--mdc-icon-size:16px"></ha-icon>
+          ${texte}
+        </span>
+        <button class="bouton mini" data-arroser="${plante.uid}" title="Noter un arrosage">
+          Arrosé
+        </button>
       </div>`;
   }
 
@@ -1148,6 +1207,25 @@ class PotagerPanel extends HTMLElement {
       })
     );
 
+    hote.querySelectorAll("[data-arroser]").forEach((el) =>
+      el.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        el.disabled = true;
+        await this._appeler({ type: "potager/arroser", uid: el.dataset.arroser });
+      })
+    );
+
+    hote.querySelectorAll("[data-arroser-tout]").forEach((el) =>
+      el.addEventListener("click", async (ev) => {
+        ev.stopPropagation();
+        el.disabled = true;
+        await this._appeler({
+          type: "potager/arroser",
+          uid: el.dataset.arroserTout.split(","),
+        });
+      })
+    );
+
     hote.querySelectorAll("[data-fiche]").forEach((el) =>
       el.addEventListener("click", () => {
         this._ouvrirFichePlante(el.dataset.fiche);
@@ -1379,6 +1457,7 @@ class PotagerPanel extends HTMLElement {
             : ""
         }
 
+        ${this._blocEauFiche(plante)}
         ${this._blocFrise(plante)}
 
         <div class="carte bloc">
@@ -1451,6 +1530,71 @@ class PotagerPanel extends HTMLElement {
             </button>
           </div>
         </div>
+      </div>`;
+  }
+
+  _blocEauFiche(plante) {
+    if (!this._jardin?.arrosage_actif) return "";
+    const eau = plante.arrosage;
+    const historique = plante.arrosages || [];
+
+    return `<div class="carte bloc">
+        <h4>Arrosage</h4>
+        ${
+          eau && eau.concernee
+            ? `<div style="font-size:15px">
+                 ${
+                   eau.a_arroser
+                     ? `<strong style="color:var(--potager-eau)">À arroser</strong>`
+                     : `Prochain arrosage le <strong>${fmtLong(eau.prochain)}</strong>`
+                 }
+               </div>
+               <div style="font-size:13px;color:var(--secondary-text-color);margin-top:4px">
+                 Tous les ${eau.frequence_jours} jours · ${
+                 eau.dernier
+                   ? `dernier le ${fmtLong(eau.dernier)}`
+                   : "jamais arrosée depuis sa mise en terre"
+               }
+               </div>
+               <button class="bouton" data-arroser="${plante.uid}" style="margin-top:12px">
+                 <ha-icon icon="mdi:watering-can"></ha-icon> Je viens d'arroser
+               </button>`
+            : `<p class="aide" style="margin-top:0">${echappe(
+                eau?.motif_exclusion || "Suivi d'arrosage inactif."
+              )}</p>`
+        }
+
+        <div class="reglage" style="margin-top:14px">
+          <label for="bascule-eau">Rappels d'arrosage</label>
+          <input id="bascule-eau" type="checkbox" data-uid="${plante.uid}"
+                 ${plante.arrosage_actif !== false ? "checked" : ""}
+                 style="width:20px;height:20px">
+        </div>
+        <div class="reglage">
+          <label for="champ-eau-freq">Arroser tous les</label>
+          <span><input id="champ-eau-freq" type="number" min="0" max="60"
+                       data-uid="${plante.uid}"
+                       value="${plante.arrosage_frequence_jours || 0}"
+                       style="width:90px"> jours</span>
+        </div>
+        <p class="aide">
+          0 pour suivre la fréquence de la fiche${
+            eau?.frequence_jours ? ` (${eau.frequence_jours} j)` : ""
+          }. Un semis boit deux fois plus souvent qu'un plant installé, l'écart
+          est appliqué automatiquement.
+        </p>
+
+        ${
+          historique.length
+            ? `<h4 style="margin-top:16px">Derniers arrosages</h4>
+               <div class="compagnes">${historique
+                 .slice(0, 12)
+                 .map(
+                   (a) => `<span class="compagne">${fmtCourt(a.date)}</span>`
+                 )
+                 .join("")}</div>`
+            : ""
+        }
       </div>`;
   }
 
@@ -1888,6 +2032,25 @@ class PotagerPanel extends HTMLElement {
         modifier({ uid: rappel.dataset.uid, rappel_jours: Number(rappel.value) })
       );
     }
+    const basculeEau = hote.querySelector("#bascule-eau");
+    if (basculeEau) {
+      basculeEau.addEventListener("change", () =>
+        modifier({
+          uid: basculeEau.dataset.uid,
+          arrosage_actif: basculeEau.checked,
+        })
+      );
+    }
+    const freqEau = hote.querySelector("#champ-eau-freq");
+    if (freqEau) {
+      freqEau.addEventListener("change", () =>
+        modifier({
+          uid: freqEau.dataset.uid,
+          arrosage_frequence_jours: Number(freqEau.value) || null,
+        })
+      );
+    }
+
     const echelon = hote.querySelector("#champ-echelon");
     if (echelon) {
       echelon.addEventListener("change", () =>
@@ -1909,6 +2072,7 @@ class PotagerPanel extends HTMLElement {
     return `
       ${this._blocSaison(o)}
       ${this._blocNotifs(o)}
+      ${this._blocEauReglages(o)}
       ${this._blocZones()}
       ${this._blocCataloguePerso()}
       ${this._blocAffichage(o)}`;
@@ -1929,7 +2093,7 @@ class PotagerPanel extends HTMLElement {
           Ces deux dates calent <strong>tout</strong> le calendrier. Aucune date
           du catalogue n'est écrite en dur&nbsp;: chaque période est un décalage
           en jours par rapport à elles. Les modifier redessine immédiatement
-          les 108 fiches.
+          les 172 fiches.
         </p>
         <div class="reglage">
           <label for="preset">Climat</label>
@@ -2072,6 +2236,29 @@ class PotagerPanel extends HTMLElement {
       </div>`;
   }
 
+  _blocEauReglages(o) {
+    return `
+      <h2>Arrosage</h2>
+      <div class="carte bloc">
+        <label class="case">
+          <input type="checkbox" id="arrosage-actif"
+                 ${o.arrosage_actif !== false ? "checked" : ""}>
+          <span>Suivre l'arrosage et le rappeler</span>
+        </label>
+        <p class="aide">
+          Le calcul est théorique et assumé comme tel&nbsp;: il part de la
+          fréquence indiquée sur la fiche, et le compte à rebours repart
+          quand <strong>vous</strong> déclarez avoir arrosé. Rien n'observe le
+          sol ni la météo.
+        </p>
+        <p class="aide">
+          Deux garde-fous évitent les rappels absurdes&nbsp;: une plante pas
+          encore en terre ne réclame rien, et les zones non abritées se taisent
+          entre la première et la dernière gelée.
+        </p>
+      </div>`;
+  }
+
   _blocZones() {
     const zones = this._jardin?.zones || [];
     return `
@@ -2094,6 +2281,13 @@ class PotagerPanel extends HTMLElement {
                        value="${z.decalage_jours}" style="width:76px">
                 <span class="aide" style="margin:0">j</span>
               </span>
+              <label class="case" style="padding:0;white-space:nowrap"
+                     title="Serre, châssis ou pots : l'arrosage y est rappelé toute l'année">
+                <input class="zone-abritee" type="checkbox" ${
+                  z.abritee ? "checked" : ""
+                }>
+                <span class="aide" style="margin:0">abritée</span>
+              </label>
               <button class="icone" data-zone-suppr="${i}" title="Supprimer">
                 <ha-icon icon="mdi:close"></ha-icon>
               </button>
@@ -2500,6 +2694,10 @@ class PotagerPanel extends HTMLElement {
     resume?.addEventListener("change", () =>
       this._enregistrerReglages({ notify_resume: resume.checked })
     );
+    const arrosageActif = hote.querySelector("#arrosage-actif");
+    arrosageActif?.addEventListener("change", () =>
+      this._enregistrerReglages({ arrosage_actif: arrosageActif.checked })
+    );
     const masquer = hote.querySelector("#masquer-terminees");
     masquer?.addEventListener("change", () =>
       this._enregistrerReglages({ masquer_terminees: masquer.checked })
@@ -2519,6 +2717,10 @@ class PotagerPanel extends HTMLElement {
                  style="width:76px">
           <span class="aide" style="margin:0">j</span>
         </span>
+        <label class="case" style="padding:0;white-space:nowrap">
+          <input class="zone-abritee" type="checkbox">
+          <span class="aide" style="margin:0">abritée</span>
+        </label>
         <button class="icone" data-zone-suppr="${index}">
           <ha-icon icon="mdi:close"></ha-icon>
         </button>`;
@@ -2542,6 +2744,7 @@ class PotagerPanel extends HTMLElement {
             id: slugifier(nom),
             nom,
             decalage_jours: Number(ligne.querySelector(".zone-decalage").value || 0),
+            abritee: ligne.querySelector(".zone-abritee")?.checked || false,
           };
         })
         .filter(Boolean);

@@ -1,9 +1,10 @@
 <meta charset="utf-8">
 <title>Banc d'essai — carte Lovelace</title>
 <style>
-  body{margin:0;padding:24px;background:#f5f5f5;font-family:system-ui;
-       --card-background-color:#fff;--primary-text-color:#212121;--secondary-text-color:#727272;
-       --primary-color:#03a9f4;--divider-color:#e0e0e0;--error-color:#db4437;
+  body{margin:0;padding:24px;background:#111314;font-family:system-ui;
+       --potager-eau:#29b6f6;
+       --card-background-color:#1c1f20;--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;
+       --primary-color:#38a3f1;--divider-color:#33393b;--error-color:#db4437;
        --text-primary-color:#fff;--ha-card-border-radius:12px;--warning-color:#ef6c00}
   .colonne{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 </style>
@@ -34,6 +35,7 @@
   // Le capteur tel que l'expose sensor.py, reconstitue depuis la fixture.
   const jardin = await window.__hassFactice.callWS({ type: "potager/jardin" });
   const etat = {
+    entity_id: "sensor.mon_potager_actions_a_mener",
     state: String(jardin.actions.length),
     attributes: {
       friendly_name: "Mon Potager Actions à mener",
@@ -46,15 +48,43 @@
     },
   };
 
+  // Un capteur par plante, comme sensor.py les expose : c'est là que la carte
+  // va chercher l'état d'arrosage de tout le potager.
+  const capteursPlantes = {};
+  for (const p of jardin.plantes) {
+    const eau = p.arrosage || {};
+    capteursPlantes["sensor.mon_potager_" + p.uid] = {
+      entity_id: "sensor.mon_potager_" + p.uid,
+      state: p.phase_libelle,
+      attributes: {
+        friendly_name: "Mon Potager " + p.nom,
+        uid: p.uid,
+        culture: p.nom,
+        zone: p.zone.nom,
+        arrosage_concernee: !!eau.concernee,
+        arrosage_a_faire: !!eau.a_arroser,
+        arrosage_jours_restants: eau.jours_restants,
+        arrosage_frequence_jours: eau.frequence_jours,
+        arrosage_dernier: eau.dernier,
+      },
+    };
+  }
+
   const hass = (actions) => ({
-    states: { "sensor.mon_potager_actions_a_mener": actions ? etat
-      : { ...etat, state: "0", attributes: { ...etat.attributes, actions: [] } } },
+    states: {
+      ...capteursPlantes,
+      "sensor.mon_potager_actions_a_mener": actions ? etat
+        : { ...etat, state: "0", attributes: { ...etat.attributes, actions: [] } },
+    },
     callWS: async (msg) => { console.log("callWS", JSON.stringify(msg)); return {}; },
   });
 
-  for (const [id, avecActions] of [["avec", true], ["sans", false]]) {
+  for (const [id, avecActions, vue, titre] of [
+    ["avec", true, "tout", "Au potager"],
+    ["sans", false, "arrosage", "Arrosage seul"],
+  ]) {
     const carte = document.createElement("potager-card");
-    carte.setConfig({ titre: avecActions ? "Au potager" : "Potager (vide)" });
+    carte.setConfig({ titre, vue });
     document.getElementById(id).appendChild(carte);
     carte.hass = hass(avecActions);
   }

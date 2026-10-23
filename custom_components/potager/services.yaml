@@ -149,6 +149,24 @@ marquer_termine:
       selector:
         text:
 
+marquer_arrose:
+  fields:
+    uid:
+      example: c3268895
+      selector:
+        text:
+    entity_id:
+      selector:
+        entity:
+          integration: potager
+          domain: sensor
+    date:
+      selector:
+        date:
+    note:
+      selector:
+        text:
+
 ressemer:
   fields:
     uid:

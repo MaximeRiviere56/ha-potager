@@ -14,10 +14,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import dt as dt_util
 
 from . import catalog
 from .const import (
+    CONF_ARROSAGE_ACTIF,
     CONF_GELEES_DERNIERE,
     CONF_GELEES_PREMIERE,
     CONF_MASQUER_TERMINEES,
@@ -54,6 +54,22 @@ def _coordinateur(hass: HomeAssistant) -> PotagerCoordinator | None:
     return entrees[0].runtime_data if entrees else None
 
 
+def _arrosage_en_dict(etat) -> dict | None:
+    """Serialise l'etat d'arrosage pour le panneau."""
+    if etat is None:
+        return None
+    return {
+        "concernee": etat.concernee,
+        "dernier": etat.dernier.isoformat() if etat.dernier else None,
+        "prochain": etat.prochain.isoformat() if etat.prochain else None,
+        "frequence_jours": etat.frequence_jours,
+        "jours_restants": etat.jours_restants,
+        "a_arroser": etat.a_arroser,
+        "en_retard": etat.en_retard,
+        "motif_exclusion": etat.motif_exclusion,
+    }
+
+
 def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, Any]:
     plante = entree["plante"]
     fiche = entree["culture"]
@@ -69,6 +85,10 @@ def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, 
         "notifs": plante.get("notifs", True),
         "rappel_jours": plante.get("rappel_jours"),
         "echelonnement_jours": plante.get("echelonnement_jours"),
+        "arrosage_actif": plante.get("arrosage_actif", True),
+        "arrosage_frequence_jours": plante.get("arrosage_frequence_jours"),
+        "arrosage": _arrosage_en_dict(entree.get("arrosage")),
+        "arrosages": list(reversed(plante.get("arrosages") or []))[:20],
         "phase": infos["phase"],
         "phase_libelle": libelle_phase(infos["phase"]),
         "perenne": bool(fiche.get("perenne")),
@@ -94,6 +114,7 @@ def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, 
 @callback
 def async_enregistrer(hass: HomeAssistant) -> None:
     for commande in (
+        arroser,
         retablir_culture,
         rotation,
         ressemer,
@@ -252,6 +273,17 @@ def jardin(hass, connection, msg) -> None:
                 }
                 for a in donnees["actions"]
             ],
+            "arrosages": [
+                {
+                    "uid": a["uid"],
+                    "nom": a["nom"],
+                    "emoji": a["emoji"],
+                    "zone": a["zone"],
+                    "etat": _arrosage_en_dict(a["etat"]),
+                }
+                for a in donnees.get("arrosages", [])
+            ],
+            "arrosage_actif": coordinator.arrosage_actif,
             "total_recolte_g": donnees["total_recolte_g"],
             "gelees": {
                 "derniere": coordinator.gelees.derniere,
@@ -444,6 +476,7 @@ async def annuler(coordinator, msg) -> dict:
                 vol.Required("id"): str,
                 vol.Required("nom"): str,
                 vol.Required("decalage_jours"): int,
+                vol.Optional("abritee", default=False): bool,
             }
         ],
     }
@@ -508,6 +541,7 @@ def reglages(hass, connection, msg) -> None:
                 CONF_NOTIFY_RESUME: coordinator.notify_resume,
                 CONF_NOTIFY_RECOLTE_RECURRENCE: coordinator.recolte_recurrence,
                 CONF_MASQUER_TERMINEES: coordinator.masquer_terminees,
+                CONF_ARROSAGE_ACTIF: coordinator.arrosage_actif,
             },
             "cibles_possibles": cibles,
             "presets": PRESETS_CLIMAT,
@@ -542,6 +576,7 @@ async def definir_reglages(coordinator, msg) -> dict:
         CONF_NOTIFY_RESUME,
         CONF_NOTIFY_RECOLTE_RECURRENCE,
         CONF_MASQUER_TERMINEES,
+        CONF_ARROSAGE_ACTIF,
     }
     propose = {cle: val for cle, val in msg["options"].items() if cle in valides}
 
@@ -643,6 +678,30 @@ def rotation(hass, connection, msg) -> None:
         msg["id"],
         {"avertissement": coordinator.verifier_rotation(msg["culture_id"], msg["zone"])},
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/arroser",
+        vol.Required("uid"): vol.Any(str, [str]),
+        vol.Optional("date"): vol.Any(str, None),
+    }
+)
+@websocket_api.async_response
+@_avec_coordinateur
+async def arroser(coordinator, msg) -> dict:
+    """Note un arrosage. Accepte plusieurs plantes : « tout arroser » est un
+    geste reel, qu'il serait absurde de faire repeter dix fois."""
+    uids = msg["uid"] if isinstance(msg["uid"], list) else [msg["uid"]]
+    jour = msg.get("date") or coordinator.data["calcule_le"]
+
+    def _noter() -> int:
+        for uid in uids:
+            coordinator.store.arroser(uid, jour)
+        return len(uids)
+
+    nombre = await coordinator.async_appliquer(_noter)
+    return {"arrosees": nombre}
 
 
 @websocket_api.websocket_command(

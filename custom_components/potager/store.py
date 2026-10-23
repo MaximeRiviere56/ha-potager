@@ -14,7 +14,14 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import STORAGE_KEY, STORAGE_VERSION, ZONE_PLEINE_TERRE, ZONES_DEFAUT
+from .const import (
+    STORAGE_KEY,
+    STORAGE_VERSION,
+    TRAITS_ZONES_CONNUES,
+    ZONE_PLEINE_TERRE,
+    ZONES_DEFAUT,
+)
+from .watering import construire_arrosage, noter_arrosage
 from .lifecycle import (
     ErreurJournal,
     EVT_SEME,
@@ -55,10 +62,18 @@ class JardinStore:
         self._donnees.setdefault("cultures_perso", [])
         if not self._donnees.get("zones"):
             self._donnees["zones"] = [dict(z) for z in ZONES_DEFAUT]
+        else:
+            # Un stockage anterieur a l'arrosage ne porte pas encore les
+            # caracteristiques de zone : on les deduit pour les zones
+            # d'origine, sans toucher a celles que l'utilisateur a creees.
+            for zone in self._donnees["zones"]:
+                for cle, valeur in TRAITS_ZONES_CONNUES.get(zone["id"], {}).items():
+                    zone.setdefault(cle, valeur)
         # Les phases sont recalculees au chargement : un journal edite a la main
         # ou une version anterieure du schema se remet ainsi d'aplomb.
         for plante in self._donnees["plantes"]:
             plante["phase"] = phase_depuis_evenements(plante.get("evenements") or [])
+            plante.setdefault("arrosages", [])
 
     def _sauvegarder(self) -> None:
         """Programme une ecriture au prochain tour de boucle.
@@ -123,7 +138,10 @@ class JardinStore:
             "notifs": notifs,
             "rappel_jours": rappel_jours,
             "echelonnement_jours": echelonnement_jours,
+            "arrosage_actif": True,
+            "arrosage_frequence_jours": None,
             "evenements": [],
+            "arrosages": [],
         }
         self.plantes.append(plante)
         self._sauvegarder()
@@ -140,7 +158,8 @@ class JardinStore:
         """Modifie les reglages d'une plante. Le journal n'est pas touchable ici."""
         plante = self.plante(uid)
         for cle in ("zone", "surnom", "notifs", "rappel_jours",
-                    "echelonnement_jours"):
+                    "echelonnement_jours", "arrosage_actif",
+                    "arrosage_frequence_jours"):
             if cle in champs:
                 plante[cle] = champs[cle]
         self._sauvegarder()
@@ -182,6 +201,18 @@ class JardinStore:
         parent["echelonnement_jours"] = None
         self._sauvegarder()
         return enfant
+
+    def arroser(self, uid: str, jour: Any, note: str | None = None) -> dict:
+        """Note un arrosage.
+
+        Ce n'est pas un evenement du journal : l'arrosage ne fait pas avancer
+        la plante dans son cycle, et il se repete bien trop souvent pour ne
+        pas noyer l'historique de culture.
+        """
+        plante = self.plante(uid)
+        entree = noter_arrosage(plante, construire_arrosage(jour, note))
+        self._sauvegarder()
+        return entree
 
     def familles_recentes(self, zone_id: str, depuis_annee: int) -> dict[str, list]:
         """Familles botaniques deja cultivees dans cette zone, par famille.

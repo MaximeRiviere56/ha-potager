@@ -17,9 +17,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import rotation
+from . import rotation, watering
 from .catalog import Catalogue
 from .const import (
+    CONF_ARROSAGE_ACTIF,
     CONF_GELEES_DERNIERE,
     CONF_GELEES_PREMIERE,
     CONF_MASQUER_TERMINEES,
@@ -27,6 +28,7 @@ from .const import (
     CONF_NOTIFY_RECOLTE_RECURRENCE,
     CONF_NOTIFY_RESUME,
     CONF_RAPPEL_JOURS,
+    DEFAUT_ARROSAGE_ACTIF,
     DEFAUT_GELEES_DERNIERE,
     DEFAUT_GELEES_PREMIERE,
     DEFAUT_MASQUER_TERMINEES,
@@ -111,6 +113,12 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @property
+    def arrosage_actif(self) -> bool:
+        return bool(
+            self.entry.options.get(CONF_ARROSAGE_ACTIF, DEFAUT_ARROSAGE_ACTIF)
+        )
+
+    @property
     def masquer_terminees(self) -> bool:
         return bool(
             self.entry.options.get(CONF_MASQUER_TERMINEES, DEFAUT_MASQUER_TERMINEES)
@@ -185,12 +193,39 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         }
                     )
 
+        arrosages: list[dict] = []
+        if self.arrosage_actif:
+            for uid, entree in plantes.items():
+                etat = watering.etat(
+                    entree["culture"],
+                    entree["plante"],
+                    entree["zone"],
+                    gelees,
+                    aujourdhui,
+                )
+                entree["arrosage"] = etat
+                if etat.a_arroser:
+                    arrosages.append(
+                        {
+                            "uid": uid,
+                            "nom": entree["nom_affiche"],
+                            "emoji": entree["culture"]["emoji"],
+                            "zone": entree["zone"]["nom"],
+                            "etat": etat,
+                        }
+                    )
+        else:
+            for entree in plantes.values():
+                entree["arrosage"] = None
+
+        arrosages.sort(key=lambda a: (a["etat"].jours_restants, a["nom"]))
         actions.sort(key=lambda a: (a["etape"].debut, a["nom"]))
 
         return {
             "plantes": plantes,
             "zones": list(self.store.zones),
             "actions": actions,
+            "arrosages": arrosages,
             "total_recolte_g": total_saison,
             "total_toutes_saisons_g": total_recolte,
             "saison": aujourdhui.year,

@@ -33,6 +33,7 @@ from .const import (
     SERVICE_MARQUER_SEME,
     SERVICE_MARQUER_TERMINE,
     SERVICE_RAFRAICHIR,
+    SERVICE_ARROSER,
     SERVICE_RESSEMER,
     SERVICE_RETIRER_PLANTE,
     ZONE_PLEINE_TERRE,
@@ -291,6 +292,16 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
 
         return noter
 
+    async def arroser(call: ServiceCall) -> None:
+        coord = _coordinateur()
+        uid = _resoudre_uid(hass, call)
+        jour = call.data.get("date") or coord.data["calcule_le"]
+        note = call.data.get("note")
+        with _refus_lisible():
+            await coord.async_appliquer(
+                lambda: coord.store.arroser(uid, jour, note)
+            )
+
     async def ressemer(call: ServiceCall) -> None:
         coord = _coordinateur()
         uid = _resoudre_uid(hass, call)
@@ -319,6 +330,7 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
         ),
         (SERVICE_MARQUER_PERDU, _noteur(EVT_PERDU, "cause", "note"), SCHEMA_PERDU),
         (SERVICE_MARQUER_TERMINE, _noteur(EVT_TERMINE, "note"), SCHEMA_DATE),
+        (SERVICE_ARROSER, arroser, SCHEMA_DATE),
         (SERVICE_RESSEMER, ressemer, SCHEMA_DATE),
         (SERVICE_ANNULER, annuler, SCHEMA_UID),
         (SERVICE_RAFRAICHIR, rafraichir, vol.Schema({})),

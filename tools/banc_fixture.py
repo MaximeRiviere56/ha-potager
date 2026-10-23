@@ -34,6 +34,7 @@ def _charger(nom: str):
 lc = _charger("lifecycle")
 ph = _charger("phenology")
 cat = _charger("catalog")
+wa = _charger("watering")
 
 GELEES = ph.Gelees("04-15", "11-15")
 AUJ = date.today()
@@ -41,9 +42,10 @@ DEPARTS = ("semis_interieur", "semis_direct", "plantation")
 
 ZONES = [
     {"id": "pleine-terre", "nom": "Pleine terre", "decalage_jours": 0},
-    {"id": "serre", "nom": "Serre", "decalage_jours": -21},
-    {"id": "chassis", "nom": "Chassis / tunnel", "decalage_jours": -10},
-    {"id": "balcon", "nom": "Balcon / pots", "decalage_jours": 0},
+    {"id": "serre", "nom": "Serre", "decalage_jours": -21, "abritee": True},
+    {"id": "chassis", "nom": "Chassis / tunnel", "decalage_jours": -10,
+     "abritee": True},
+    {"id": "balcon", "nom": "Balcon / pots", "decalage_jours": 0, "abritee": True},
 ]
 
 
@@ -58,7 +60,22 @@ def etape_dict(etape) -> dict:
     }
 
 
-def construire(culture_id, zone_id, evenements, surnom=None) -> dict:
+def arrosage_dict(etat) -> dict | None:
+    if etat is None:
+        return None
+    return {
+        "concernee": etat.concernee,
+        "dernier": etat.dernier.isoformat() if etat.dernier else None,
+        "prochain": etat.prochain.isoformat() if etat.prochain else None,
+        "frequence_jours": etat.frequence_jours,
+        "jours_restants": etat.jours_restants,
+        "a_arroser": etat.a_arroser,
+        "en_retard": etat.en_retard,
+        "motif_exclusion": etat.motif_exclusion,
+    }
+
+
+def construire(culture_id, zone_id, evenements, surnom=None, arrose_il_y_a=None) -> dict:
     fiche = cat.culture(culture_id)
     zone = next(z for z in ZONES if z["id"] == zone_id)
     plante = {
@@ -73,8 +90,15 @@ def construire(culture_id, zone_id, evenements, surnom=None) -> dict:
     for type_evt, jour, extra in evenements:
         lc.ajouter_evenement(plante, lc.construire_evenement(type_evt, jour, **extra))
 
+    if arrose_il_y_a is not None:
+        wa.noter_arrosage(
+            plante,
+            wa.construire_arrosage(AUJ - timedelta(days=arrose_il_y_a)),
+        )
+
     etapes = ph.prochaines_etapes(fiche, plante, GELEES, zone["decalage_jours"], AUJ)
     infos = lc.resume(plante)
+    etat_eau = wa.etat(fiche, plante, zone, GELEES, AUJ)
     return {
         "uid": plante["uid"],
         "culture_id": culture_id,
@@ -99,7 +123,10 @@ def construire(culture_id, zone_id, evenements, surnom=None) -> dict:
         "evenements": [
             {**e, "libelle": lc.LIBELLES_EVENEMENTS[e["type"]]} for e in plante["evenements"]
         ],
-        "arrosage": fiche["arrosage"],
+        "arrosage_actif": True,
+        "arrosage_frequence_jours": None,
+        "arrosage": arrosage_dict(etat_eau),
+        "arrosages": list(reversed(plante.get("arrosages") or []))[:20],
         "exposition": fiche["exposition"],
     }
 
@@ -127,7 +154,8 @@ def main() -> None:
     # Un echantillon qui couvre les cinq phases : c'est la seule facon de voir
     # si une vue se casse sur un cas de bord.
     plantes = [
-        construire("tomate", "serre", [("seme", il_y_a(40), {"mode": "interieur"})], "Cœur de bœuf"),
+        construire("tomate", "serre", [("seme", il_y_a(40), {"mode": "interieur"})],
+                   "Cœur de bœuf", arrose_il_y_a=3),
         construire("radis", "pleine-terre", []),
         construire(
             "courgette",
@@ -137,6 +165,7 @@ def main() -> None:
                 ("recolte", il_y_a(9), {"quantite_g": 620}),
                 ("recolte", il_y_a(2), {"quantite_g": 840, "note": "trois belles"}),
             ],
+            arrose_il_y_a=1,
         ),
         construire("pommier", "pleine-terre", [("plante", "2024-11-20", {})]),
         construire(
@@ -167,8 +196,25 @@ def main() -> None:
                 }
             )
 
+    besoins_eau = []
+    for plante in plantes:
+        eau = plante["arrosage"]
+        if eau and eau["a_arroser"]:
+            besoins_eau.append(
+                {
+                    "uid": plante["uid"],
+                    "nom": plante["nom"],
+                    "emoji": plante["emoji"],
+                    "zone": plante["zone"]["nom"],
+                    "etat": eau,
+                }
+            )
+    besoins_eau.sort(key=lambda b: b["etat"]["jours_restants"])
+
     jardin = {
         "plantes": plantes,
+        "arrosages": besoins_eau,
+        "arrosage_actif": True,
         "zones": ZONES,
         "actions": actions,
         "total_recolte_g": sum(p["total_recolte_g"] for p in plantes),
@@ -216,6 +262,7 @@ def main() -> None:
             "notify_resume": False,
             "notify_recolte_recurrence": 2,
             "masquer_terminees": False,
+            "arrosage_actif": True,
         },
         "cibles_possibles": [
             {"value": "notify.mobile_app_fairphone_6", "label": "Fairphone 6", "mobile": True},
@@ -300,7 +347,7 @@ def main() -> None:
         "    if (msg.type in reponses) return reponses[msg.type];\n"
         "    // Les commandes d'ecriture n'ont rien a simuler : le banc verifie\n"
         "    // que l'interface les emet, pas qu'elles aboutissent.\n"
-        '    if (/\\/(ajouter|modifier|retirer|noter|annuler|zones|ressemer|definir|supprimer|retablir)/.test(msg.type)) {\n'
+        '    if (/\\/(ajouter|modifier|retirer|noter|annuler|zones|ressemer|arroser|definir|supprimer|retablir)/.test(msg.type)) {\n'
         '      console.log("ECRITURE", JSON.stringify(msg));\n'
         "      return { ok: true, uid: \"simule\" };\n"
         "    }\n"
@@ -311,9 +358,15 @@ def main() -> None:
     print(f"{sortie.relative_to(RACINE)} : {len(plantes)} plantes, {len(actions)} actions")
     for plante in plantes:
         prochaine = plante["prochaine"] or {}
+        eau = plante["arrosage"] or {}
+        soif = (
+            "à arroser" if eau.get("a_arroser")
+            else f"eau dans {eau['jours_restants']} j" if eau.get("concernee")
+            else "—"
+        )
         print(
             f"  {plante['nom']:28} {plante['phase_libelle']:11} "
-            f"{prochaine.get('libelle', '—')} {prochaine.get('debut', '')}"
+            f"{prochaine.get('libelle', '—'):16} {soif}"
         )
 
 

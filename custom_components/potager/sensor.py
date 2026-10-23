@@ -23,7 +23,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: PotagerCoordinator = entry.runtime_data
-    async_add_entities([ActionsSensor(coordinator), RecolteSensor(coordinator)])
+    async_add_entities(
+        [
+            ActionsSensor(coordinator),
+            RecolteSensor(coordinator),
+            ArrosageSensor(coordinator),
+        ]
+    )
 
     suivre_les_plantes(
         hass,
@@ -117,6 +123,46 @@ class RecolteSensor(PotagerEntity, SensorEntity):
         }
 
 
+class ArrosageSensor(PotagerEntity, SensorEntity):
+    """Combien de plantes attendent de l'eau, et lesquelles.
+
+    Separe du capteur d'actions : l'arrosage revient tous les deux jours quand
+    un semis revient une fois l'an. Les melanger rendrait les deux illisibles.
+    """
+
+    _attr_name = "À arroser"
+    _attr_icon = "mdi:watering-can"
+    _attr_native_unit_of_measurement = "plantes"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator: PotagerCoordinator) -> None:
+        super().__init__(coordinator, "arrosage")
+
+    @property
+    def native_value(self) -> int:
+        return len(self.coordinator.data.get("arrosages", []))
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {
+            "plantes": [
+                {
+                    "uid": besoin["uid"],
+                    "plante": besoin["nom"],
+                    "emoji": besoin["emoji"],
+                    "zone": besoin["zone"],
+                    "jours_de_retard": -besoin["etat"].jours_restants,
+                    "dernier_arrosage": (
+                        besoin["etat"].dernier.isoformat()
+                        if besoin["etat"].dernier
+                        else None
+                    ),
+                }
+                for besoin in self.coordinator.data.get("arrosages", [])
+            ],
+        }
+
+
 class PlanteSensor(PotagerPlanteEntity, SensorEntity):
     """Une plante du jardin : sa phase en etat, sa fiche en attributs."""
 
@@ -187,6 +233,24 @@ class PlanteSensor(PotagerPlanteEntity, SensorEntity):
             "echelonnement_jours": entree["plante"].get("echelonnement_jours"),
             "notifs_actives": entree["plante"].get("notifs", True),
         }
+
+        etat_eau = entree.get("arrosage")
+        if etat_eau is not None:
+            attributs.update(
+                {
+                    "arrosage_concernee": etat_eau.concernee,
+                    "arrosage_dernier": (
+                        etat_eau.dernier.isoformat() if etat_eau.dernier else None
+                    ),
+                    "arrosage_prochain": (
+                        etat_eau.prochain.isoformat() if etat_eau.prochain else None
+                    ),
+                    "arrosage_frequence_jours": etat_eau.frequence_jours,
+                    "arrosage_jours_restants": etat_eau.jours_restants,
+                    "arrosage_a_faire": etat_eau.a_arroser,
+                    "arrosage_motif_exclusion": etat_eau.motif_exclusion,
+                }
+            )
 
         if prochaine is not None:
             attributs.update(
