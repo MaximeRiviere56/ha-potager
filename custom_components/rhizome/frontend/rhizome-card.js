@@ -1,12 +1,12 @@
 /**
- * Carte Lovelace « Mon Potager ».
+ * Carte Lovelace « Rhizome ».
  *
  * Elle lit les attributs des capteurs déjà présents : aucune requête
  * supplémentaire, donc elle s'affiche instantanément sur un tableau de bord
  * déjà chargé. Les boutons écrivent par les mêmes commandes que le panneau.
  *
  * Usage :
- *   type: custom:potager-card
+ *   type: custom:rhizome-card
  *   titre: Au potager
  *   vue: tout        # tout (défaut) · actions · arrosage
  *   max: 8
@@ -18,7 +18,7 @@ const EVT_POUR_ETAPE = {
   repiquage: { evenement: "repique" },
   plantation: { evenement: "plante" },
   recolte: { evenement: "recolte" },
-  ressemer: { commande: "potager/ressemer" },
+  ressemer: { commande: "rhizome/ressemer" },
 };
 
 const echappe = (texte) => {
@@ -42,7 +42,7 @@ const quandEau = (jours) => {
   return `dans ${-jours} j`;
 };
 
-class PotagerCard extends HTMLElement {
+class RhizomeCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -142,7 +142,7 @@ class PotagerCard extends HTMLElement {
     if (!this._entiteActions()) {
       this.shadowRoot.innerHTML = `<ha-card header="${echappe(this._config.titre)}">
           <div class="vide">Capteur du potager introuvable. L'intégration
-          Mon Potager est-elle installée ?</div>
+          Rhizome est-elle installée ?</div>
         </ha-card>`;
       return;
     }
@@ -177,7 +177,7 @@ class PotagerCard extends HTMLElement {
         }
         .section + .ligne { border-top: 0; }
         .emoji { font-size: 24px; line-height: 1; }
-        .goutte { color: var(--potager-eau, #29b6f6); }
+        .goutte { color: var(--rhizome-eau, #29b6f6); }
         .corps { flex: 1; min-width: 0; }
         .nom { font-size: 15px; }
         .detail { font-size: 12px; color: var(--secondary-text-color); margin-top: 1px; }
@@ -257,7 +257,7 @@ class PotagerCard extends HTMLElement {
             : ""
         }
 
-        <a class="lien" href="/potager">Ouvrir Mon Potager →</a>
+        <a class="lien" href="/rhizome">Ouvrir Rhizome →</a>
       </ha-card>`;
 
     this.shadowRoot.querySelectorAll("button[data-action]").forEach((bouton) =>
@@ -270,7 +270,7 @@ class PotagerCard extends HTMLElement {
           corr.commande
             ? { type: corr.commande, uid: a.uid }
             : {
-                type: "potager/noter",
+                type: "rhizome/noter",
                 uid: a.uid,
                 evenement: corr.evenement,
                 ...(corr.mode ? { mode: corr.mode } : {}),
@@ -284,7 +284,7 @@ class PotagerCard extends HTMLElement {
       bouton.addEventListener("click", () => {
         this._erreur = null;
         this._commander(
-          { type: "potager/arroser", uid: bouton.dataset.eau },
+          { type: "rhizome/arroser", uid: bouton.dataset.eau },
           bouton
         );
       })
@@ -294,7 +294,7 @@ class PotagerCard extends HTMLElement {
       bouton.addEventListener("click", () => {
         this._erreur = null;
         this._commander(
-          { type: "potager/arroser", uid: bouton.dataset.eauTout.split(",") },
+          { type: "rhizome/arroser", uid: bouton.dataset.eauTout.split(",") },
           bouton
         );
       })
@@ -306,12 +306,12 @@ class PotagerCard extends HTMLElement {
   }
 }
 
-customElements.define("potager-card", PotagerCard);
+customElements.define("rhizome-card", RhizomeCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "potager-card",
-  name: "Mon Potager",
+  type: "rhizome-card",
+  name: "Rhizome",
   description:
     "Ce qu'il y a à semer, repiquer, récolter ou arroser, avec un bouton pour le noter.",
   preview: true,

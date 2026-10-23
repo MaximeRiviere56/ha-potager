@@ -22,7 +22,7 @@ sys.path.insert(0, str(RACINE / "tools"))
 from build_catalog import valider  # noqa: E402
 from catalogue_source import CULTURES  # noqa: E402
 
-CATALOG_JSON = RACINE / "custom_components" / "potager" / "data" / "catalog.json"
+CATALOG_JSON = RACINE / "custom_components" / "rhizome" / "data" / "catalog.json"
 GELEES = ph.Gelees(derniere="04-15", premiere="11-15")
 
 # Quelques dates reparties sur l'annee, dont les deux pieges : le creux de
@@ -135,18 +135,18 @@ class TestCataloguePersonnel(unittest.TestCase):
         import importlib.util
         import types
 
-        src = RACINE / "custom_components" / "potager"
-        if "potager_cat" not in sys.modules:
-            pkg = types.ModuleType("potager_cat")
+        src = RACINE / "custom_components" / "rhizome"
+        if "rhizome_cat" not in sys.modules:
+            pkg = types.ModuleType("rhizome_cat")
             pkg.__path__ = [str(src)]
-            sys.modules["potager_cat"] = pkg
+            sys.modules["rhizome_cat"] = pkg
             spec = importlib.util.spec_from_file_location(
-                "potager_cat.catalog", src / "catalog.py"
+                "rhizome_cat.catalog", src / "catalog.py"
             )
             module = importlib.util.module_from_spec(spec)
-            sys.modules["potager_cat.catalog"] = module
+            sys.modules["rhizome_cat.catalog"] = module
             spec.loader.exec_module(module)
-        cls.cat = sys.modules["potager_cat.catalog"]
+        cls.cat = sys.modules["rhizome_cat.catalog"]
 
     def test_slug_sans_accent_ni_espace(self):
         self.assertEqual(self.cat.slug("Chou-rave de Vienne"), "chou-rave-de-vienne")

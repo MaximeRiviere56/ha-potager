@@ -1,15 +1,21 @@
-"""Constantes de l'integration Mon Potager."""
+"""Constantes de l'integration Rhizome."""
 
 from __future__ import annotations
 
-DOMAIN = "potager"
+DOMAIN = "rhizome"
 
-STORAGE_KEY = "potager.jardin"
+STORAGE_KEY = "rhizome.jardin"
 STORAGE_VERSION = 1
 
-PANEL_URL = "/potager-frontend"
-PANEL_PATH = "potager"
-PANEL_TITLE = "Mon Potager"
+# L'integration s'est appelee « potager » jusqu'a la v0.7.0, et le jardin de
+# toute installation anterieure vit encore sous cette cle. On l'adopte au
+# premier chargement : le journal est la seule donnee du projet qu'aucun calcul
+# ne peut reconstituer.
+STORAGE_KEY_HERITAGE = "potager.jardin"
+
+PANEL_URL = "/rhizome-frontend"
+PANEL_PATH = "rhizome"
+PANEL_TITLE = "Rhizome"
 PANEL_ICON = "mdi:sprout"
 
 # --- Options de configuration -------------------------------------------------

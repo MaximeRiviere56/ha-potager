@@ -16,6 +16,7 @@ from homeassistant.helpers.storage import Store
 
 from .const import (
     STORAGE_KEY,
+    STORAGE_KEY_HERITAGE,
     STORAGE_VERSION,
     TRAITS_ZONES_CONNUES,
     ZONE_PLEINE_TERRE,
@@ -45,6 +46,7 @@ class JardinStore:
     """Enveloppe typee autour du Store de Home Assistant."""
 
     def __init__(self, hass: HomeAssistant) -> None:
+        self._hass = hass
         self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._donnees: dict[str, Any] = {
             "plantes": [],
@@ -56,6 +58,8 @@ class JardinStore:
 
     async def async_charger(self) -> None:
         charge = await self._store.async_load()
+        if charge is None:
+            charge = await self._async_adopter_heritage()
         if charge:
             self._donnees = charge
         self._donnees.setdefault("plantes", [])
@@ -74,6 +78,29 @@ class JardinStore:
         for plante in self._donnees["plantes"]:
             plante["phase"] = phase_depuis_evenements(plante.get("evenements") or [])
             plante.setdefault("arrosages", [])
+
+    async def _async_adopter_heritage(self) -> dict[str, Any] | None:
+        """Reprend le jardin ecrit sous l'ancien nom de l'integration.
+
+        Le renommage en « rhizome » change la cle de stockage : sans cette
+        reprise, une installation existante redemarrerait sur un jardin vide.
+        L'ancien fichier est volontairement laisse en place — il ne coute que
+        quelques kilo-octets et reste le seul filet si la reprise deraille.
+        """
+        ancien: Store[dict[str, Any]] = Store(
+            self._hass, STORAGE_VERSION, STORAGE_KEY_HERITAGE
+        )
+        donnees = await ancien.async_load()
+        if donnees is None:
+            return None
+        _LOGGER.warning(
+            "Jardin repris depuis « %s » : l'integration s'appelle desormais "
+            "« %s ». L'ancien stockage est conserve intact.",
+            STORAGE_KEY_HERITAGE,
+            STORAGE_KEY,
+        )
+        await self._store.async_save(donnees)
+        return donnees
 
     def _sauvegarder(self) -> None:
         """Programme une ecriture au prochain tour de boucle.

@@ -1,4 +1,4 @@
-"""Mon Potager : catalogue, jardin virtuel, calendrier et rappels."""
+"""Rhizome : catalogue, jardin virtuel, calendrier et rappels."""
 
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ from .const import (
     SERVICE_RETIRER_PLANTE,
     ZONE_PLEINE_TERRE,
 )
-from .coordinator import PotagerCoordinator
+from .coordinator import RhizomeCoordinator
 from .lifecycle import (
     ErreurJournal,
     EVT_PERDU,
@@ -49,7 +49,7 @@ from .lifecycle import (
     MODE_SEMIS_DIRECT,
     MODE_SEMIS_INTERIEUR,
 )
-from .notifier import PotagerNotifier
+from .notifier import RhizomeNotifier
 from .store import JardinStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.CALENDAR, Platform.TODO]
 # Alias ecrit en affectation simple, et non avec le mot-cle `type` de PEP 695 :
 # cela reste parsable par un Python 3.9, donc verifiable en local avant
 # d'atterrir sur l'instance.
-PotagerEntry = ConfigEntry[PotagerCoordinator]
+RhizomeEntry = ConfigEntry[RhizomeCoordinator]
 
 # --- Schemas des services -----------------------------------------------------
 
@@ -134,7 +134,7 @@ def _resoudre_uid(hass: HomeAssistant, call: ServiceCall) -> str:
     entree = er.async_get(hass).async_get(entity_id)
     if entree is None or entree.platform != DOMAIN:
         raise ServiceValidationError(
-            f"{entity_id} n'est pas une entite de Mon Potager."
+            f"{entity_id} n'est pas une entite de Rhizome."
         )
 
     # unique_id = <entry_id>_<uid>_<suffixe>
@@ -153,21 +153,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PotagerEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RhizomeEntry) -> bool:
     # Lecture du catalogue hors boucle d'evenements : c'est de l'I/O fichier.
     await hass.async_add_executor_job(catalog.charger)
 
     store = JardinStore(hass)
     await store.async_charger()
 
-    coordinator = PotagerCoordinator(hass, entry, store)
+    coordinator = RhizomeCoordinator(hass, entry, store)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     await _async_enregistrer_panneau(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    notifier = PotagerNotifier(hass, coordinator)
+    notifier = RhizomeNotifier(hass, coordinator)
     entry.async_on_unload(notifier.async_demarrer())
 
     _async_enregistrer_services(hass)
@@ -185,14 +185,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PotagerEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PotagerEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: RhizomeEntry) -> bool:
     decharge = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if decharge:
         await entry.runtime_data.store.async_sauvegarder_maintenant()
     return decharge
 
 
-async def _async_options_modifiees(hass: HomeAssistant, entry: PotagerEntry) -> None:
+async def _async_options_modifiees(hass: HomeAssistant, entry: RhizomeEntry) -> None:
     """Changer les dates de gelees ou les zones redessine tout le calendrier."""
     await entry.runtime_data.async_refresh()
 
@@ -217,8 +217,8 @@ async def _async_enregistrer_panneau(hass: HomeAssistant) -> None:
     await panel_custom.async_register_panel(
         hass,
         frontend_url_path=PANEL_PATH,
-        webcomponent_name="potager-panel",
-        module_url=f"{PANEL_URL}/potager-panel.js",
+        webcomponent_name="rhizome-panel",
+        module_url=f"{PANEL_URL}/rhizome-panel.js",
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
         require_admin=False,
@@ -248,10 +248,10 @@ def _async_enregistrer_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_AJOUTER_PLANTE):
         return
 
-    def _coordinateur() -> PotagerCoordinator:
+    def _coordinateur() -> RhizomeCoordinator:
         entrees = hass.config_entries.async_loaded_entries(DOMAIN)
         if not entrees:
-            raise RuntimeError("Mon Potager n'est pas charge.")
+            raise RuntimeError("Rhizome n'est pas charge.")
         return entrees[0].runtime_data
 
     async def ajouter(call: ServiceCall) -> None:

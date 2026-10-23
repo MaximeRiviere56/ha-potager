@@ -1,6 +1,6 @@
-# Mon Potager
+# Rhizome
 
-[![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-potager&category=integration)
+[![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-rhizome&category=integration)
 
 Une intégration Home Assistant pour gérer un potager : choisir ses légumes dans
 un catalogue de 172 cultures, les suivre dans un jardin virtuel, et recevoir au
@@ -11,9 +11,15 @@ bon moment un rappel pour semer, repiquer ou récolter.
 > semaines en retard ? La date de récolte se décale de trois semaines. Et la
 > plante déjà semée ne vous réclamera plus jamais de la semer.
 
+> **Rhizome s'appelait « Mon Potager » jusqu'à la v0.6.0.** Le nom a changé
+> parce que le projet ne veut plus se limiter au jardin. Si vous venez de cette
+> version, lisez [Migration depuis Mon Potager](#migration-depuis-mon-potager)
+> avant de mettre à jour : votre journal est repris automatiquement, mais vos
+> entités changent de nom.
+
 ## Ce que ça donne
 
-**Un panneau « Mon Potager » dans la barre latérale**, avec six vues :
+**Un panneau « Rhizome » dans la barre latérale**, avec six vues :
 Aujourd'hui, Mon potager, Catalogue, Calendrier, Journal et Réglages.
 
 ![Le jardin, par zone](docs/mon-potager.png)
@@ -38,15 +44,15 @@ sûr moyen de faire ignorer les vraies.
 
 | Entité | Rôle |
 |---|---|
-| `sensor.mon_potager_actions_a_mener` | Nombre d'actions du jour, détail en attributs |
-| `sensor.mon_potager_a_arroser` | Nombre de plantes qui attendent de l'eau, détail en attributs |
-| `sensor.mon_potager_recolte_de_la_saison` | Récolte de l'année en cours en kg (`state_class: total`) ; le cumul de toutes les saisons reste en attribut |
+| `sensor.rhizome_actions_a_mener` | Nombre d'actions du jour, détail en attributs |
+| `sensor.rhizome_a_arroser` | Nombre de plantes qui attendent de l'eau, détail en attributs |
+| `sensor.rhizome_recolte_de_la_saison` | Récolte de l'année en cours en kg (`state_class: total`) ; le cumul de toutes les saisons reste en attribut |
 | `sensor.<plante>` | Phase de la plante, et toute sa fiche en attributs |
 | `switch.rappels_<plante>` | Rappels de cette plante — automatisable (« coupe tout pendant les vacances ») |
-| `calendar.mon_potager` | Étapes prévues **et** journal passé |
-| `todo.mon_potager` | Tâches en cours — **cocher enregistre l'événement** |
+| `calendar.rhizome` | Étapes prévues **et** journal passé |
+| `todo.rhizome` | Tâches en cours — **cocher enregistre l'événement** |
 
-**Une carte Lovelace** `custom:potager-card` pour votre tableau de bord principal.
+**Une carte Lovelace** `custom:rhizome-card` pour votre tableau de bord principal.
 
 ## Le suivi réel, sans formulaire
 
@@ -54,7 +60,7 @@ Un journal qu'on doit tenir à la main ne se tient pas. Il y a donc trois chemin
 pour enregistrer un geste, et aucun ne demande de saisir une date :
 
 1. le bouton **« C'est fait »** sur la notification ;
-2. la **case à cocher** de `todo.mon_potager` ;
+2. la **case à cocher** de `todo.rhizome` ;
 3. le bouton **« Fait »** sur la carte Lovelace ou dans le panneau.
 
 Chacun inscrit l'événement au journal à la date du jour, ce qui recalcule
@@ -68,14 +74,14 @@ prévu ──semé le──▶ semé ──repiqué le──▶ planté ──1�
 ```
 
 Les récoltes se cumulent : un plant de tomates se récolte vingt fois, et vous
-obtenez un total par culture et par saison. `potager.annuler_dernier_evenement`
+obtenez un total par culture et par saison. `rhizome.annuler_dernier_evenement`
 défait la dernière entrée — on se trompe toujours une fois.
 
 ## Installation
 
 ### En un clic
 
-[![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-potager&category=integration)
+[![Ajouter le dépôt à HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MaximeRiviere56&repository=ha-rhizome&category=integration)
 
 Ce bouton ouvre HACS sur votre propre instance avec le dépôt déjà renseigné :
 il ne reste qu'à télécharger, redémarrer, puis ajouter l'intégration.
@@ -87,25 +93,57 @@ il ne reste qu'à télécharger, redémarrer, puis ajouter l'intégration.
 ### À la main, dans HACS
 
 1. HACS → menu ⋮ → **Dépôts personnalisés**
-2. URL `https://github.com/MaximeRiviere56/ha-potager`, catégorie **Integration**
-3. Installer **Mon Potager**, puis redémarrer Home Assistant
-4. **Paramètres → Appareils et services → Ajouter une intégration → Mon Potager**
+2. URL `https://github.com/MaximeRiviere56/ha-rhizome`, catégorie **Integration**
+3. Installer **Rhizome**, puis redémarrer Home Assistant
+4. **Paramètres → Appareils et services → Ajouter une intégration → Rhizome**
 
 ### Sans HACS
 
-Copier `custom_components/potager/` dans le dossier `config/` de Home
+Copier `custom_components/rhizome/` dans le dossier `config/` de Home
 Assistant, redémarrer, puis ajouter l'intégration.
+
+### Migration depuis Mon Potager
+
+Le renommage change le domaine de l'intégration, et Home Assistant ne sait pas
+déplacer une entrée de configuration d'un domaine à l'autre. La bascule se fait
+donc à la main, une seule fois :
+
+1. **Paramètres → Appareils et services → Mon Potager → Supprimer.** Cela
+   n'efface pas votre jardin : le journal vit dans un fichier de stockage que
+   l'intégration ne touche pas en partant.
+2. Dans HACS, supprimer **Mon Potager**, puis ajouter le dépôt
+   `https://github.com/MaximeRiviere56/ha-rhizome` et télécharger **Rhizome**.
+3. Redémarrer Home Assistant, puis ajouter l'intégration **Rhizome**.
+
+Au premier démarrage, Rhizome reprend le jardin écrit par Mon Potager —
+plantes, journal, arrosages, fiches personnelles et zones. L'ancien fichier est
+laissé intact : il reste votre filet.
+
+Ce qui change, en revanche :
+
+| Avant | Après |
+|---|---|
+| `sensor.mon_potager_actions_a_mener` | `sensor.rhizome_actions_a_mener` |
+| `calendar.mon_potager`, `todo.mon_potager` | `calendar.rhizome`, `todo.rhizome` |
+| `potager.marquer_seme` et les autres services | `rhizome.marquer_seme` |
+| `custom:potager-card` | `custom:rhizome-card` |
+| `/potager-frontend/potager-card.js` | `/rhizome-frontend/rhizome-card.js` |
+| Panneau sur `/potager` | Panneau sur `/rhizome` |
+
+Vos tableaux de bord et automatisations qui nomment ces entités sont à
+reprendre. Les réglages — gelées, destinataires des rappels, zones — sont à
+ressaisir une fois, puisqu'ils vivent dans l'entrée de configuration supprimée.
 
 ### La carte Lovelace
 
 Le fichier est servi par l'intégration. L'ajouter dans **Paramètres →
 Tableaux de bord → Ressources** :
 
-- URL : `/potager-frontend/potager-card.js`
+- URL : `/rhizome-frontend/rhizome-card.js`
 - Type : **Module JavaScript**
 
 ```yaml
-type: custom:potager-card
+type: custom:rhizome-card
 titre: Au potager
 vue: tout        # tout (défaut) · actions · arrosage
 max: 8
@@ -335,17 +373,17 @@ compagnon n'existe pas, ou à qui il manque `rusticite.gel`.
 
 | Service | Effet |
 |---|---|
-| `potager.ajouter_plante` | Ajoute une culture au jardin |
-| `potager.retirer_plante` | La retire, avec son journal |
-| `potager.marquer_seme` | Semis à sa date réelle (`mode` : `direct` ou `interieur`) |
-| `potager.marquer_repique` | Mise en place |
-| `potager.marquer_recolte` | Récolte, avec `quantite_g` facultatif |
-| `potager.marquer_perdu` | Perte, avec sa `cause` |
-| `potager.marquer_termine` | Clôt la culture |
-| `potager.marquer_arrose` | Note un arrosage ; le compte à rebours repart de là |
-| `potager.ressemer` | Ouvre le lot suivant d'un semis échelonné |
-| `potager.annuler_dernier_evenement` | Défait la dernière entrée du journal |
-| `potager.rafraichir` | Recalcule tout de suite |
+| `rhizome.ajouter_plante` | Ajoute une culture au jardin |
+| `rhizome.retirer_plante` | La retire, avec son journal |
+| `rhizome.marquer_seme` | Semis à sa date réelle (`mode` : `direct` ou `interieur`) |
+| `rhizome.marquer_repique` | Mise en place |
+| `rhizome.marquer_recolte` | Récolte, avec `quantite_g` facultatif |
+| `rhizome.marquer_perdu` | Perte, avec sa `cause` |
+| `rhizome.marquer_termine` | Clôt la culture |
+| `rhizome.marquer_arrose` | Note un arrosage ; le compte à rebours repart de là |
+| `rhizome.ressemer` | Ouvre le lot suivant d'un semis échelonné |
+| `rhizome.annuler_dernier_evenement` | Défait la dernière entrée du journal |
+| `rhizome.rafraichir` | Recalcule tout de suite |
 
 ## Développement
 

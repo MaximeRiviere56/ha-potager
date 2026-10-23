@@ -35,7 +35,7 @@ from .const import (
     PRESETS_CLIMAT,
     ZONE_PLEINE_TERRE,
 )
-from .coordinator import PotagerCoordinator, etape_en_dict, libelle_phase
+from .coordinator import RhizomeCoordinator, etape_en_dict, libelle_phase
 from .lifecycle import ErreurJournal, LIBELLES_EVENEMENTS, TYPES_EVENEMENTS
 from .phenology import (
     ETAPE_PLANTATION,
@@ -49,7 +49,7 @@ from .phenology import (
 _MOTIF_JOUR_MOIS = re.compile(r"^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$")
 
 
-def _coordinateur(hass: HomeAssistant) -> PotagerCoordinator | None:
+def _coordinateur(hass: HomeAssistant) -> RhizomeCoordinator | None:
     entrees = hass.config_entries.async_loaded_entries(DOMAIN)
     return entrees[0].runtime_data if entrees else None
 
@@ -70,7 +70,7 @@ def _arrosage_en_dict(etat) -> dict | None:
     }
 
 
-def _plante_en_dict(entree: dict, coordinator: PotagerCoordinator) -> dict[str, Any]:
+def _plante_en_dict(entree: dict, coordinator: RhizomeCoordinator) -> dict[str, Any]:
     plante = entree["plante"]
     fiche = entree["culture"]
     infos = entree["resume"]
@@ -153,7 +153,7 @@ def async_enregistrer(hass: HomeAssistant) -> None:
 def catalogue(hass, connection, msg) -> None:
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
 
     fiches = coordinator.catalogue
@@ -218,7 +218,7 @@ def _semis(fiche: dict, gelees: Gelees, aujourdhui) -> dict[str, Any]:
 def fiche_culture(hass, connection, msg) -> None:
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
 
     fiche = coordinator.catalogue.culture(msg["culture_id"])
@@ -249,7 +249,7 @@ def fiche_culture(hass, connection, msg) -> None:
 def jardin(hass, connection, msg) -> None:
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
 
     donnees = coordinator.data
@@ -302,7 +302,7 @@ def calendrier(hass, connection, msg) -> None:
     """Bandes annuelles par plante, prevues et reelles, pour la vue calendrier."""
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
 
     annee = msg.get("annee") or coordinator.data["calcule_le"].year
@@ -342,7 +342,7 @@ def _avec_coordinateur(fonction):
         coordinator = _coordinateur(hass)
         if coordinator is None:
             connection.send_error(
-                msg["id"], "non_charge", "Mon Potager n'est pas chargé"
+                msg["id"], "non_charge", "Rhizome n'est pas chargé"
             )
             return
         try:
@@ -503,7 +503,7 @@ def reglages(hass, connection, msg) -> None:
     """
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
 
     options = dict(coordinator.entry.options)
@@ -672,7 +672,7 @@ def rotation(hass, connection, msg) -> None:
     """Avertissement de rotation, avant d'ajouter une plante a une zone."""
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
     connection.send_result(
         msg["id"],
@@ -723,7 +723,7 @@ async def ressemer(coordinator, msg) -> dict:
 def cultures_perso(hass, connection, msg) -> None:
     coordinator = _coordinateur(hass)
     if coordinator is None:
-        connection.send_error(msg["id"], "non_charge", "Mon Potager n'est pas chargé")
+        connection.send_error(msg["id"], "non_charge", "Rhizome n'est pas chargé")
         return
     connection.send_result(
         msg["id"], {"cultures": coordinator.catalogue.perso()}

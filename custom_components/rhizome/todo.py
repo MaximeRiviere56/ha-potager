@@ -19,8 +19,8 @@ from homeassistant.components.todo import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import PotagerCoordinator
-from .entity import PotagerEntity
+from .coordinator import RhizomeCoordinator
+from .entity import RhizomeEntity
 from .lifecycle import ErreurJournal
 from .notifier import JOURNAL_POUR_ETAPE
 from .phenology import ETAPE_RESSEMER
@@ -33,10 +33,10 @@ SEPARATEUR = "|"
 async def async_setup_entry(
     hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    async_add_entities([PotagerTodo(entry.runtime_data)])
+    async_add_entities([RhizomeTodo(entry.runtime_data)])
 
 
-class PotagerTodo(PotagerEntity, TodoListEntity):
+class RhizomeTodo(RhizomeEntity, TodoListEntity):
     """Taches derivees du calcul : rien n'est stocke ici.
 
     Un element coche disparait de lui-meme, puisque la phase de la plante a
@@ -47,7 +47,7 @@ class PotagerTodo(PotagerEntity, TodoListEntity):
     _attr_icon = "mdi:format-list-checks"
     _attr_supported_features = TodoListEntityFeature.UPDATE_TODO_ITEM
 
-    def __init__(self, coordinator: PotagerCoordinator) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator) -> None:
         super().__init__(coordinator, "taches")
 
     @property
@@ -77,7 +77,7 @@ class PotagerTodo(PotagerEntity, TodoListEntity):
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Cocher enregistre l'evenement ; decocher ne defait rien.
 
-        L'annulation passe par `potager.annuler_dernier_evenement`, qui sait
+        L'annulation passe par `rhizome.annuler_dernier_evenement`, qui sait
         exactement quel evenement retirer — une case decochee, non.
         """
         if item.status != TodoItemStatus.COMPLETED or not item.uid:

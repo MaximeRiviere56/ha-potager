@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, PANEL_TITLE
-from .coordinator import PotagerCoordinator
+from .coordinator import RhizomeCoordinator
 
 
 def info_appareil(entry: ConfigEntry) -> DeviceInfo:
@@ -30,26 +30,26 @@ def info_appareil(entry: ConfigEntry) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, entry.entry_id)},
         name=PANEL_TITLE,
-        manufacturer="Mon Potager",
+        manufacturer="Rhizome",
         entry_type=DeviceEntryType.SERVICE,
     )
 
 
-class PotagerEntity(CoordinatorEntity[PotagerCoordinator]):
+class RhizomeEntity(CoordinatorEntity[RhizomeCoordinator]):
     """Base des entites globales du potager."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: PotagerCoordinator, cle: str) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator, cle: str) -> None:
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.entry.entry_id}_{cle}"
         self._attr_device_info = info_appareil(coordinator.entry)
 
 
-class PotagerPlanteEntity(PotagerEntity):
+class RhizomePlanteEntity(RhizomeEntity):
     """Base des entites rattachees a une plante du jardin."""
 
-    def __init__(self, coordinator: PotagerCoordinator, uid: str, suffixe: str) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator, uid: str, suffixe: str) -> None:
         super().__init__(coordinator, f"{uid}_{suffixe}")
         self._uid = uid
 
@@ -72,9 +72,9 @@ class PotagerPlanteEntity(PotagerEntity):
 def suivre_les_plantes(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    coordinator: PotagerCoordinator,
+    coordinator: RhizomeCoordinator,
     async_add_entities: AddEntitiesCallback,
-    fabrique: Callable[[PotagerCoordinator, str], Iterable],
+    fabrique: Callable[[RhizomeCoordinator, str], Iterable],
     plateforme: str,
     suffixe: str,
 ) -> None:

@@ -1,6 +1,8 @@
 # Sources du logo
 
-Les quatre SVG d'où sortent les huit PNG de `custom_components/potager/brand/`.
+Les quatre SVG d'où sortent les huit PNG de `custom_components/rhizome/brand/`.
+Le wordmark porte le nom du produit : il a dit « Mon Potager » jusqu'à la
+v0.7.0, et « Rhizome » depuis.
 
 Le dessin est un semis qui sort de terre, calibré pour tenir à 48 px dans la
 barre latérale : peu de formes, des masses pleines, aucun détail qui disparaisse
@@ -15,8 +17,13 @@ alors que Home Assistant attend de la transparence. Le rendu passe donc par un
 canevas de navigateur, qui la conserve.
 
 ```bash
-python3 tools/brand/rendre.py     # explique la marche à suivre
+python3 tools/brand/rendre.py          # recepteur, port 8778
+python3 -m http.server 8777            # dans un autre terminal
+# puis http://localhost:8777/tools/brand/rendu.html
 ```
+
+La page rend les quatre logos d'elle-même. Les icônes ne portent pas de
+texte : `produire()` sans argument, dans la console, les refait aussi.
 
 | Fichier | Dimensions | Rôle |
 |---|---|---|

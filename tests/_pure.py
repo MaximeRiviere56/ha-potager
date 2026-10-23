@@ -1,6 +1,6 @@
 """Charge les modules purs de l'integration sans executer son __init__.py.
 
-`custom_components/potager/__init__.py` importe Home Assistant, absent de ce
+`custom_components/rhizome/__init__.py` importe Home Assistant, absent de ce
 Mac. Les deux modules qu'on veut tester n'en dependent pas : on les charge donc
 dans un paquet synthetique, ce qui laisse leurs imports relatifs fonctionner.
 """
@@ -12,8 +12,8 @@ import pathlib
 import sys
 import types
 
-SRC = pathlib.Path(__file__).resolve().parent.parent / "custom_components" / "potager"
-PAQUET = "potager_pur"
+SRC = pathlib.Path(__file__).resolve().parent.parent / "custom_components" / "rhizome"
+PAQUET = "rhizome_pur"
 
 
 def _charger(nom_module: str):

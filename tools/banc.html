@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Banc d'essai — panneau Mon Potager</title>
+<title>Banc d'essai — panneau Rhizome</title>
 <!--
   Monte le panneau hors de Home Assistant, avec un `hass` factice dont les
   reponses sont generees par tools/banc_fixture.py depuis le vrai catalogue et
@@ -14,7 +14,7 @@
        --secondary-text-color:#727272;--primary-color:#03a9f4;--divider-color:#e0e0e0;
        --error-color:#db4437;--text-primary-color:#fff;--app-header-background-color:#03a9f4;
        --app-header-text-color:#fff;--header-height:56px;--ha-card-border-radius:12px}
-  #hote,potager-panel{height:100%}
+  #hote,rhizome-panel{height:100%}
 </style>
 <div id="hote"></div>
 <script>
@@ -29,8 +29,8 @@
 </script>
 <script src="./fixture.js"></script>
 <script type="module">
-  import "../custom_components/potager/frontend/potager-panel.js";
-  const panneau = document.createElement("potager-panel");
+  import "../custom_components/rhizome/frontend/rhizome-panel.js";
+  const panneau = document.createElement("rhizome-panel");
   document.getElementById("hote").appendChild(panneau);
   panneau.hass = window.__hassFactice;
   window.__panneau = panneau;

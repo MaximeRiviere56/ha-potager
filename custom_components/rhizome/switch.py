@@ -13,8 +13,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import PotagerCoordinator
-from .entity import PotagerPlanteEntity, suivre_les_plantes
+from .coordinator import RhizomeCoordinator
+from .entity import RhizomePlanteEntity, suivre_les_plantes
 
 PLATEFORME = "switch"
 SUFFIXE = "notifs"
@@ -23,7 +23,7 @@ SUFFIXE = "notifs"
 async def async_setup_entry(
     hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    coordinator: PotagerCoordinator = entry.runtime_data
+    coordinator: RhizomeCoordinator = entry.runtime_data
     suivre_les_plantes(
         hass,
         entry,
@@ -35,13 +35,13 @@ async def async_setup_entry(
     )
 
 
-class NotifsSwitch(PotagerPlanteEntity, SwitchEntity):
+class NotifsSwitch(RhizomePlanteEntity, SwitchEntity):
     """L'etat vit dans le store, pas dans l'entite : le panneau et
     l'interrupteur lisent ainsi la meme verite."""
 
     _attr_icon = "mdi:bell-ring-outline"
 
-    def __init__(self, coordinator: PotagerCoordinator, uid: str) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator, uid: str) -> None:
         super().__init__(coordinator, uid, SUFFIXE)
 
     @property

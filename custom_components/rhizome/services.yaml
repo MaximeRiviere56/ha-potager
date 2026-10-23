@@ -36,7 +36,7 @@ retirer_plante:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
 
 marquer_seme:
@@ -48,7 +48,7 @@ marquer_seme:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -73,7 +73,7 @@ marquer_repique:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -91,7 +91,7 @@ marquer_recolte:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -118,7 +118,7 @@ marquer_perdu:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -140,7 +140,7 @@ marquer_termine:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -158,7 +158,7 @@ marquer_arrose:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -176,7 +176,7 @@ ressemer:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
     date:
       selector:
@@ -191,7 +191,7 @@ annuler_dernier_evenement:
     entity_id:
       selector:
         entity:
-          integration: potager
+          integration: rhizome
           domain: sensor
 
 rafraichir:

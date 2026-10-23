@@ -1,9 +1,9 @@
 {
-  "title": "My Vegetable Garden",
+  "title": "Rhizome",
   "config": {
     "step": {
       "user": {
-        "title": "My Vegetable Garden",
+        "title": "Rhizome",
         "description": "Two settings matter: your frost dates, which anchor the whole calendar, and who receives the reminders.",
         "data": {
           "preset_climat": "Climate",
@@ -32,7 +32,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Garden settings",
+        "title": "Rhizome settings",
         "description": "Changing the frost dates redraws the whole calendar.",
         "data": {
           "preset_climat": "Climate",

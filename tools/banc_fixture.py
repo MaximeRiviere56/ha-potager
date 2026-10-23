@@ -16,17 +16,17 @@ import types
 from datetime import date, timedelta
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
-SRC = RACINE / "custom_components" / "potager"
+SRC = RACINE / "custom_components" / "rhizome"
 
-_pkg = types.ModuleType("potager_banc")
+_pkg = types.ModuleType("rhizome_banc")
 _pkg.__path__ = [str(SRC)]
-sys.modules["potager_banc"] = _pkg
+sys.modules["rhizome_banc"] = _pkg
 
 
 def _charger(nom: str):
-    spec = importlib.util.spec_from_file_location(f"potager_banc.{nom}", SRC / f"{nom}.py")
+    spec = importlib.util.spec_from_file_location(f"rhizome_banc.{nom}", SRC / f"{nom}.py")
     module = importlib.util.module_from_spec(spec)
-    sys.modules[f"potager_banc.{nom}"] = module
+    sys.modules[f"rhizome_banc.{nom}"] = module
     spec.loader.exec_module(module)
     return module
 
@@ -336,13 +336,13 @@ def main() -> None:
         "// Genere par tools/banc_fixture.py — ne pas editer a la main.\n"
         "window.__hassFactice = {\n  states: {},\n  callWS: async (msg) => {\n"
         "    const reponses = {\n"
-        f'      "potager/jardin": {json.dumps(jardin, ensure_ascii=False)},\n'
-        f'      "potager/catalogue": {json.dumps(catalogue, ensure_ascii=False)},\n'
-        f'      "potager/culture": {json.dumps(fiche, ensure_ascii=False)},\n'
-        f'      "potager/reglages": {json.dumps(reglages, ensure_ascii=False)},\n'
-        f'      "potager/cultures_perso": {json.dumps(cultures_perso, ensure_ascii=False)},\n'
-        f'      "potager/calendrier": {json.dumps(calendrier, ensure_ascii=False)},\n'
-        f'      "potager/rotation": {json.dumps(rotation, ensure_ascii=False)},\n'
+        f'      "rhizome/jardin": {json.dumps(jardin, ensure_ascii=False)},\n'
+        f'      "rhizome/catalogue": {json.dumps(catalogue, ensure_ascii=False)},\n'
+        f'      "rhizome/culture": {json.dumps(fiche, ensure_ascii=False)},\n'
+        f'      "rhizome/reglages": {json.dumps(reglages, ensure_ascii=False)},\n'
+        f'      "rhizome/cultures_perso": {json.dumps(cultures_perso, ensure_ascii=False)},\n'
+        f'      "rhizome/calendrier": {json.dumps(calendrier, ensure_ascii=False)},\n'
+        f'      "rhizome/rotation": {json.dumps(rotation, ensure_ascii=False)},\n'
         "    };\n"
         "    if (msg.type in reponses) return reponses[msg.type];\n"
         "    // Les commandes d'ecriture n'ont rien a simuler : le banc verifie\n"

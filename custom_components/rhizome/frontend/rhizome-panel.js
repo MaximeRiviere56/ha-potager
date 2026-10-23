@@ -1,5 +1,5 @@
 /**
- * Panneau « Mon Potager ».
+ * Panneau « Rhizome ».
  *
  * Ecrit en web components natifs, sans bundler ni dependance : le fichier que
  * Home Assistant sert est celui qu'on lit ici. C'est ce qui garde l'install
@@ -40,11 +40,11 @@ const EXPOSITIONS = {
 const EAU = { faible: "Peu d'eau", moyen: "Arrosage modéré", eleve: "Beaucoup d'eau" };
 
 const COULEURS_ETAPE = {
-  semis_interieur: "var(--potager-semis)",
-  semis_direct: "var(--potager-semis)",
-  repiquage: "var(--potager-plantation)",
-  plantation: "var(--potager-plantation)",
-  recolte: "var(--potager-recolte)",
+  semis_interieur: "var(--rhizome-semis)",
+  semis_direct: "var(--rhizome-semis)",
+  repiquage: "var(--rhizome-plantation)",
+  plantation: "var(--rhizome-plantation)",
+  recolte: "var(--rhizome-recolte)",
 };
 
 /** Miroir cote client de JOURNAL_POUR_ETAPE (notifier.py) : ce qu'un
@@ -57,7 +57,7 @@ const EVT_POUR_ETAPE = {
   recolte: { evenement: "recolte" },
   // Le ressemis ne note rien : il ouvre un nouveau lot, donc une nouvelle
   // plante. D'ou une commande distincte.
-  ressemer: { commande: "potager/ressemer" },
+  ressemer: { commande: "rhizome/ressemer" },
 };
 
 const LIBELLES_EVT = {
@@ -165,11 +165,11 @@ function quand(joursRestants, enCours) {
 
 const STYLES = `
   :host {
-    --potager-semis: #7cb342;
-    --potager-plantation: #00897b;
-    --potager-recolte: #ef6c00;
-    --potager-eau: #29b6f6;
-    --potager-rayon: var(--ha-card-border-radius, 12px);
+    --rhizome-semis: #7cb342;
+    --rhizome-plantation: #00897b;
+    --rhizome-recolte: #ef6c00;
+    --rhizome-eau: #29b6f6;
+    --rhizome-rayon: var(--ha-card-border-radius, 12px);
     display: block;
     height: 100%;
     overflow: hidden;
@@ -216,7 +216,7 @@ const STYLES = `
 
   .carte {
     background: var(--card-background-color, #fff);
-    border-radius: var(--potager-rayon);
+    border-radius: var(--rhizome-rayon);
     box-shadow: var(--ha-card-box-shadow, 0 1px 3px rgba(0,0,0,.12));
     border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, transparent);
   }
@@ -231,7 +231,7 @@ const STYLES = `
   .action .titre { font-size: 16px; font-weight: 500; }
   .action .detail { font-size: 13px; color: var(--secondary-text-color); margin-top: 2px; }
   .action .verbe { font-weight: 500; }
-  .urgent .verbe { color: var(--potager-recolte); }
+  .urgent .verbe { color: var(--rhizome-recolte); }
 
   /* --- Cartes de plante ------------------------------------------------- */
   .plante { padding: 14px; cursor: pointer; transition: box-shadow .15s, transform .15s; }
@@ -250,7 +250,7 @@ const STYLES = `
     font-size: 12px; color: var(--secondary-text-color);
   }
   .pied-eau > span { display: inline-flex; align-items: center; gap: 5px; }
-  .pied-eau .soif { color: var(--potager-eau); font-weight: 500; }
+  .pied-eau .soif { color: var(--rhizome-eau); font-weight: 500; }
   button.bouton.mini { padding: 5px 12px; font-size: 12px; }
 
   .badge {
@@ -259,9 +259,9 @@ const STYLES = `
     background: var(--divider-color); color: var(--primary-text-color); white-space: nowrap;
   }
   .badge.prevu { background: color-mix(in srgb, var(--secondary-text-color) 18%, transparent); }
-  .badge.seme { background: color-mix(in srgb, var(--potager-semis) 25%, transparent); }
-  .badge.plante { background: color-mix(in srgb, var(--potager-plantation) 25%, transparent); }
-  .badge.en_recolte { background: color-mix(in srgb, var(--potager-recolte) 28%, transparent); }
+  .badge.seme { background: color-mix(in srgb, var(--rhizome-semis) 25%, transparent); }
+  .badge.plante { background: color-mix(in srgb, var(--rhizome-plantation) 25%, transparent); }
+  .badge.en_recolte { background: color-mix(in srgb, var(--rhizome-recolte) 28%, transparent); }
   .badge.termine, .badge.perdu { background: color-mix(in srgb, var(--error-color) 20%, transparent); }
 
   /* --- Boutons ----------------------------------------------------------- */
@@ -400,12 +400,12 @@ const STYLES = `
     display: flex; align-items: flex-start; gap: 8px; margin-top: 12px;
     background: color-mix(in srgb, var(--warning-color, #ef6c00) 16%, transparent);
     color: var(--primary-text-color); padding: 10px 12px;
-    border-radius: var(--potager-rayon); font-size: 13px; line-height: 1.5;
+    border-radius: var(--rhizome-rayon); font-size: 13px; line-height: 1.5;
   }
 
   .erreur {
     background: color-mix(in srgb, var(--error-color) 15%, transparent);
-    color: var(--error-color); padding: 12px 14px; border-radius: var(--potager-rayon);
+    color: var(--error-color); padding: 12px 14px; border-radius: var(--rhizome-rayon);
     margin-bottom: 14px; font-size: 14px;
   }
   .chargement { text-align: center; padding: 48px; color: var(--secondary-text-color); }
@@ -418,7 +418,7 @@ const STYLES = `
   }
 `;
 
-class PotagerPanel extends HTMLElement {
+class RhizomePanel extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -460,9 +460,14 @@ class PotagerPanel extends HTMLElement {
   }
 
   _signatureEtat() {
+    // Le prefixe suit le nom de l'appareil, donc celui de l'integration. Il a
+    // longtemps valu « sensor.potager » alors que les entites s'appelaient
+    // « sensor.mon_potager_… » : le filtre ne matchait rien et le panneau ne
+    // voyait aucun changement d'etat venu d'ailleurs. Garder les deux bouts
+    // d'accord, ou renoncer au prefixe.
     const etats = this._hass?.states || {};
     return Object.keys(etats)
-      .filter((id) => id.startsWith("sensor.potager") || id.startsWith("switch.potager"))
+      .filter((id) => id.startsWith("sensor.rhizome") || id.startsWith("switch.rhizome"))
       .map((id) => `${id}:${etats[id].state}:${etats[id].last_updated}`)
       .join(",");
   }
@@ -480,11 +485,11 @@ class PotagerPanel extends HTMLElement {
     if (!discret) this._chargement = true;
     try {
       const [jardin, catalogue, reglages, perso, calendrier] = await Promise.all([
-        this._hass.callWS({ type: "potager/jardin" }),
-        this._hass.callWS({ type: "potager/catalogue" }),
-        this._hass.callWS({ type: "potager/reglages" }),
-        this._hass.callWS({ type: "potager/cultures_perso" }),
-        this._hass.callWS({ type: "potager/calendrier", annee: this._anneeCal }),
+        this._hass.callWS({ type: "rhizome/jardin" }),
+        this._hass.callWS({ type: "rhizome/catalogue" }),
+        this._hass.callWS({ type: "rhizome/reglages" }),
+        this._hass.callWS({ type: "rhizome/cultures_perso" }),
+        this._hass.callWS({ type: "rhizome/calendrier", annee: this._anneeCal }),
       ]);
       this._jardin = jardin;
       this._catalogue = catalogue;
@@ -494,7 +499,7 @@ class PotagerPanel extends HTMLElement {
       this._erreur = null;
       this._signature = this._signatureEtat();
     } catch (err) {
-      this._erreur = err?.message || "Impossible de joindre Mon Potager.";
+      this._erreur = err?.message || "Impossible de joindre Rhizome.";
     } finally {
       this._chargement = false;
       this._rendreVue();
@@ -514,7 +519,7 @@ class PotagerPanel extends HTMLElement {
   }
 
   _noter(uid, evenement, extra = {}) {
-    return this._appeler({ type: "potager/noter", uid, evenement, ...extra });
+    return this._appeler({ type: "rhizome/noter", uid, evenement, ...extra });
   }
 
   // --- Coquille ------------------------------------------------------------
@@ -527,7 +532,7 @@ class PotagerPanel extends HTMLElement {
         <header>
           <div class="barre-titre">
             <ha-icon icon="mdi:sprout"></ha-icon>
-            <h1>Mon Potager</h1>
+            <h1>Rhizome</h1>
             <span class="compteur-entete" id="compteur" hidden></span>
           </div>
           <nav id="nav"></nav>
@@ -1077,9 +1082,9 @@ class PotagerPanel extends HTMLElement {
       </div>
 
       <div class="legende">
-        <span><i class="pastille" style="background:var(--potager-semis)"></i> Semis</span>
-        <span><i class="pastille" style="background:var(--potager-plantation)"></i> Plantation, repiquage</span>
-        <span><i class="pastille" style="background:var(--potager-recolte)"></i> Récolte</span>
+        <span><i class="pastille" style="background:var(--rhizome-semis)"></i> Semis</span>
+        <span><i class="pastille" style="background:var(--rhizome-plantation)"></i> Plantation, repiquage</span>
+        <span><i class="pastille" style="background:var(--rhizome-recolte)"></i> Récolte</span>
         <span><i class="pastille" style="background:var(--primary-text-color)"></i> Noté au journal</span>
         <span>Trame claire&nbsp;: prévu · Plein&nbsp;: calculé d'après votre journal</span>
       </div>`;
@@ -1211,7 +1216,7 @@ class PotagerPanel extends HTMLElement {
       el.addEventListener("click", async (ev) => {
         ev.stopPropagation();
         el.disabled = true;
-        await this._appeler({ type: "potager/arroser", uid: el.dataset.arroser });
+        await this._appeler({ type: "rhizome/arroser", uid: el.dataset.arroser });
       })
     );
 
@@ -1220,7 +1225,7 @@ class PotagerPanel extends HTMLElement {
         ev.stopPropagation();
         el.disabled = true;
         await this._appeler({
-          type: "potager/arroser",
+          type: "rhizome/arroser",
           uid: el.dataset.arroserTout.split(","),
         });
       })
@@ -1302,7 +1307,7 @@ class PotagerPanel extends HTMLElement {
       el.addEventListener("click", async () => {
         this._anneeCal = Number(el.dataset.annee);
         this._calendrier = await this._hass.callWS({
-          type: "potager/calendrier",
+          type: "rhizome/calendrier",
           annee: this._anneeCal,
         });
         this._rendreVue();
@@ -1317,7 +1322,7 @@ class PotagerPanel extends HTMLElement {
     this._rendreFiche();
     try {
       this._ficheDetail = await this._hass.callWS({
-        type: "potager/culture",
+        type: "rhizome/culture",
         culture_id: cultureId,
       });
     } catch (err) {
@@ -1334,7 +1339,7 @@ class PotagerPanel extends HTMLElement {
     if (plante) {
       try {
         this._ficheDetail = await this._hass.callWS({
-          type: "potager/culture",
+          type: "rhizome/culture",
           culture_id: plante.culture_id,
         });
       } catch (err) {
@@ -1545,7 +1550,7 @@ class PotagerPanel extends HTMLElement {
             ? `<div style="font-size:15px">
                  ${
                    eau.a_arroser
-                     ? `<strong style="color:var(--potager-eau)">À arroser</strong>`
+                     ? `<strong style="color:var(--rhizome-eau)">À arroser</strong>`
                      : `Prochain arrosage le <strong>${fmtLong(eau.prochain)}</strong>`
                  }
                </div>
@@ -1897,7 +1902,7 @@ class PotagerPanel extends HTMLElement {
       const verifier = async () => {
         try {
           const r = await this._hass.callWS({
-            type: "potager/rotation",
+            type: "rhizome/rotation",
             culture_id: this._fiche.id,
             zone: zoneAjout.value,
           });
@@ -1933,7 +1938,7 @@ class PotagerPanel extends HTMLElement {
         if (!confirm("Rétablir la fiche d'origine et perdre vos corrections ?")) return;
         el.disabled = true;
         await this._appeler({
-          type: "potager/culture_perso/retablir",
+          type: "rhizome/culture_perso/retablir",
           culture_id: el.dataset.retablir,
         });
         this._fermerFiche();
@@ -1949,7 +1954,7 @@ class PotagerPanel extends HTMLElement {
           hote.querySelector("#champ-echelon-ajout")?.value || 0
         );
         const reponse = await this._appeler({
-          type: "potager/ajouter",
+          type: "rhizome/ajouter",
           culture_id: el.dataset.ajouter,
           zone: zone || "pleine-terre",
           surnom: surnom || null,
@@ -1972,7 +1977,7 @@ class PotagerPanel extends HTMLElement {
     hote.querySelectorAll("[data-annuler]").forEach((el) =>
       el.addEventListener("click", async () => {
         el.disabled = true;
-        await this._appeler({ type: "potager/annuler", uid: el.dataset.annuler });
+        await this._appeler({ type: "rhizome/annuler", uid: el.dataset.annuler });
       })
     );
 
@@ -1980,7 +1985,7 @@ class PotagerPanel extends HTMLElement {
       el.addEventListener("click", async () => {
         if (!confirm("Retirer cette plante et son journal ?")) return;
         el.disabled = true;
-        await this._appeler({ type: "potager/retirer", uid: el.dataset.retirer });
+        await this._appeler({ type: "rhizome/retirer", uid: el.dataset.retirer });
         this._fermerFiche();
       })
     );
@@ -1991,7 +1996,7 @@ class PotagerPanel extends HTMLElement {
       ev.target.disabled = true;
       try {
         await this._hass.callWS({
-          type: "potager/culture_perso/definir",
+          type: "rhizome/culture_perso/definir",
           fiche: this._lireFichePerso(),
         });
         await this._charger({ discret: true });
@@ -2006,7 +2011,7 @@ class PotagerPanel extends HTMLElement {
     });
 
     const modifier = (champs) =>
-      this._appeler({ type: "potager/modifier", ...champs });
+      this._appeler({ type: "rhizome/modifier", ...champs });
 
     const zone = hote.querySelector("#sel-zone");
     if (zone) {
@@ -2623,7 +2628,7 @@ class PotagerPanel extends HTMLElement {
 
   async _enregistrerReglages(partiel) {
     const reponse = await this._appeler({
-      type: "potager/reglages/definir",
+      type: "rhizome/reglages/definir",
       options: partiel,
     });
     if (reponse?.options) {
@@ -2754,7 +2759,7 @@ class PotagerPanel extends HTMLElement {
         return;
       }
       ev.target.disabled = true;
-      await this._appeler({ type: "potager/zones", zones });
+      await this._appeler({ type: "rhizome/zones", zones });
     });
 
     // --- Catalogue personnel
@@ -2776,7 +2781,7 @@ class PotagerPanel extends HTMLElement {
         if (!confirm("Supprimer cette fiche ?")) return;
         b.disabled = true;
         await this._appeler({
-          type: "potager/culture_perso/supprimer",
+          type: "rhizome/culture_perso/supprimer",
           culture_id: b.dataset.persoSuppr,
         });
       })
@@ -2784,4 +2789,4 @@ class PotagerPanel extends HTMLElement {
   }
 }
 
-customElements.define("potager-panel", PotagerPanel);
+customElements.define("rhizome-panel", RhizomePanel);

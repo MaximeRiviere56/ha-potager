@@ -11,8 +11,8 @@ from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import PotagerCoordinator, libelle_phase
-from .entity import PotagerEntity, PotagerPlanteEntity, suivre_les_plantes
+from .coordinator import RhizomeCoordinator, libelle_phase
+from .entity import RhizomeEntity, RhizomePlanteEntity, suivre_les_plantes
 from .lifecycle import PHASES_LIBELLES
 
 PLATEFORME = "sensor"
@@ -22,7 +22,7 @@ SUFFIXE = "etat"
 async def async_setup_entry(
     hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    coordinator: PotagerCoordinator = entry.runtime_data
+    coordinator: RhizomeCoordinator = entry.runtime_data
     async_add_entities(
         [
             ActionsSensor(coordinator),
@@ -42,7 +42,7 @@ async def async_setup_entry(
     )
 
 
-class ActionsSensor(PotagerEntity, SensorEntity):
+class ActionsSensor(RhizomeEntity, SensorEntity):
     """Combien d'actions reclament une attention, et lesquelles."""
 
     _attr_name = "Actions à mener"
@@ -50,7 +50,7 @@ class ActionsSensor(PotagerEntity, SensorEntity):
     _attr_native_unit_of_measurement = "actions"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: PotagerCoordinator) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator) -> None:
         super().__init__(coordinator, "actions")
 
     @property
@@ -81,7 +81,7 @@ class ActionsSensor(PotagerEntity, SensorEntity):
         }
 
 
-class RecolteSensor(PotagerEntity, SensorEntity):
+class RecolteSensor(RhizomeEntity, SensorEntity):
     """Total recolte, en kilos. `total` plutot que `total_increasing` : une
     annulation au journal doit pouvoir faire redescendre le compteur."""
 
@@ -92,7 +92,7 @@ class RecolteSensor(PotagerEntity, SensorEntity):
     _attr_state_class = SensorStateClass.TOTAL
     _attr_suggested_display_precision = 2
 
-    def __init__(self, coordinator: PotagerCoordinator) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator) -> None:
         super().__init__(coordinator, "recolte")
 
     @property
@@ -123,7 +123,7 @@ class RecolteSensor(PotagerEntity, SensorEntity):
         }
 
 
-class ArrosageSensor(PotagerEntity, SensorEntity):
+class ArrosageSensor(RhizomeEntity, SensorEntity):
     """Combien de plantes attendent de l'eau, et lesquelles.
 
     Separe du capteur d'actions : l'arrosage revient tous les deux jours quand
@@ -135,7 +135,7 @@ class ArrosageSensor(PotagerEntity, SensorEntity):
     _attr_native_unit_of_measurement = "plantes"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: PotagerCoordinator) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator) -> None:
         super().__init__(coordinator, "arrosage")
 
     @property
@@ -163,13 +163,13 @@ class ArrosageSensor(PotagerEntity, SensorEntity):
         }
 
 
-class PlanteSensor(PotagerPlanteEntity, SensorEntity):
+class PlanteSensor(RhizomePlanteEntity, SensorEntity):
     """Une plante du jardin : sa phase en etat, sa fiche en attributs."""
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = list(PHASES_LIBELLES.values())
 
-    def __init__(self, coordinator: PotagerCoordinator, uid: str) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator, uid: str) -> None:
         super().__init__(coordinator, uid, SUFFIXE)
 
     @property

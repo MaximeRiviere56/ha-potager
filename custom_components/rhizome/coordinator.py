@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 INTERVALLE = timedelta(hours=1)
 
 
-class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class RhizomeCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Vue calculee du potager, partagee par toutes les entites."""
 
     def __init__(
@@ -264,7 +264,7 @@ class PotagerCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self.store.async_sauvegarder_maintenant()
 
         # `async_refresh` et non `async_request_refresh` : ce dernier est
-        # debounce, et le panneau qui rappelle `potager/jardin` juste apres
+        # debounce, et le panneau qui rappelle `rhizome/jardin` juste apres
         # recevrait l'etat d'avant la mutation. Le calcul etant pur et local,
         # il n'y a rien a economiser en le differant.
         await self.async_refresh()

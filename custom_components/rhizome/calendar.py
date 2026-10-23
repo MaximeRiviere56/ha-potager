@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import PotagerCoordinator
-from .entity import PotagerEntity
+from .coordinator import RhizomeCoordinator
+from .entity import RhizomeEntity
 from .lifecycle import LIBELLES_EVENEMENTS, parse_date
 from .phenology import fenetres_theoriques
 
@@ -25,16 +25,16 @@ PHASES_SANS_PREVISION = {"seme", "plante", "en_recolte", "termine", "perdu"}
 async def async_setup_entry(
     hass: HomeAssistant, entry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    async_add_entities([PotagerCalendar(entry.runtime_data)])
+    async_add_entities([RhizomeCalendar(entry.runtime_data)])
 
 
-class PotagerCalendar(PotagerEntity, CalendarEntity):
+class RhizomeCalendar(RhizomeEntity, CalendarEntity):
     """Un seul calendrier pour tout le potager."""
 
     _attr_name = None
     _attr_icon = "mdi:calendar-blank-multiple"
 
-    def __init__(self, coordinator: PotagerCoordinator) -> None:
+    def __init__(self, coordinator: RhizomeCoordinator) -> None:
         super().__init__(coordinator, "calendrier")
 
     @property

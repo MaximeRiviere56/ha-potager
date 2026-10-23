@@ -17,7 +17,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from catalogue_source import CULTURES  # noqa: E402
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
-SORTIE = RACINE / "custom_components" / "potager" / "data" / "catalog.json"
+SORTIE = RACINE / "custom_components" / "rhizome" / "data" / "catalog.json"
 
 CATEGORIES = {
     "legume-fruit",

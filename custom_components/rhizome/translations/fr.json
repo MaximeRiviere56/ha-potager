@@ -1,9 +1,9 @@
 {
-  "title": "Mon Potager",
+  "title": "Rhizome",
   "config": {
     "step": {
       "user": {
-        "title": "Mon Potager",
+        "title": "Rhizome",
         "description": "Deux réglages suffisent : vos dates de gelées, qui calent tout le calendrier, et qui doit recevoir les rappels.",
         "data": {
           "preset_climat": "Climat",
@@ -26,13 +26,13 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Mon Potager est déjà configuré : tout se gère ensuite depuis le panneau latéral."
+      "single_instance_allowed": "Rhizome est déjà configuré : tout se gère ensuite depuis le panneau latéral."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Réglages du potager",
+        "title": "Réglages de Rhizome",
         "description": "Modifier les gelées redessine tout le calendrier, y compris les étapes déjà calculées.",
         "data": {
           "preset_climat": "Climat",

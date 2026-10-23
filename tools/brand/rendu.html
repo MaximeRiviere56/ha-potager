@@ -1,0 +1,79 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Rendu des PNG de marque</title>
+<style>
+  body{font:14px system-ui;margin:2rem;background:#fafafa;color:#222}
+  li{margin:.3rem 0}
+  .ok{color:#2e7d32}.ko{color:#c62828}
+  canvas{display:none}
+</style>
+<h1>Rendu des PNG de marque</h1>
+<p>Le recepteur doit ecouter sur <code>127.0.0.1:8778</code> — voir
+   <code>python3 tools/brand/rendre.py</code>.</p>
+<ul id="journal"></ul>
+<script>
+// Un SVG dessine dans un canevas conserve sa transparence, ce que `qlmanage`
+// ne fait pas. Les SVG sont charges en data: URL plutot que par leur chemin :
+// une image same-origin suffirait ici, mais la data: URL rend le rendu
+// independant de la facon dont le dossier est servi.
+const CIBLES = [
+  { svg: "logo-clair.svg",   nom: "logo",        w:  640, h: 160 },
+  { svg: "logo-clair.svg",   nom: "logo@2x",     w: 1280, h: 320 },
+  { svg: "logo-sombre.svg",  nom: "dark_logo",   w:  640, h: 160 },
+  { svg: "logo-sombre.svg",  nom: "dark_logo@2x",w: 1280, h: 320 },
+  { svg: "icone-claire.svg", nom: "icon",        w:  256, h: 256 },
+  { svg: "icone-claire.svg", nom: "icon@2x",     w:  512, h: 512 },
+  { svg: "icone-sombre.svg", nom: "dark_icon",   w:  256, h: 256 },
+  { svg: "icone-sombre.svg", nom: "dark_icon@2x",w:  512, h: 512 },
+];
+
+const journal = document.getElementById("journal");
+function noter(texte, ok) {
+  const li = document.createElement("li");
+  li.textContent = texte;
+  li.className = ok ? "ok" : "ko";
+  journal.append(li);
+}
+
+async function dessiner(cible) {
+  const source = await (await fetch(cible.svg)).text();
+  const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+  const image = await new Promise((resoudre, rejeter) => {
+    const img = new Image();
+    img.onload = () => resoudre(img);
+    img.onerror = () => rejeter(new Error("SVG illisible : " + cible.svg));
+    img.src = url;
+  });
+  const canevas = document.createElement("canvas");
+  canevas.width = cible.w;
+  canevas.height = cible.h;
+  canevas.getContext("2d").drawImage(image, 0, 0, cible.w, cible.h);
+  return canevas.toDataURL("image/png");
+}
+
+async function produire(seulement) {
+  const liste = seulement
+    ? CIBLES.filter((c) => seulement.includes(c.nom))
+    : CIBLES;
+  for (const cible of liste) {
+    try {
+      const donnees = await dessiner(cible);
+      const reponse = await fetch(
+        "http://127.0.0.1:8778/?" + encodeURIComponent(cible.nom),
+        { method: "POST", body: donnees }
+      );
+      if (!reponse.ok) throw new Error("recepteur : HTTP " + reponse.status);
+      noter(`${cible.nom}.png — ${cible.w}×${cible.h}`, true);
+    } catch (erreur) {
+      noter(`${cible.nom}.png — ${erreur.message}`, false);
+    }
+  }
+  noter("Termine.", true);
+}
+
+// Les logos portent le nom du produit et sont les seuls a bouger quand il
+// change ; les icones n'ont pas de texte. Rendre les quatre autres sans raison
+// ne ferait que du bruit binaire dans l'historique.
+window.produire = produire;
+produire(["logo", "logo@2x", "dark_logo", "dark_logo@2x"]);
+</script>

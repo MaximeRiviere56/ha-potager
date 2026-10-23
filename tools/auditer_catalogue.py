@@ -22,17 +22,17 @@ import types
 from datetime import date, timedelta
 
 RACINE = pathlib.Path(__file__).resolve().parent.parent
-SRC = RACINE / "custom_components" / "potager"
+SRC = RACINE / "custom_components" / "rhizome"
 
-_pkg = types.ModuleType("potager_audit")
+_pkg = types.ModuleType("rhizome_audit")
 _pkg.__path__ = [str(SRC)]
-sys.modules["potager_audit"] = _pkg
+sys.modules["rhizome_audit"] = _pkg
 
 
 def _charger(nom: str):
-    spec = importlib.util.spec_from_file_location(f"potager_audit.{nom}", SRC / f"{nom}.py")
+    spec = importlib.util.spec_from_file_location(f"rhizome_audit.{nom}", SRC / f"{nom}.py")
     module = importlib.util.module_from_spec(spec)
-    sys.modules[f"potager_audit.{nom}"] = module
+    sys.modules[f"rhizome_audit.{nom}"] = module
     spec.loader.exec_module(module)
     return module
 

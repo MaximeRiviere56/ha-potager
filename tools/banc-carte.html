@@ -2,7 +2,7 @@
 <title>Banc d'essai — carte Lovelace</title>
 <style>
   body{margin:0;padding:24px;background:#111314;font-family:system-ui;
-       --potager-eau:#29b6f6;
+       --rhizome-eau:#29b6f6;
        --card-background-color:#1c1f20;--primary-text-color:#e1e1e1;--secondary-text-color:#9b9b9b;
        --primary-color:#38a3f1;--divider-color:#33393b;--error-color:#db4437;
        --text-primary-color:#fff;--ha-card-border-radius:12px;--warning-color:#ef6c00}
@@ -30,15 +30,15 @@
 </script>
 <script src="./fixture.js"></script>
 <script type="module">
-  import "../custom_components/potager/frontend/potager-card.js";
+  import "../custom_components/rhizome/frontend/rhizome-card.js";
 
   // Le capteur tel que l'expose sensor.py, reconstitue depuis la fixture.
-  const jardin = await window.__hassFactice.callWS({ type: "potager/jardin" });
+  const jardin = await window.__hassFactice.callWS({ type: "rhizome/jardin" });
   const etat = {
-    entity_id: "sensor.mon_potager_actions_a_mener",
+    entity_id: "sensor.rhizome_actions_a_mener",
     state: String(jardin.actions.length),
     attributes: {
-      friendly_name: "Mon Potager Actions à mener",
+      friendly_name: "Rhizome Actions à mener",
       actions: jardin.actions.map((a) => ({
         uid: a.uid, plante: a.nom, emoji: a.emoji, action: a.etape.libelle,
         etape: a.etape.type, zone: a.zone, debut: a.etape.debut, fin: a.etape.fin,
@@ -53,11 +53,11 @@
   const capteursPlantes = {};
   for (const p of jardin.plantes) {
     const eau = p.arrosage || {};
-    capteursPlantes["sensor.mon_potager_" + p.uid] = {
-      entity_id: "sensor.mon_potager_" + p.uid,
+    capteursPlantes["sensor.rhizome_" + p.uid] = {
+      entity_id: "sensor.rhizome_" + p.uid,
       state: p.phase_libelle,
       attributes: {
-        friendly_name: "Mon Potager " + p.nom,
+        friendly_name: "Rhizome " + p.nom,
         uid: p.uid,
         culture: p.nom,
         zone: p.zone.nom,
@@ -73,7 +73,7 @@
   const hass = (actions) => ({
     states: {
       ...capteursPlantes,
-      "sensor.mon_potager_actions_a_mener": actions ? etat
+      "sensor.rhizome_actions_a_mener": actions ? etat
         : { ...etat, state: "0", attributes: { ...etat.attributes, actions: [] } },
     },
     callWS: async (msg) => { console.log("callWS", JSON.stringify(msg)); return {}; },
@@ -83,7 +83,7 @@
     ["avec", true, "tout", "Au potager"],
     ["sans", false, "arrosage", "Arrosage seul"],
   ]) {
-    const carte = document.createElement("potager-card");
+    const carte = document.createElement("rhizome-card");
     carte.setConfig({ titre, vue });
     document.getElementById(id).appendChild(carte);
     carte.hass = hass(avecActions);

@@ -28,7 +28,7 @@ from .const import (
     DEFAUT_NOTIFY_HEURE,
     DOMAIN,
 )
-from .coordinator import PotagerCoordinator
+from .coordinator import RhizomeCoordinator
 from .lifecycle import (
     EVT_PLANTE,
     EVT_RECOLTE,
@@ -49,7 +49,7 @@ from .phenology import (
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_ACTION_MOBILE = "mobile_app_notification_action"
-PREFIXE = "POTAGER"
+PREFIXE = "RHIZOME"
 # L'arrosage n'est pas une etape du cycle : il a son propre type d'action.
 ETAPE_ARROSAGE = "arrosage"
 SEPARATEUR = "|"
@@ -74,10 +74,10 @@ VERBES = {
 }
 
 
-class PotagerNotifier:
+class RhizomeNotifier:
     """Verifie une fois par jour ce qui merite un rappel."""
 
-    def __init__(self, hass: HomeAssistant, coordinator: PotagerCoordinator) -> None:
+    def __init__(self, hass: HomeAssistant, coordinator: RhizomeCoordinator) -> None:
         self.hass = hass
         self.coordinator = coordinator
 

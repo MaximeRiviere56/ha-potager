@@ -1,12 +1,12 @@
-# Mon Potager — passation
+# Rhizome — passation
 
-Tu reprends une intégration Home Assistant personnalisée, `potager`, écrite de
+Tu reprends une intégration Home Assistant personnalisée, `rhizome`, écrite de
 zéro et déployée en production chez son unique utilisateur. Ce document te
 donne ce qui ne se devine pas en lisant le code.
 
 ## Le produit
 
-Un potager dans Home Assistant : un catalogue de 172 cultures, un jardin
+Un suivi de plantes dans Home Assistant : un catalogue de 172 cultures, un jardin
 virtuel, un panneau latéral, des rappels, et un suivi d'arrosage.
 
 **L'idée centrale, qui gouverne tout le reste : le calendrier est piloté par ce
@@ -17,9 +17,10 @@ ne réclame plus jamais de la semer. Toute évolution doit préserver ça.
 
 ## Où
 
-- Source : `~/Documents/apps/ha-potager`
-- Dépôt : `https://github.com/MaximeRiviere56/ha-potager` (public)
-- Déploiement : HACS en dépôt personnalisé → `/config/custom_components/potager/`
+- Source : `~/Documents/apps/ha-potager` — le dossier local porte encore
+  l'ancien nom, le dépôt distant non. Sans conséquence, mais déroutant.
+- Dépôt : `https://github.com/MaximeRiviere56/ha-rhizome` (public)
+- Déploiement : HACS en dépôt personnalisé → `/config/custom_components/rhizome/`
   sur l'instance. **Modifier les sources ne change rien chez l'utilisateur**
   tant qu'une release n'est pas publiée et téléchargée par HACS.
 
@@ -44,7 +45,7 @@ pas être exécuté sur le poste de développement : ces modules sont le seul fi
 (`DataUpdateCoordinator`, vue calculée partagée) · `store.py` (persistance) ·
 `catalog.py` (catalogue livré + fiches personnelles fusionnées) ·
 `websocket.py` (API du panneau) · `notifier.py` · `sensor.py` `switch.py`
-`calendar.py` `todo.py` · `frontend/potager-panel.js` et `potager-card.js`.
+`calendar.py` `todo.py` · `frontend/rhizome-panel.js` et `rhizome-card.js`.
 
 ### Frontend
 
@@ -130,15 +131,33 @@ sourcées.**
 
 ## État au 23 octobre 2026
 
-v0.6.0 publiée. L'utilisateur a **plusieurs versions téléchargées mais pas
-activées** : il lui reste un redémarrage de Home Assistant pour que v0.3.0 à
-v0.6.0 prennent effet. Vérifie l'état réel avant de conclure quoi que ce soit —
-une commande WebSocket inconnue de l'instance signifie que le code tourne en
-version antérieure.
+v0.7.0 : l'intégration s'appelait `potager` / « Mon Potager » jusqu'à la v0.6.0,
+elle s'appelle `rhizome` / « Rhizome » depuis. Le nom a changé pour que le
+projet puisse accueillir les plantes d'intérieur à côté du jardin — **cette
+extension n'est pas faite**, seul le nom l'anticipe.
+
+Ce que le renommage a impliqué, et qu'il ne faut pas défaire :
+
+- `STORAGE_KEY` vaut `rhizome.jardin`, et `store.py` adopte au premier
+  chargement le `potager.jardin` écrit par les versions antérieures. L'ancien
+  fichier est laissé intact. Cette reprise pourra disparaître le jour où plus
+  aucune installation ne vient de « Mon Potager ».
+- Le domaine change, donc les `entity_id` aussi (`sensor.mon_potager_*` →
+  `sensor.rhizome_*`). Une entrée de configuration ne migre pas d'un domaine à
+  l'autre : l'ancienne intégration se supprime et la nouvelle se rajoute, en
+  ressaisissant les réglages.
+- Le mot « potager » reste partout où il est un **nom commun** : la vue
+  « Mon potager », les fiches du catalogue, les commentaires. Seuls les
+  identifiants et le nom du produit ont bougé. Ne passe jamais un
+  rechercher-remplacer global sur ce mot.
+
+L'instance tourne bien en v0.6.0 — la passation précédente affirmait le
+contraire, c'était faux. Vérifie toujours l'état réel plutôt que ce document.
 
 Son instance : HA 2026.10.2, Bouguenais (44), zone 9a, gelées 15/04 et 15/11,
 notifications vers `notify.mobile_app_fairphone_6`.
 
-Pistes restantes, par ordre de valeur : alerte gel via l'entité météo
-(`weather.bouguenais` existe, `rusticite.gel` est dans chaque fiche), arrosage
-réellement journalisé par zone, export du journal.
+Pistes restantes, par ordre de valeur : les plantes d'intérieur, que le nom
+promet désormais ; alerte gel via l'entité météo (`weather.bouguenais` existe,
+`rusticite.gel` est dans chaque fiche) ; arrosage réellement journalisé par
+zone ; export du journal.

@@ -1,4 +1,4 @@
-"""Configuration de Mon Potager.
+"""Configuration de Rhizome.
 
 Deux reglages seulement comptent vraiment : les dates de gelees locales, qui
 calent tout le calendrier, et les destinataires des rappels. Plutot que de
@@ -136,7 +136,7 @@ def _appliquer_preset(saisie: dict[str, Any]) -> dict[str, Any]:
     return saisie
 
 
-class PotagerConfigFlow(ConfigFlow, domain=DOMAIN):
+class RhizomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Un seul potager par instance : tout se gere ensuite dans le panneau."""
 
     VERSION = 1
@@ -149,17 +149,17 @@ class PotagerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             options = _appliquer_preset(dict(user_input))
-            return self.async_create_entry(title="Mon Potager", data={}, options=options)
+            return self.async_create_entry(title="Rhizome", data={}, options=options)
 
         return self.async_show_form(step_id="user", data_schema=_schema(self.hass, {}))
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: ConfigEntry) -> PotagerOptionsFlow:
-        return PotagerOptionsFlow()
+    def async_get_options_flow(entry: ConfigEntry) -> RhizomeOptionsFlow:
+        return RhizomeOptionsFlow()
 
 
-class PotagerOptionsFlow(OptionsFlow):
+class RhizomeOptionsFlow(OptionsFlow):
     """Modifier les gelees ou les destinataires redessine tout le calendrier."""
 
     async def async_step_init(
